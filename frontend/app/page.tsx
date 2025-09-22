@@ -1,6 +1,9 @@
 'use client'
 
 import SimpleUploadManager from '@/components/features/SimpleUploadManager'
+import ProcessSteps from '@/components/features/ProcessSteps'
+import SocialProof from '@/components/features/SocialProof'
+import FinalCTA from '@/components/features/FinalCTA'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -96,69 +99,92 @@ export default function HomePage() {
       </nav>
 
       {/* Hero Section - Mobile First */}
-      <section className="relative px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
+      <section className="relative px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
         <div className="mx-auto max-w-4xl">
           <div className="text-center">
+            {/* Trust Badge */}
+            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-2 rounded-full text-xs sm:text-sm font-medium mb-4 sm:mb-6">
+              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+              Confiado por milhares de brasileiros
+            </div>
+            
             {/* Headline principal - Mobile First */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold tracking-tight text-gray-900 leading-tight">
               Nunca Assine Um
-              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mt-2">
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-orange-500 mt-1 sm:mt-2">
                 Contrato Arriscado
               </span>
             </h1>
             
             {/* Subtítulo - Mobile First */}
-            <p className="mt-6 text-lg sm:text-xl lg:text-2xl leading-relaxed text-gray-600 max-w-3xl mx-auto">
-              Análise de contratos com IA que protege brasileiros de acordos arriscados. 
+            <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl xl:text-2xl leading-relaxed text-gray-600 max-w-3xl mx-auto px-2">
+              IA especializada analisa seus contratos em <strong className="text-blue-600">3 segundos</strong>. 
+              Identifica riscos, cláusulas abusivas e protege seus direitos.
               <span className="block mt-2 font-semibold text-blue-600">
                 Democratizando a compreensão jurídica no Brasil.
               </span>
             </p>
 
-            {/* Proposta de valor real */}
-            <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
-              <div className="flex flex-col items-center p-4 bg-white/60 rounded-lg backdrop-blur-sm">
-                <svg className="w-8 h-8 text-green-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium text-gray-700 text-center">Análise Instantânea</span>
+            {/* Proposta de valor real - Inspirado no Unclaws */}
+            <div className="mt-6 sm:mt-8 flex flex-wrap justify-center gap-2 sm:gap-3 md:gap-4 max-w-3xl mx-auto px-2 w-full">
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-white/70 backdrop-blur-sm px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full shadow-sm border border-blue-200 min-w-0 flex-shrink">
+                <span className="text-blue-500 text-sm sm:text-base flex-shrink-0">⚡</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">3 segundos</span>
               </div>
-              <div className="flex flex-col items-center p-4 bg-white/60 rounded-lg backdrop-blur-sm">
-                <svg className="w-8 h-8 text-blue-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium text-gray-700 text-center">Upload Seguro</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-white/70 backdrop-blur-sm px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full shadow-sm border border-green-200 min-w-0 flex-shrink">
+                <span className="text-green-500 text-sm sm:text-base flex-shrink-0">🔒</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">100% seguro</span>
               </div>
-              <div className="flex flex-col items-center p-4 bg-white/60 rounded-lg backdrop-blur-sm">
-                <svg className="w-8 h-8 text-purple-500 mb-2" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium text-gray-700 text-center">Linguagem Clara</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-white/70 backdrop-blur-sm px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full shadow-sm border border-purple-200 min-w-0 flex-shrink">
+                <span className="text-purple-500 text-sm sm:text-base flex-shrink-0">🎯</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">IA avançada</span>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2 bg-white/70 backdrop-blur-sm px-2.5 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-full shadow-sm border border-orange-200 min-w-0 flex-shrink">
+                <span className="text-orange-500 text-sm sm:text-base flex-shrink-0">📋</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-700 whitespace-nowrap">Múltiplos riscos</span>
               </div>
             </div>
 
-            {/* CTAs - Mobile First */}
-            <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            {/* CTAs - Mobile First - Inspirado no Unclaws */}
+            <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4">
               <Link
                 href="/dashboard"
-                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 text-lg font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 text-center"
+                className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 text-center flex items-center justify-center gap-2"
               >
-                Analise Seu Contrato Grátis
+                <span className="text-lg sm:text-xl">🚀</span>
+                Analise Grátis Agora
               </Link>
               <Link 
                 href="/chat" 
-                className="w-full sm:w-auto rounded-xl border-2 border-gray-300 px-8 py-4 text-lg font-semibold text-gray-700 hover:border-blue-600 hover:text-blue-600 transition-colors text-center"
+                className="w-full sm:w-auto rounded-xl border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold transition-all text-center flex items-center justify-center gap-2"
               >
-                Fale com a IA
+                <span className="text-lg sm:text-xl">💬</span>
+                Conversar com IA
               </Link>
+            </div>
+            
+            {/* Trust Indicators */}
+            <div className="mt-4 sm:mt-6 flex flex-wrap justify-center gap-3 sm:gap-6 text-xs sm:text-sm text-gray-600 px-4">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-green-500">✓</span>
+                <span>30 dias grátis</span>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-green-500">✓</span>
+                <span>Sem cartão</span>
+              </div>
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-green-500">✓</span>
+                <span>Cancele quando quiser</span>
+              </div>
             </div>
 
             {/* Explicação do problema que resolvemos */}
-            <div className="mt-12 p-6 bg-yellow-50 rounded-xl border border-yellow-200">
-              <h3 className="text-lg font-semibold text-yellow-800 mb-2">
-                🚨 Você sabia que 73% dos brasileiros já assinaram contratos sem entender completamente?
+            <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-yellow-50 rounded-xl border border-yellow-200 mx-4 sm:mx-0">
+              <h3 className="text-base sm:text-lg font-semibold text-yellow-800 mb-2">
+                🚨 Você sabia que a maioria dos brasileiros assina contratos sem entender completamente?
               </h3>
-              <p className="text-yellow-700">
+              <p className="text-sm sm:text-base text-yellow-700 leading-relaxed">
                 Cláusulas abusivas, multas escondidas e armadilhas jurídicas podem custar caro. 
                 Nossa IA identifica esses riscos em segundos, usando linguagem simples que qualquer pessoa entende.
               </p>
@@ -166,6 +192,50 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Process Steps - Novo componente inspirado no Unclaws */}
+      <ProcessSteps />
+
+      {/* Upload Section - Centralizada */}
+      <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="mx-auto max-w-4xl">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-12 border border-white/20">
+            <div className="text-center mb-8">
+              <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+                🚀 Comece agora - Análise gratuita
+              </h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">
+                Faça upload do seu contrato e receba um relatório detalhado em segundos. 
+                Sem cadastro necessário para o primeiro teste.
+              </p>
+            </div>
+            
+            <SimpleUploadManager 
+              onFileSelect={handleFileSelect}
+              onUploadComplete={handleUploadComplete}
+            />
+            
+            {/* Trust Indicators */}
+            <div className="flex flex-wrap justify-center gap-6 mt-8 pt-8 border-t border-gray-200">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span className="text-green-500">🔒</span>
+                <span>Criptografia end-to-end</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span className="text-blue-500">📋</span>
+                <span>Conforme LGPD</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <span className="text-purple-500">🗑️</span>
+                <span>Dados excluídos após análise</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof - Novo componente */}
+      <SocialProof />
 
       {/* Como Funciona - Mobile First */}
       <section className="relative px-4 sm:px-6 lg:px-8 py-12 sm:py-16 bg-white">
@@ -421,18 +491,11 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Call to action adicional */}
-          <div className="mt-8 sm:mt-12 p-4 sm:p-6 bg-blue-50 rounded-xl border border-blue-200">
-            <h3 className="text-lg sm:text-xl font-semibold text-blue-800 mb-2">
-              💡 Comece agora mesmo
-            </h3>
-            <p className="text-blue-700 text-sm sm:text-base">
-              Faça upload do seu contrato e receba uma análise detalhada em segundos. 
-              Identifique riscos antes que se tornem problemas.
-            </p>
-          </div>
         </div>
       </section>
+
+      {/* Final CTA - Novo componente inspirado no Unclaws */}
+      <FinalCTA />
     </div>
   )
 }

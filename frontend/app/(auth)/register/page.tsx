@@ -65,9 +65,9 @@ export default function RegisterPage() {
   }
 
   return (
-    <div>
+    <div className="w-full">
       <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Criar nova conta</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">Criar nova conta</h2>
         <p className="mt-2 text-sm text-gray-600">
           Já tem uma conta?{' '}
           <Link href="/login" className="text-blue-600 hover:text-blue-500">
@@ -76,8 +76,8 @@ export default function RegisterPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
+      <form onSubmit={handleSubmit} className="space-y-6 w-full">
+        <div className="w-full">
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
             Nome completo
           </label>
@@ -88,12 +88,12 @@ export default function RegisterPage() {
             required
             value={formData.name}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-w-0"
             placeholder="Seu nome completo"
           />
         </div>
 
-        <div>
+        <div className="w-full">
           <label htmlFor="email" className="block text-sm font-medium text-gray-700">
             Email
           </label>
@@ -104,12 +104,12 @@ export default function RegisterPage() {
             required
             value={formData.email}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-w-0"
             placeholder="seu@email.com"
           />
         </div>
 
-        <div>
+        <div className="w-full">
           <label htmlFor="password" className="block text-sm font-medium text-gray-700">
             Senha
           </label>
@@ -120,13 +120,13 @@ export default function RegisterPage() {
             required
             value={formData.password}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-w-0"
             placeholder="••••••••"
           />
           <p className="mt-1 text-sm text-gray-500">Mínimo 6 caracteres</p>
         </div>
 
-        <div>
+        <div className="w-full">
           <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
             Confirmar senha
           </label>
@@ -137,20 +137,20 @@ export default function RegisterPage() {
             required
             value={formData.confirmPassword}
             onChange={handleChange}
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 min-w-0"
             placeholder="••••••••"
           />
         </div>
 
-        <div className="flex items-center">
+        <div className="flex items-start w-full">
           <input
             id="terms"
             name="terms"
             type="checkbox"
             required
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0 mt-0.5"
           />
-          <label htmlFor="terms" className="ml-2 block text-sm text-gray-900">
+          <label htmlFor="terms" className="ml-2 block text-sm text-gray-900 min-w-0">
             Aceito os{' '}
             <a href="#" className="text-blue-600 hover:text-blue-500">
               termos de uso
@@ -163,8 +163,8 @@ export default function RegisterPage() {
         </div>
 
         {error && (
-          <div className="p-3 bg-red-100 border border-red-300 rounded-md">
-            <p className="text-red-700 text-sm">❌ {error}</p>
+          <div className="p-3 bg-red-100 border border-red-300 rounded-md w-full">
+            <p className="text-red-700 text-sm break-words">❌ {error}</p>
           </div>
         )}
 
@@ -177,7 +177,7 @@ export default function RegisterPage() {
         </button>
       </form>
 
-      <div className="mt-6">
+      <div className="mt-6 w-full">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300" />
@@ -187,12 +187,12 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-            📧 Google
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+          <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 min-w-0">
+            <span className="truncate">📧 Google</span>
           </button>
-          <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-            📘 Facebook
+          <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 min-w-0">
+            <span className="truncate">📘 Facebook</span>
           </button>
         </div>
       </div>
