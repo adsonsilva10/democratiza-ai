@@ -1,67 +1,57 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, ReactNode, useEffect, useCallback } from 'react'
+import { useState, ReactNode, useEffect } from 'react'
+// import { performanceMonitor } from '@/lib/performance'
+// import PerformanceAlerts from '@/components/features/PerformanceAlerts'
 
 interface SidebarLayoutProps {
   children: ReactNode
   currentPage?: string
 }
 
-export default function SidebarLayoutAdvanced({ children, currentPage }: SidebarLayoutProps) {
-  // Estados simplificados para evitar loops
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const [isLargeScreen, setIsLargeScreen] = useState(false)
+export default function SidebarLayout({ children, currentPage }: SidebarLayoutProps) {
+  const [sidebarOpen, setSidebarOpen] = useState(true) // Simples: inicia aberto
   const [mounted, setMounted] = useState(false)
+  const [isLargeScreen, setIsLargeScreen] = useState(false)
   const [userClosedSidebar, setUserClosedSidebar] = useState(false)
 
-  // Callback estável para verificar tamanho da tela
-  const checkScreenSize = useCallback(() => {
-    const isLarge = window.innerWidth >= 1024
-    setIsLargeScreen(isLarge)
-    
-    // Desktop: aberto por padrão, mobile: fechado
-    if (isLarge) {
-      setSidebarOpen(!userClosedSidebar)
-    } else {
-      setSidebarOpen(false)
-      // Reset userClosedSidebar apenas quando sai do desktop
-      if (userClosedSidebar) {
-        setUserClosedSidebar(false)
-      }
-    }
-  }, [userClosedSidebar]) // Dependência estável
-
-  // useEffect apenas para setup inicial
   useEffect(() => {
     setMounted(true)
-    checkScreenSize()
     
+    // Verificar tamanho da tela
+    const checkScreenSize = () => {
+      setIsLargeScreen(window.innerWidth >= 1024)
+    }
+    
+    checkScreenSize()
     window.addEventListener('resize', checkScreenSize)
+    
     return () => window.removeEventListener('resize', checkScreenSize)
-  }, [checkScreenSize])
+  }, [])
 
-  // Handlers de toggle
-  const handleSidebarToggle = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+  // Função para toggle do sidebar (desktop e mobile)
+  const handleSidebarToggle = (e: React.MouseEvent | React.TouchEvent) => {
     e.preventDefault()
     e.stopPropagation()
     
     if (isLargeScreen) {
-      // Desktop: controla estado de "fechado pelo usuário"
+      // Desktop: controla se usuário fechou explicitamente
       setUserClosedSidebar(prev => !prev)
+      setSidebarOpen(prev => !prev)
     } else {
-      // Mobile: toggle direto
+      // Mobile: toggle normal
       setSidebarOpen(prev => !prev)
     }
-  }, [isLargeScreen])
+  }
 
-  const closeSidebar = useCallback(() => {
+  // Função específica para fechar sidebar (botão X interno)
+  const closeSidebar = () => {
     if (isLargeScreen) {
       setUserClosedSidebar(true)
-    } else {
-      setSidebarOpen(false)
     }
-  }, [isLargeScreen])
+    setSidebarOpen(false)
+  }
 
   // Previne problemas de hidratação
   if (!mounted) {
@@ -81,8 +71,8 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
         </svg>
       ), 
-      label: 'Home', 
-      href: '/dashboard', 
+      label: 'Início', 
+      href: '/', 
       id: 'home' 
     },
     { 
@@ -92,18 +82,8 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         </svg>
       ), 
       label: 'Análise', 
-      href: '/dashboard/analise', 
-      id: 'analise' 
-    },
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ), 
-      label: 'Histórico', 
-      href: '/dashboard/historico', 
-      id: 'historico' 
+      href: '/dashboard', 
+      id: 'dashboard' 
     },
     { 
       icon: (
@@ -112,8 +92,38 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         </svg>
       ), 
       label: 'Chat IA', 
-      href: '/dashboard/chat', 
+      href: '/chat', 
       id: 'chat' 
+    },
+    { 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ), 
+      label: 'Contratos', 
+      href: '/contracts', 
+      id: 'contracts' 
+    },
+    { 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ), 
+      label: 'Performance', 
+      href: '/performance', 
+      id: 'performance' 
+    },
+    { 
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+      ), 
+      label: 'Perfil', 
+      href: '/profile', 
+      id: 'profile' 
     },
     { 
       icon: (
@@ -123,31 +133,19 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         </svg>
       ), 
       label: 'Configurações', 
-      href: '/dashboard/configuracoes', 
-      id: 'configuracoes' 
-    },
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ), 
-      label: 'Ajuda e Suporte', 
-      href: '/dashboard/suporte', 
-      id: 'suporte' 
+      href: '/settings', 
+      id: 'settings' 
     },
   ]
 
-  // Determina se o sidebar deve estar visível
-  const sidebarVisible = isLargeScreen ? !userClosedSidebar : sidebarOpen
-
   return (
-    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
-      {/* Sidebar Principal */}
+    <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">      
+      {/* Sidebar - sempre visível no desktop, controlável no mobile */}
       <div className={`fixed inset-y-0 left-0 z-30 bg-gradient-to-b from-blue-900 to-purple-900 transition-all duration-300 ease-in-out shadow-lg
-        ${sidebarVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}
+        ${(isLargeScreen && !userClosedSidebar) || (!isLargeScreen && sidebarOpen) ? 'w-64' : 'w-0'}
+        ${!sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
       `}>
-        <div className={`h-full flex flex-col ${sidebarVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-300`}>
+        <div className={`h-full flex flex-col ${((isLargeScreen && !userClosedSidebar) || (!isLargeScreen && sidebarOpen)) ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-300`}>
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
             <div className="text-white font-bold text-lg truncate">
@@ -185,25 +183,23 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
                 )}
               </Link>
             ))}
-          </nav>
-
-          {/* User Section */}
-          <div className="absolute bottom-20 left-0 right-0 px-2">
-            <div className="flex items-center px-3 py-3 text-white justify-start bg-white/5 rounded-lg backdrop-blur-sm">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <div className="text-sm font-medium truncate">Usuário</div>
-                <div className="text-xs text-gray-300 truncate flex items-center">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></div>
-                  Plano Free
-                </div>
+          </nav>        {/* User Section */}
+        <div className="absolute bottom-20 left-0 right-0 px-2">
+          <div className="flex items-center px-3 py-3 text-white justify-start bg-white/5 rounded-lg backdrop-blur-sm">
+            <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-lg">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            </div>
+            <div className="ml-3 min-w-0 flex-1">
+              <div className="text-sm font-medium truncate">Usuário</div>
+              <div className="text-xs text-gray-300 truncate flex items-center">
+                <div className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></div>
+                Plano Free
               </div>
             </div>
           </div>
+        </div>
 
           {/* Logout Button */}
           <div className="absolute bottom-4 left-0 right-0 px-2">
@@ -220,7 +216,7 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         </div>
       </div>
 
-      {/* Overlay para mobile quando sidebar aberto */}
+      {/* Overlay for mobile when sidebar is open */}
       {!isLargeScreen && sidebarOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-20"
@@ -228,7 +224,7 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         />
       )}
 
-      {/* Mobile Navigation Bar - aparece quando sidebar está fechado no mobile */}
+      {/* Mobile Navigation Bar - Aparece quando sidebar está fechado */}
       {!isLargeScreen && !sidebarOpen && (
         <div className="fixed left-0 top-0 bottom-0 w-16 bg-gradient-to-b from-blue-900 to-purple-900 z-30 flex flex-col shadow-lg">
           {/* Hamburger button no topo */}
@@ -279,40 +275,66 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
       {/* Main Content */}
       <div className={`transition-all duration-300 min-h-screen ${
         isLargeScreen 
-          ? (sidebarVisible ? 'ml-64' : 'ml-0') 
+          ? (sidebarOpen ? 'ml-64' : 'ml-0') 
           : (sidebarOpen ? 'ml-0' : 'ml-16')
       }`}>
         {/* Top Bar */}
         <div className="bg-white border-b border-gray-200 px-4 sm:px-6 py-4 relative z-10">
           <div className="flex items-center justify-between w-full min-w-0">
             <div className="flex items-center min-w-0 flex-1">
-              {/* Botão para expandir quando fechado - APENAS DESKTOP */}
-              {(isLargeScreen && !sidebarVisible) && (
+              {/* Botão hamburger no mobile */}
+              {/* Botão hamburger no mobile OU botão expandir no desktop quando fechado */}
+              {(!isLargeScreen || (isLargeScreen && !sidebarOpen)) && (
                 <button
                   onClick={handleSidebarToggle}
-                  className="mr-4 p-3 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:bg-gray-200 flex-shrink-0 transition-all duration-150 cursor-pointer"
+                  onTouchStart={handleSidebarToggle}
+                  className={`mr-4 p-3 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-50 active:bg-gray-200 flex-shrink-0 transition-all duration-150 cursor-pointer ${!isLargeScreen ? 'touch-manipulation' : ''}`}
                   style={{ 
                     minWidth: '48px', 
                     minHeight: '48px', 
                     touchAction: 'manipulation',
+                    WebkitTapHighlightColor: 'transparent',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    MozUserSelect: 'none'
                   }}
-                  title="Expandir sidebar"
+                  title={isLargeScreen ? "Expandir sidebar" : "Toggle Menu"}
                   type="button"
+                  role="button"
+                  tabIndex={0}
                 >
-                  {/* Ícone para expandir sidebar no desktop */}
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                  </svg>
+                  {isLargeScreen ? (
+                    // Ícone para expandir sidebar no desktop
+                    <svg 
+                      className="h-6 w-6 pointer-events-none" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                  ) : (
+                    // Ícone hamburger para mobile
+                    <svg 
+                      className="h-6 w-6 pointer-events-none" 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                      style={{ pointerEvents: 'none' }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  )}
                 </button>
               )}
-              
               <div>
                 <h1 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
                   {menuItems.find(item => item.id === currentPage)?.label || 'Dashboard'}
                 </h1>
+
               </div>
             </div>
-            
             <div className="flex items-center gap-4 flex-shrink-0">
               <span className="text-sm text-gray-600 hidden sm:block truncate">
                 Protegendo contratos desde 2024
@@ -327,6 +349,9 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
           {children}
         </main>
       </div>
+
+      {/* Performance Alerts - Temporariamente removido */}
+      {/* <PerformanceAlerts /> */}
     </div>
   )
 }
