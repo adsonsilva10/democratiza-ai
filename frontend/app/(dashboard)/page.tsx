@@ -50,59 +50,99 @@ const typeEmojis = {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6 w-full overflow-x-hidden">
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full">
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow w-full">
-          <div className="flex items-center">
-            <div className="text-2xl mr-3 flex-shrink-0">📄</div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{mockContracts.length}</p>
-              <p className="text-gray-600 text-sm sm:text-base truncate">Contratos Total</p>
+    <div className="w-full max-w-7xl mx-auto">
+      {/* Header melhorado */}
+      <div className="mb-8">
+        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+          📊 Dashboard
+        </h1>
+        <p className="text-gray-600 text-base sm:text-lg">
+          Acompanhe seus contratos e análises em tempo real
+        </p>
+      </div>
+
+      <div className="space-y-8">
+        {/* Stats Cards melhorados */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="text-3xl mr-4 flex-shrink-0">📄</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{mockContracts.length}</p>
+                <p className="text-gray-600 font-medium">Contratos Total</p>
+              </div>
+            </div>
+            <div className="text-blue-500 opacity-20">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                <path fillRule="evenodd" d="M4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3z" clipRule="evenodd"></path>
+              </svg>
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow w-full">
-          <div className="flex items-center">
-            <div className="text-2xl mr-3 flex-shrink-0">⚡</div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                {mockContracts.filter(c => c.status === 'analyzed').length}
-              </p>
-              <p className="text-gray-600 text-sm sm:text-base truncate">Analisados</p>
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 border border-green-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="text-3xl mr-4 flex-shrink-0">⚡</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl sm:text-3xl font-bold text-green-700">
+                  {mockContracts.filter(c => c.status === 'analyzed').length}
+                </p>
+                <p className="text-green-600 font-medium">Analisados</p>
+              </div>
+            </div>
+            <div className="text-green-500 opacity-20">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"></path>
+              </svg>
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow w-full">
-          <div className="flex items-center">
-            <div className="text-2xl mr-3 flex-shrink-0">⚠️</div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                {mockContracts.filter(c => c.riskLevel === 'high').length}
-              </p>
-              <p className="text-gray-600 text-sm sm:text-base truncate">Alto Risco</p>
+        <div className="bg-gradient-to-br from-red-50 to-pink-50 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 border border-red-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="text-3xl mr-4 flex-shrink-0">⚠️</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl sm:text-3xl font-bold text-red-700">
+                  {mockContracts.filter(c => c.riskLevel === 'high').length}
+                </p>
+                <p className="text-red-600 font-medium">Alto Risco</p>
+              </div>
+            </div>
+            <div className="text-red-500 opacity-20">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"></path>
+              </svg>
             </div>
           </div>
         </div>
         
-        <div className="bg-white p-4 sm:p-6 rounded-lg shadow w-full">
-          <div className="flex items-center">
-            <div className="text-2xl mr-3 flex-shrink-0">🔄</div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xl sm:text-2xl font-bold text-gray-900 truncate">
-                {mockContracts.filter(c => c.status === 'processing').length}
-              </p>
-              <p className="text-gray-600 text-sm sm:text-base truncate">Processando</p>
+        <div className="bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 border border-yellow-100">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="text-3xl mr-4 flex-shrink-0 animate-spin">🔄</div>
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl sm:text-3xl font-bold text-yellow-700">
+                  {mockContracts.filter(c => c.status === 'processing').length}
+                </p>
+                <p className="text-yellow-600 font-medium">Processando</p>
+              </div>
+            </div>
+            <div className="text-yellow-500 opacity-20">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd"></path>
+              </svg>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white p-4 sm:p-6 rounded-lg shadow w-full">
-        <h2 className="text-lg font-semibold mb-4 truncate">Ações Rápidas</h2>
+        {/* Quick Actions melhoradas */}
+        <div className="bg-white p-8 rounded-xl shadow-lg">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">🚀 Ações Rápidas</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
           <Link 
             href="/dashboard/upload"
@@ -139,10 +179,10 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Recent Contracts */}
-      <div className="bg-white p-4 sm:p-6 rounded-lg shadow w-full">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-2 w-full">
-          <h2 className="text-lg font-semibold truncate">Contratos Recentes</h2>
+        {/* Recent Contracts melhorados */}
+        <div className="bg-white p-8 rounded-xl shadow-lg">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-2">
+            <h2 className="text-xl font-bold text-gray-900">📋 Contratos Recentes</h2>
           <Link 
             href="/dashboard/contracts"
             className="text-blue-600 hover:text-blue-700 text-sm flex-shrink-0"
@@ -186,13 +226,14 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Tips */}
-      <div className="bg-blue-50 p-4 sm:p-6 rounded-lg border border-blue-200 w-full">
-        <h3 className="font-semibold text-blue-900 mb-2">💡 Dica do Dia</h3>
-        <p className="text-blue-800 text-sm sm:text-base leading-relaxed">
-          Sempre leia as cláusulas de rescisão antecipada antes de assinar um contrato. 
-          Elas podem conter multas ou condições que impactem significativamente seus direitos.
-        </p>
+        {/* Tips */}
+        <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+          <h3 className="font-semibold text-blue-900 mb-3 text-lg">💡 Dica do Dia</h3>
+          <p className="text-blue-800 text-base leading-relaxed">
+            Sempre leia as cláusulas de rescisão antecipada antes de assinar um contrato. 
+            Elas podem conter multas ou condições que impactem significativamente seus direitos.
+          </p>
+        </div>
       </div>
     </div>
   )

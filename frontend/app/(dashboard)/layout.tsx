@@ -1,4 +1,4 @@
-import SidebarLayout from '@/components/layout/SidebarLayout'
+import SidebarLayoutAdvanced from '@/components/layout/SidebarLayoutAdvanced'
 
 export default function DashboardLayout({
   children,
@@ -6,8 +6,8 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarLayout>
+    <SidebarLayoutAdvanced>
       {children}
-    </SidebarLayout>
+    </SidebarLayoutAdvanced>
   )
 }

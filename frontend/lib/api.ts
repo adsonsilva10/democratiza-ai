@@ -72,11 +72,41 @@ class ApiClient {
     this.token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   }
 
+  private trackApiCall(endpoint: string, method: string, startTime: number, status: number) {
+    if (typeof window !== 'undefined') {
+      const duration = performance.now() - startTime
+      
+      try {
+        const apiMetrics = JSON.parse(localStorage.getItem('democratiza_ai_api_metrics') || '[]')
+        apiMetrics.push({
+          url: endpoint,
+          method,
+          duration: Math.round(duration),
+          status,
+          timestamp: Date.now()
+        })
+        
+        // Manter apenas últimas 100 chamadas
+        const recentMetrics = apiMetrics.slice(-100)
+        localStorage.setItem('democratiza_ai_api_metrics', JSON.stringify(recentMetrics))
+        
+        // Log para desenvolvimento
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`🚀 API [${method}] ${endpoint}: ${duration.toFixed(0)}ms (${status})`)
+        }
+      } catch (error) {
+        console.warn('Erro ao salvar métricas de API:', error)
+      }
+    }
+  }
+
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
+    const startTime = performance.now()
     const url = `${this.baseURL}${endpoint}`;
+    const method = options.method || 'GET'
     
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -97,6 +127,9 @@ class ApiClient {
       });
 
       const data = await response.json();
+      
+      // Track performance
+      this.trackApiCall(endpoint, method, startTime, response.status)
 
       if (!response.ok) {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);

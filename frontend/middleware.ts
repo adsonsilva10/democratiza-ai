@@ -8,6 +8,12 @@ const protectedRoutes = ['/dashboard', '/chat']
 const authRoutes = ['/login', '/register']
 
 export function middleware(request: NextRequest) {
+  // 🚧 MIDDLEWARE DESABILITADO TEMPORARIAMENTE PARA DESENVOLVIMENTO
+  // Todas as rotas são acessíveis livremente
+  
+  /* 
+  CÓDIGO ORIGINAL - DESCOMENTE QUANDO QUISER REATIVAR AUTENTICAÇÃO:
+  
   const { pathname } = request.nextUrl
   
   // Verificar se há token
@@ -38,6 +44,7 @@ export function middleware(request: NextRequest) {
     url.pathname = '/dashboard'
     return NextResponse.redirect(url)
   }
+  */
 
   return NextResponse.next()
 }

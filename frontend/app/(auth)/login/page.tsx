@@ -17,22 +17,33 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      // Simular login
+      // Simular delay de autenticação
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      // Aqui você faria a chamada para a API
-      // const response = await fetch('/api/v1/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // })
+      // Credenciais de demonstração
+      const validCredentials = [
+        { email: 'demo@democratiza.ai', password: 'demo123' },
+        { email: 'admin@democratiza.ai', password: 'admin123' },
+        { email: 'user@test.com', password: '123456' }
+      ]
 
-      // Simular sucesso e redirecionamento
-      alert('Login realizado com sucesso!')
-      // window.location.href = '/dashboard'
+      const isValid = validCredentials.some(
+        cred => cred.email === formData.email && cred.password === formData.password
+      )
+
+      if (isValid) {
+        // Salvar token fictício no localStorage
+        localStorage.setItem('auth-token', 'demo-token-' + Date.now())
+        localStorage.setItem('user-email', formData.email)
+        
+        alert('Login realizado com sucesso!')
+        window.location.href = '/dashboard'
+      } else {
+        setError('Email ou senha incorretos. Tente: demo@democratiza.ai / demo123')
+      }
       
     } catch (err) {
-      setError('Email ou senha incorretos')
+      setError('Erro ao fazer login. Tente novamente.')
     } finally {
       setIsLoading(false)
     }
@@ -54,6 +65,28 @@ export default function LoginPage() {
           <Link href="/register" className="text-blue-600 hover:text-blue-500">
             crie uma nova conta
           </Link>
+        </p>
+      </div>
+
+      {/* Credenciais de demonstração */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <h3 className="text-sm font-medium text-blue-900 mb-2">🔑 Credenciais de Demonstração</h3>
+        <div className="space-y-2 text-sm">
+          <div className="bg-white rounded p-2 border">
+            <p className="font-mono text-blue-800">📧 demo@democratiza.ai</p>
+            <p className="font-mono text-blue-800">🔒 demo123</p>
+          </div>
+          <div className="bg-white rounded p-2 border">
+            <p className="font-mono text-blue-800">📧 admin@democratiza.ai</p>
+            <p className="font-mono text-blue-800">🔒 admin123</p>
+          </div>
+          <div className="bg-white rounded p-2 border">
+            <p className="font-mono text-blue-800">📧 user@test.com</p>
+            <p className="font-mono text-blue-800">🔒 123456</p>
+          </div>
+        </div>
+        <p className="text-xs text-blue-600 mt-2">
+          💡 Use qualquer uma dessas credenciais para acessar o sistema
         </p>
       </div>
 
@@ -123,6 +156,31 @@ export default function LoginPage() {
         >
           {isLoading ? '🔄 Entrando...' : '🔑 Entrar'}
         </button>
+
+        {/* Botões de acesso rápido */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4">
+          <button
+            type="button"
+            onClick={() => setFormData({email: 'demo@democratiza.ai', password: 'demo123'})}
+            className="text-xs px-3 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+          >
+            🚀 Demo
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormData({email: 'admin@democratiza.ai', password: 'admin123'})}
+            className="text-xs px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors"
+          >
+            👑 Admin
+          </button>
+          <button
+            type="button"
+            onClick={() => setFormData({email: 'user@test.com', password: '123456'})}
+            className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+          >
+            👤 User
+          </button>
+        </div>
       </form>
 
       <div className="mt-6 w-full">
