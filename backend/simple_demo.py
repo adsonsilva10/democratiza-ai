@@ -4,6 +4,7 @@ Servidor simplificado para demonstração sem dependências complexas
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 # Configurar variável de ambiente para usar mocks
 os.environ["USE_MOCK_RAG"] = "True"
@@ -100,23 +101,224 @@ async def demo_analyze_text(contract_data: dict):
         "analysis": analysis
     }
 
-@app.post("/api/v1/demo/chat")
-async def demo_chat(chat_data: dict):
-    """Chat sobre análise de contrato"""
-    from app.services.mock_llm_service import mock_llm_service
+def get_agent_response(question: str, agent_type: str = "general") -> dict:
+    """Gerar resposta baseada no tipo de agente e pergunta"""
     
-    contract_analysis = chat_data.get("contract_analysis", {})
-    user_question = chat_data.get("question", "")
+    # Agente de Locação (Rental)
+    if agent_type == "rental":
+        if "rescisão" in question.lower() or "cancelar" in question.lower():
+            return {
+                "response": "🏠 **LOCAÇÃO - Rescisão**: Em contratos de locação, há diferentes modalidades: **Rescisão imotivada** (com aviso prévio de 30 dias para inquilino, 90 para locador), **Rescisão por descumprimento** (sem aviso), **Cláusula de arrependimento** (primeiros 3 anos). 📋 **Multa**: Geralmente 3 aluguéis se rescindido pelo locador antes do prazo.",
+                "agent": "Agente de Locação",
+                "specialization": "Contratos Imobiliários"
+            }
+        elif "reforma" in question.lower() or "benfeitoria" in question.lower():
+            return {
+                "response": "🔨 **LOCAÇÃO - Reformas**: **Benfeitorias necessárias** (locador paga), **Úteis** (acordo entre partes), **Voluptuárias** (inquilino não tem direito a indenização). ⚠️ **Importante**: Sempre comunicar por escrito e obter autorização prévia do locador.",
+                "agent": "Agente de Locação",
+                "specialization": "Contratos Imobiliários"
+            }
+        else:
+            return {
+                "response": f"🏠 **AGENTE DE LOCAÇÃO**: Analisando sua pergunta sobre '{question}'. Sou especializado em **contratos de aluguel**, **direitos do inquilino/locador**, **IPTU**, **reformas**, **rescisão** e **reajustes**. Como posso ajudá-lo especificamente?",
+                "agent": "Agente de Locação",
+                "specialization": "Contratos Imobiliários"
+            }
     
-    if not user_question:
+    # Agente Financeiro
+    elif agent_type == "financial":
+        if "juros" in question.lower() or "taxa" in question.lower():
+            return {
+                "response": "💰 **FINANCEIRO - Juros**: **CDC**: Juros máx. 2% ao mês + multa 2%. **Cartão de Crédito**: Rotativo máx. 15% ao mês (Bacen). **Financiamentos**: CET deve incluir todas as taxas. 🚨 **Abusivo**: Juros superiores aos limites legais ou taxas não discriminadas.",
+                "agent": "Agente Financeiro", 
+                "specialization": "Contratos Bancários e Financeiros"
+            }
+        elif "cdc" in question.lower() or "consumidor" in question.lower():
+            return {
+                "response": "⚖️ **CDC - Direitos**: **Direito de arrependimento** (7 dias), **Informação clara** sobre taxas, **Revisão de cláusulas abusivas**, **Renegociação de dívidas**. 📞 **Canais**: Procon, Bacen, Justiça Gratuita para revisão contratual.",
+                "agent": "Agente Financeiro",
+                "specialization": "Contratos Bancários e Financeiros"
+            }
+        else:
+            return {
+                "response": f"💰 **AGENTE FINANCEIRO**: Analisando '{question}'. Especializo-me em **empréstimos**, **financiamentos**, **cartões de crédito**, **seguros**, **CDC** e **revisão de contratos bancários**. Qual aspecto específico posso esclarecer?",
+                "agent": "Agente Financeiro",
+                "specialization": "Contratos Bancários e Financeiros"
+            }
+    
+    # Agente de Telecomunicações
+    elif agent_type == "telecom":
+        if "cancelar" in question.lower() or "cancelamento" in question.lower():
+            return {
+                "response": "� **TELECOM - Cancelamento**: **Direito livre** após 12 meses de fidelidade. **Antes da fidelidade**: Multa proporcional ao período restante. **Serviços adicionais**: Cancelamento imediato sem multa. 📞 **Como**: Call center, chat, presencial ou anatel.gov.br.",
+                "agent": "Agente de Telecomunicações",
+                "specialization": "Contratos de Telefonia e Internet"
+            }
+        elif "velocidade" in question.lower() or "internet" in question.lower():
+            return {
+                "response": "🌐 **INTERNET - Velocidade**: **Mínimo garantido**: 40% da velocidade contratada via cabo, 20% via rádio. **Teste oficial**: anatel.gov.br/brasilbandalarga. **Não cumpre**: Desconto na fatura ou rescisão sem multa. � **Medição**: Faça testes em horários diversos.",
+                "agent": "Agente de Telecomunicações", 
+                "specialization": "Contratos de Telefonia e Internet"
+            }
+        else:
+            return {
+                "response": f"📱 **AGENTE TELECOM**: Analisando '{question}'. Sou expert em **planos de celular**, **internet banda larga**, **TV por assinatura**, **fidelidade**, **velocidade** e **Anatel**. Que aspecto posso esclarecer?",
+                "agent": "Agente de Telecomunicações",
+                "specialization": "Contratos de Telefonia e Internet"
+            }
+    
+    # Agente Geral (default)
+    else:
+        if "rescisão" in question.lower():
+            return {
+                "response": "🏛️ **Cláusula de Rescisão**: Define condições para encerramento antecipado. **Elementos**: Prazo de aviso, multas, devolução de valores, estado de entrega. ⚖️ **Tipos**: Rescisão imotivada, por descumprimento, ou consensual. Varia por tipo de contrato.",
+                "agent": "Assistente Jurídico Geral",
+                "specialization": "Análise Geral de Contratos"
+            }
+        elif "pagamento" in question.lower():
+            return {
+                "response": "💰 **Condições de Pagamento**: **Vencimento**, **forma** (débito, boleto, PIX), **multa por atraso** (máx. 2%), **juros de mora** (máx. 1% ao mês), **desconto por antecipação**. � **Verificar**: Taxas abusivas ou não discriminadas.",
+                "agent": "Assistente Jurídico Geral", 
+                "specialization": "Análise Geral de Contratos"
+            }
+        elif "olá" in question.lower() or "oi" in question.lower():
+            return {
+                "response": "👋 Olá! Sou seu assistente jurídico. Posso **analisar contratos**, **explicar cláusulas**, **identificar riscos** e **sugerir melhorias**. Para atendimento especializado, especifique: **Locação** 🏠, **Financeiro** 💰, ou **Telecom** 📱. Como posso ajudar?",
+                "agent": "Assistente Jurídico Geral",
+                "specialization": "Análise Geral de Contratos"
+            }
+        else:
+            return {
+                "response": f"🤖 **Pergunta**: '{question}'. Como assistente jurídico, analiso **contratos**, **cláusulas**, **riscos** e **direitos**. Para resposta especializada, especifique o tipo: 🏠**Locação**, 💰**Financeiro**, 📱**Telecom**. Quer que eu classifique automaticamente?",
+                "agent": "Assistente Jurídico Geral",
+                "specialization": "Análise Geral de Contratos"  
+            }
+
+@app.get("/api/v1/demo/chat")
+async def demo_chat_get(question: str = "", agent_type: str = "general", contract_id: str = ""):
+    """Chat com agentes especializados via GET"""
+    
+    if not question:
         return {"error": "Pergunta é obrigatória"}
     
-    response = await mock_llm_service.chat_with_contract(contract_analysis, user_question)
+    # Gerar resposta baseada no agente
+    agent_response = get_agent_response(question, agent_type)
     
     return {
-        "question": user_question,
-        "response": response,
-        "context": "Esta é uma resposta automatizada baseada na análise do contrato"
+        "message": agent_response["response"],
+        "response": agent_response["response"],
+        "question": question,
+        "agent": agent_response["agent"],
+        "specialization": agent_response["specialization"],
+        "agent_type": agent_type,
+        "contract_id": contract_id,
+        "context": "Resposta gerada por agente especializado"
+    }
+
+@app.get("/api/v1/demo/classify-contract")
+async def classify_contract(text: str = "", contract_type: str = ""):
+    """Classificar tipo de contrato baseado no texto"""
+    
+    if not text and not contract_type:
+        return {"error": "Texto ou tipo de contrato é obrigatório"}
+    
+    # Se tipo foi fornecido diretamente
+    if contract_type:
+        agent_type = contract_type
+    else:
+        # Classificação automática baseada em palavras-chave
+        text_lower = text.lower()
+        if any(word in text_lower for word in ["aluguel", "locação", "inquilino", "locador", "imóvel"]):
+            agent_type = "rental"
+        elif any(word in text_lower for word in ["empréstimo", "financiamento", "juros", "banco", "crédito", "cdc"]):
+            agent_type = "financial"
+        elif any(word in text_lower for word in ["telefone", "internet", "celular", "banda larga", "telecom", "anatel"]):
+            agent_type = "telecom"
+        else:
+            agent_type = "general"
+    
+    # Mapear tipos para informações do agente
+    agent_info = {
+        "rental": {
+            "name": "Agente de Locação",
+            "icon": "🏠",
+            "description": "Especialista em contratos imobiliários, locação e direitos do inquilino/locador",
+            "areas": ["Aluguel", "IPTU", "Reformas", "Rescisão", "Reajustes"]
+        },
+        "financial": {
+            "name": "Agente Financeiro", 
+            "icon": "💰",
+            "description": "Expert em contratos bancários, empréstimos e direito do consumidor",
+            "areas": ["Empréstimos", "Cartão de Crédito", "CDC", "Juros", "Seguros"]
+        },
+        "telecom": {
+            "name": "Agente de Telecomunicações",
+            "icon": "📱", 
+            "description": "Especialista em contratos de telefonia, internet e TV por assinatura",
+            "areas": ["Celular", "Internet", "TV", "Fidelidade", "Anatel"]
+        },
+        "general": {
+            "name": "Assistente Jurídico Geral",
+            "icon": "🤖",
+            "description": "Análise geral de contratos e orientação jurídica básica", 
+            "areas": ["Contratos", "Cláusulas", "Riscos", "Direitos"]
+        }
+    }
+    
+    return {
+        "agent_type": agent_type,
+        "agent_info": agent_info[agent_type],
+        "classification_method": "automatic" if not contract_type else "manual",
+        "text_analyzed": bool(text)
+    }
+
+@app.get("/api/v1/demo/agents")
+async def get_available_agents():
+    """Listar agentes especializados disponíveis"""
+    
+    agents = {
+        "general": {
+            "name": "Assistente Jurídico Geral",
+            "icon": "🤖",
+            "description": "Análise geral de contratos e orientação jurídica básica",
+            "areas": ["Contratos", "Cláusulas", "Riscos", "Direitos"],
+            "color": "blue"
+        },
+        "rental": {
+            "name": "Agente de Locação", 
+            "icon": "🏠",
+            "description": "Especialista em contratos imobiliários e direitos locatários",
+            "areas": ["Aluguel", "IPTU", "Reformas", "Rescisão", "Reajustes"],
+            "color": "green"
+        },
+        "financial": {
+            "name": "Agente Financeiro",
+            "icon": "💰", 
+            "description": "Expert em contratos bancários e direito do consumidor",
+            "areas": ["Empréstimos", "Cartão", "CDC", "Juros", "Seguros"],
+            "color": "yellow"
+        },
+        "telecom": {
+            "name": "Agente de Telecomunicações",
+            "icon": "📱",
+            "description": "Especialista em telefonia, internet e regulamentação Anatel",
+            "areas": ["Celular", "Internet", "TV", "Fidelidade", "Cancelamento"],
+            "color": "purple"
+        }
+    }
+    
+    return {"agents": agents}
+
+@app.post("/api/v1/demo/chat")  
+async def demo_chat_post():
+    """Chat POST - simplificado por enquanto"""
+    from fastapi import Request
+    
+    return {
+        "message": "🤖 Olá! Sou seu assistente jurídico. Como posso ajudá-lo hoje?",
+        "response": "🤖 Olá! Sou seu assistente jurídico. Como posso ajudá-lo hoje?",
+        "question": "teste",
+        "context": "Chat POST funcionando"
     }
 
 if __name__ == "__main__":
