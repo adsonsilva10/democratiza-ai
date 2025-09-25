@@ -1,222 +1,402 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
-from datetime import datetime, timedelta
-import httpx
-from uuid import uuid4
+""""""
 
-from app.db.database import get_db
-from app.db.models import PaymentTransaction, User
-from app.api.v1.auth import get_current_user
-from app.core.config import settings
+Payments API endpointsPayments API endpoints
 
-router = APIRouter()
+""""""
 
-# Pydantic models
-class PaymentCreate(BaseModel):
-    subscription_type: str  # "basic", "premium"
-    subscription_months: int
-    payment_method: str  # "credit_card", "pix", "boleto"
+from typing import List, Dict, Anyfrom typing import List, Dict, Any
 
-class PaymentResponse(BaseModel):
-    id: str
-    amount: float
-    status: str
-    payment_url: Optional[str] = None
-    qr_code: Optional[str] = None
-    barcode: Optional[str] = None
+from fastapi import APIRouter, Depends, HTTPException, Requestfrom fastapi import APIRouter, Depends, HTTPException, Request
 
-class SubscriptionResponse(BaseModel):
-    subscription_type: str
-    expires_at: Optional[datetime]
-    is_active: bool
-    days_remaining: Optional[int]
+from sqlalchemy.orm import Sessionfrom sqlalchemy.orm import Session
 
-# Subscription pricing (in BRL)
-SUBSCRIPTION_PRICES = {
-    "basic": {
-        1: 29.90,
-        3: 79.90,
-        6: 149.90,
-        12: 279.90
-    },
-    "premium": {
-        1: 49.90,
-        3: 129.90,
-        6: 239.90,
-        12: 449.90
-    }
-}
+from pydantic import BaseModelfrom pydantic import BaseModel
 
-class MercadoPagoClient:
-    """Client for Mercado Pago API integration"""
-    
-    def __init__(self):
-        self.access_token = settings.MERCADO_PAGO_ACCESS_TOKEN
-        self.base_url = "https://api.mercadopago.com"
-    
-    async def create_preference(self, payment_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Create payment preference in Mercado Pago"""
+from app.db.database import get_dbfrom app.db.database import get_db
+
+from app.services.payment_service import PaymentServicefrom app.services.payment_service import PaymentService
+
+from app.api.v1.auth import get_current_userfrom app.api.v1.auth import get_current_user
+
+from app.db.models import Userfrom app.db.models import User
+
+
+
+router = APIRouter()router = APIRouter()
+
+
+
+class PayPerUseRequest(BaseModel):class PayPerUseRequest(BaseModel):
+
+    """Request model for pay-per-use analysis"""    """Request model for pay-per-use analysis"""
+
+    analysis_type: str = "standard"  # standard, premium, express    analysis_type: str = "standard"  # standard, premium, express
+
         
-        url = f"{self.base_url}/checkout/preferences"
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json"
-        }
+
+class SubscriptionPaymentRequest(BaseModel):class SubscriptionPaymentRequest(BaseModel):
+
+    """Request model for subscription payment"""    """Request model for subscription payment"""
+
+    plan_id: str    plan_id: str
+
+    
+
+@router.post("/pay-per-use")class WebhookRequest(BaseModel):
+
+async def create_pay_per_use_payment(    """Request model for Mercado Pago webhook"""
+
+    request: PayPerUseRequest,    action: str
+
+    current_user: User = Depends(get_current_user),    api_version: str
+
+    db: Session = Depends(get_db)    data: Dict[str, Any]
+
+):    date_created: str
+
+    """Create a pay-per-use payment for contract analysis"""    id: int
+
+        live_mode: bool
+
+    try:    type: str
+
+        payment_service = PaymentService(db)    user_id: str
+
         
+
+        result = await payment_service.create_pay_per_use_payment(class MercadoPagoClient:
+
+            user_id=str(current_user.id),    """Client for Mercado Pago API integration"""
+
+            analysis_type=request.analysis_type    
+
+        )    def __init__(self):
+
+                self.access_token = settings.MERCADO_PAGO_ACCESS_TOKEN
+
+        return {        self.base_url = "https://api.mercadopago.com"
+
+            "status": "success",    
+
+            "payment_id": result["payment_id"],    async def create_preference(self, payment_data: Dict[str, Any]) -> Dict[str, Any]:
+
+            "payment_url": result["payment_url"],        """Create payment preference in Mercado Pago"""
+
+            "amount": result["amount"],        
+
+            "analysis_type": request.analysis_type,        url = f"{self.base_url}/checkout/preferences"
+
+            "expires_at": result["expires_at"]        headers = {
+
+        }            "Authorization": f"Bearer {self.access_token}",
+
+                    "Content-Type": "application/json"
+
+    except Exception as e:        }
+
+        raise HTTPException(status_code=400, detail=str(e))        
+
         preference_data = {
-            "items": [
-                {
-                    "title": payment_data["title"],
-                    "description": payment_data["description"],
-                    "quantity": 1,
-                    "currency_id": "BRL",
-                    "unit_price": payment_data["amount"]
-                }
-            ],
-            "payer": {
-                "email": payment_data["payer_email"],
-                "name": payment_data["payer_name"]
-            },
-            "external_reference": payment_data["external_reference"],
-            "notification_url": f"{settings.API_V1_STR}/payments/webhook",
-            "back_urls": {
-                "success": f"{settings.FRONTEND_URL}/payment/success",
-                "failure": f"{settings.FRONTEND_URL}/payment/failure",
-                "pending": f"{settings.FRONTEND_URL}/payment/pending"
-            },
-            "auto_return": "approved",
-            "payment_methods": {
-                "excluded_payment_types": [],
-                "installments": 12 if payment_data["amount"] > 100 else 6
-            }
-        }
-        
+
+@router.post("/subscription")            "items": [
+
+async def create_subscription_payment(                {
+
+    request: SubscriptionPaymentRequest,                    "title": payment_data["title"],
+
+    current_user: User = Depends(get_current_user),                    "description": payment_data["description"],
+
+    db: Session = Depends(get_db)                    "quantity": 1,
+
+):                    "currency_id": "BRL",
+
+    """Create a subscription payment"""                    "unit_price": payment_data["amount"]
+
+                    }
+
+    try:            ],
+
+        payment_service = PaymentService(db)            "payer": {
+
+                        "email": payment_data["payer_email"],
+
+        result = await payment_service.create_subscription_payment(                "name": payment_data["payer_name"]
+
+            user_id=str(current_user.id),            },
+
+            plan_id=request.plan_id            "external_reference": payment_data["external_reference"],
+
+        )            "notification_url": f"{settings.API_V1_STR}/payments/webhook",
+
+                    "back_urls": {
+
+        return {                "success": f"{settings.FRONTEND_URL}/payment/success",
+
+            "status": "success",                "failure": f"{settings.FRONTEND_URL}/payment/failure",
+
+            "payment_id": result["payment_id"],                "pending": f"{settings.FRONTEND_URL}/payment/pending"
+
+            "payment_url": result["payment_url"],            },
+
+            "amount": result["amount"],            "auto_return": "approved",
+
+            "plan": result["plan"],            "payment_methods": {
+
+            "expires_at": result["expires_at"]                "excluded_payment_types": [],
+
+        }                "installments": 12 if payment_data["amount"] > 100 else 6
+
+                    }
+
+    except Exception as e:        }
+
+        raise HTTPException(status_code=400, detail=str(e))        
+
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=preference_data, headers=headers)
+
+@router.get("/plans")            response = await client.post(url, json=preference_data, headers=headers)
+
+async def get_available_plans(            
+
+    db: Session = Depends(get_db)            if response.status_code == 201:
+
+):                return response.json()
+
+    """Get all available subscription plans"""            else:
+
+                    raise HTTPException(
+
+    try:                    status_code=status.HTTP_400_BAD_REQUEST,
+
+        payment_service = PaymentService(db)                    detail="Failed to create payment preference"
+
+        plans = await payment_service.get_available_plans()                )
+
             
-            if response.status_code == 201:
-                return response.json()
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Failed to create payment preference"
-                )
-    
-    async def get_payment(self, payment_id: str) -> Dict[str, Any]:
-        """Get payment details from Mercado Pago"""
+
+        return {    async def get_payment(self, payment_id: str) -> Dict[str, Any]:
+
+            "status": "success",        """Get payment details from Mercado Pago"""
+
+            "plans": plans        
+
+        }        url = f"{self.base_url}/v1/payments/{payment_id}"
+
+                headers = {
+
+    except Exception as e:            "Authorization": f"Bearer {self.access_token}"
+
+        raise HTTPException(status_code=400, detail=str(e))        }
+
         
-        url = f"{self.base_url}/v1/payments/{payment_id}"
-        headers = {
-            "Authorization": f"Bearer {self.access_token}"
-        }
+
+@router.get("/user/subscription")        async with httpx.AsyncClient() as client:
+
+async def get_user_subscription(            response = await client.get(url, headers=headers)
+
+    current_user: User = Depends(get_current_user),            
+
+    db: Session = Depends(get_db)            if response.status_code == 200:
+
+):                return response.json()
+
+    """Get current user's subscription status"""            else:
+
+                    raise HTTPException(
+
+    try:                    status_code=status.HTTP_404_NOT_FOUND,
+
+        payment_service = PaymentService(db)                    detail="Payment not found"
+
+        subscription = await payment_service.get_user_subscription(str(current_user.id))                )
+
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, headers=headers)
+
+        return {mercado_pago = MercadoPagoClient()
+
+            "status": "success",
+
+            "subscription": subscriptiondef calculate_subscription_price(subscription_type: str, months: int) -> float:
+
+        }    """Calculate subscription price"""
+
             
-            if response.status_code == 200:
-                return response.json()
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Payment not found"
-                )
 
-mercado_pago = MercadoPagoClient()
+    except Exception as e:    if subscription_type not in SUBSCRIPTION_PRICES:
 
-def calculate_subscription_price(subscription_type: str, months: int) -> float:
-    """Calculate subscription price"""
-    
-    if subscription_type not in SUBSCRIPTION_PRICES:
-        raise ValueError("Invalid subscription type")
-    
-    if months not in SUBSCRIPTION_PRICES[subscription_type]:
-        raise ValueError("Invalid subscription duration")
-    
-    return SUBSCRIPTION_PRICES[subscription_type][months]
+        raise HTTPException(status_code=400, detail=str(e))        raise ValueError("Invalid subscription type")
 
-@router.post("/create", response_model=PaymentResponse)
-async def create_payment(
-    payment_data: PaymentCreate,
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db)
+    
+
+@router.get("/user/transactions")    if months not in SUBSCRIPTION_PRICES[subscription_type]:
+
+async def get_user_transactions(        raise ValueError("Invalid subscription duration")
+
+    current_user: User = Depends(get_current_user),    
+
+    db: Session = Depends(get_db)    return SUBSCRIPTION_PRICES[subscription_type][months]
+
 ):
-    """Create payment for subscription"""
-    
-    # Validate subscription type and duration
-    if payment_data.subscription_type not in ["basic", "premium"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid subscription type"
-        )
-    
-    if payment_data.subscription_months not in [1, 3, 6, 12]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid subscription duration"
-        )
-    
-    # Calculate amount
-    amount = calculate_subscription_price(
-        payment_data.subscription_type,
-        payment_data.subscription_months
-    )
-    
-    # Create payment transaction record
-    transaction = PaymentTransaction(
-        user_id=current_user.id,
-        external_id=str(uuid4()),
-        amount=amount,
-        status="pending",
-        payment_method=payment_data.payment_method,
-        subscription_type=payment_data.subscription_type,
-        subscription_months=payment_data.subscription_months
-    )
-    
-    db.add(transaction)
-    await db.commit()
-    await db.refresh(transaction)
-    
-    try:
-        # Create Mercado Pago preference
-        mp_payment_data = {
-            "title": f"Contrato Seguro - {payment_data.subscription_type.title()}",
-            "description": f"Assinatura {payment_data.subscription_type} por {payment_data.subscription_months} meses",
-            "amount": amount,
-            "payer_email": current_user.email,
-            "payer_name": current_user.full_name,
-            "external_reference": str(transaction.id)
-        }
-        
-        preference = await mercado_pago.create_preference(mp_payment_data)
-        
-        # Update transaction with external ID
-        transaction.external_id = preference["id"]
-        transaction.payment_details = {
-            "preference_id": preference["id"],
-            "init_point": preference["init_point"]
-        }
-        await db.commit()
-        
-        return PaymentResponse(
-            id=str(transaction.id),
-            amount=amount,
-            status="pending",
-            payment_url=preference["init_point"]
-        )
-        
-    except Exception as e:
-        # Update transaction status to failed
-        transaction.status = "failed"
-        await db.commit()
-        
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create payment"
+
+    """Get user's payment history"""@router.post("/create", response_model=PaymentResponse)
+
+    async def create_payment(
+
+    try:    payment_data: PaymentCreate,
+
+        payment_service = PaymentService(db)    current_user: User = Depends(get_current_user),
+
+        transactions = await payment_service.get_user_transactions(str(current_user.id))    db: AsyncSession = Depends(get_db)
+
+        ):
+
+        return {    """Create payment for subscription"""
+
+            "status": "success",    
+
+            "transactions": transactions    # Validate subscription type and duration
+
+        }    if payment_data.subscription_type not in ["basic", "premium"]:
+
+                raise HTTPException(
+
+    except Exception as e:            status_code=status.HTTP_400_BAD_REQUEST,
+
+        raise HTTPException(status_code=400, detail=str(e))            detail="Invalid subscription type"
+
         )
 
+@router.get("/user/can-analyze")    
+
+async def check_user_can_analyze(    if payment_data.subscription_months not in [1, 3, 6, 12]:
+
+    current_user: User = Depends(get_current_user),        raise HTTPException(
+
+    db: Session = Depends(get_db)            status_code=status.HTTP_400_BAD_REQUEST,
+
+):            detail="Invalid subscription duration"
+
+    """Check if user can perform contract analysis"""        )
+
+        
+
+    try:    # Calculate amount
+
+        payment_service = PaymentService(db)    amount = calculate_subscription_price(
+
+        result = await payment_service.check_user_can_analyze(str(current_user.id))        payment_data.subscription_type,
+
+                payment_data.subscription_months
+
+        return {    )
+
+            "status": "success",    
+
+            "can_analyze": result["can_analyze"],    # Create payment transaction record
+
+            "reason": result["reason"],    transaction = PaymentTransaction(
+
+            "remaining_analyses": result.get("remaining_analyses"),        user_id=current_user.id,
+
+            "subscription_expires": result.get("subscription_expires")        external_id=str(uuid4()),
+
+        }        amount=amount,
+
+                status="pending",
+
+    except Exception as e:        payment_method=payment_data.payment_method,
+
+        raise HTTPException(status_code=400, detail=str(e))        subscription_type=payment_data.subscription_type,
+
+        subscription_months=payment_data.subscription_months
+
+@router.post("/webhook")    )
+
+async def mercado_pago_webhook(    
+
+    request: Request,    db.add(transaction)
+
+    db: Session = Depends(get_db)    await db.commit()
+
+):    await db.refresh(transaction)
+
+    """Handle Mercado Pago webhook notifications"""    
+
+        try:
+
+    try:        # Create Mercado Pago preference
+
+        # Parse webhook data        mp_payment_data = {
+
+        webhook_data = await request.json()            "title": f"Contrato Seguro - {payment_data.subscription_type.title()}",
+
+                    "description": f"Assinatura {payment_data.subscription_type} por {payment_data.subscription_months} meses",
+
+        payment_service = PaymentService(db)            "amount": amount,
+
+        result = await payment_service.process_webhook(webhook_data)            "payer_email": current_user.email,
+
+                    "payer_name": current_user.full_name,
+
+        return {            "external_reference": str(transaction.id)
+
+            "status": "processed" if result["processed"] else "ignored",        }
+
+            "message": result["message"]        
+
+        }        preference = await mercado_pago.create_preference(mp_payment_data)
+
+                
+
+    except Exception as e:        # Update transaction with external ID
+
+        # Log error but return success to avoid webhook retries        transaction.external_id = preference["id"]
+
+        print(f"Webhook processing error: {str(e)}")        transaction.payment_details = {
+
+        return {"status": "error", "message": "Internal error"}            "preference_id": preference["id"],
+
+            "init_point": preference["init_point"]
+
+@router.post("/consume-analysis")        }
+
+async def consume_analysis_credit(        await db.commit()
+
+    current_user: User = Depends(get_current_user),        
+
+    db: Session = Depends(get_db)        return PaymentResponse(
+
+):            id=str(transaction.id),
+
+    """Consume one analysis credit (called when user performs analysis)"""            amount=amount,
+
+                status="pending",
+
+    try:            payment_url=preference["init_point"]
+
+        payment_service = PaymentService(db)        )
+
+        result = await payment_service.consume_analysis_credit(str(current_user.id))        
+
+            except Exception as e:
+
+        return {        # Update transaction status to failed
+
+            "status": "success",        transaction.status = "failed"
+
+            "consumed": True,        await db.commit()
+
+            "remaining_analyses": result.get("remaining_analyses"),        
+
+            "subscription_expires": result.get("subscription_expires")        raise HTTPException(
+
+        }            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+
+                    detail="Failed to create payment"
+
+    except Exception as e:        )
+
+        raise HTTPException(status_code=400, detail=str(e))
 @router.get("/subscription", response_model=SubscriptionResponse)
 async def get_subscription_status(
     current_user: User = Depends(get_current_user)

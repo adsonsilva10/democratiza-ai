@@ -19,8 +19,11 @@ class Settings(BaseSettings):
     
     # External APIs
     CLAUDE_API_KEY: str
+    OPENAI_API_KEY: str
     GOOGLE_CLOUD_VISION_API_KEY: str
-    D4SIGN_API_KEY: str
+    D4SIGN_TOKEN: str
+    D4SIGN_CRYPTO_KEY: str
+    D4SIGN_FOLDER_UUID: str
     MERCADO_PAGO_ACCESS_TOKEN: str
     SENDGRID_API_KEY: str
     
@@ -52,6 +55,9 @@ class Settings(BaseSettings):
     # AI Configuration
     MAX_TOKENS: int = 4000
     TEMPERATURE: float = 0.1
+    
+    # Application Base URL (for webhooks)
+    API_BASE_URL: str = "https://yourdomain.com"  # Update in production
     
     # RAG Configuration
     EMBEDDING_DIMENSION: int = 1536

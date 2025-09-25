@@ -374,9 +374,113 @@ export default function AnalisePage() {
           </div>
         </div>
 
+        {/* Fluxo de Assinatura Integrado */}
+        <div className="mb-6">
+          {analysisResult.riskLevel === 'Baixo' ? (
+            // Contrato com baixo risco - recomenda assinatura
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">✅</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-green-900 mb-2">
+                    Contrato Aprovado para Assinatura
+                  </h3>
+                  <p className="text-green-800 mb-4">
+                    A análise indica que este contrato tem baixo risco e pode ser assinado com segurança. 
+                    Você pode prosseguir diretamente para a assinatura eletrônica.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={() => window.open('/dashboard/assinatura', '_blank')}
+                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
+                    >
+                      ✍️ Assinar Agora
+                    </button>
+                    <button 
+                      onClick={() => setShowChat(true)}
+                      className="px-6 py-3 bg-white text-green-700 border border-green-300 rounded-lg hover:bg-green-50 transition-colors font-medium"
+                    >
+                      💬 Tirar Dúvidas Antes
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : analysisResult.riskLevel === 'Médio' ? (
+            // Contrato com risco médio - assinatura condicional
+            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">⚠️</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-yellow-900 mb-2">
+                    Assinatura Requer Atenção
+                  </h3>
+                  <p className="text-yellow-800 mb-4">
+                    Identifiquei alguns pontos que merecem atenção. Recomendo negociar os termos antes da assinatura 
+                    ou consultar nossa IA para orientações específicas.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={() => setShowChat(true)}
+                      className="px-6 py-3 bg-gradient-to-r from-yellow-600 to-amber-600 text-white rounded-lg hover:from-yellow-700 hover:to-amber-700 transition-all font-medium shadow-lg"
+                    >
+                      🤖 Consultar IA Primeiro
+                    </button>
+                    <button 
+                      onClick={() => {
+                        if(confirm('Este contrato tem riscos médios. Tem certeza que deseja prosseguir para assinatura?')) {
+                          window.open('/dashboard/assinatura', '_blank')
+                        }
+                      }}
+                      className="px-6 py-3 bg-white text-yellow-700 border border-yellow-300 rounded-lg hover:bg-yellow-50 transition-colors font-medium"
+                    >
+                      ✍️ Assinar Mesmo Assim
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Contrato com alto risco - não recomenda assinatura
+            <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="text-4xl">🚨</div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-semibold text-red-900 mb-2">
+                    ⚠️ Assinatura NÃO Recomendada
+                  </h3>
+                  <p className="text-red-800 mb-4">
+                    Este contrato apresenta <strong>riscos significativos</strong>. Recomendo fortemente renegociar 
+                    os termos ou buscar assessoria jurídica antes de assinar.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button 
+                      onClick={() => setShowChat(true)}
+                      className="px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 transition-all font-medium shadow-lg"
+                    >
+                      🆘 Buscar Orientação
+                    </button>
+                    <button 
+                      onClick={() => setChatInput('Como posso renegociar este contrato para reduzir os riscos?')}
+                      className="px-6 py-3 bg-white text-red-700 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-medium"
+                    >
+                      🤝 Dicas de Renegociação
+                    </button>
+                  </div>
+                  <div className="mt-4 p-3 bg-red-100 rounded-lg">
+                    <p className="text-xs text-red-800">
+                      <strong>Importante:</strong> A assinatura eletrônica estará disponível somente após a resolução dos principais riscos identificados.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Ações Recomendadas */}
         <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
-          <h3 className="text-lg font-semibold text-indigo-900 mb-3">Próximos Passos</h3>
+          <h3 className="text-lg font-semibold text-indigo-900 mb-3">Ações Adicionais</h3>
           <div className="flex flex-wrap gap-2">
             <button 
               onClick={() => setChatInput('Como posso contestar as cláusulas abusivas?')}
@@ -398,6 +502,12 @@ export default function AnalisePage() {
             </button>
             <button className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
               📄 Gerar Relatório
+            </button>
+            <button 
+              onClick={() => window.open('/dashboard/historico', '_blank')}
+              className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+            >
+              📂 Salvar no Histórico
             </button>
           </div>
         </div>
@@ -441,117 +551,140 @@ export default function AnalisePage() {
           </div>
         </div>
 
+        {/* Botão de Chat Flutuante */}
+        {!showChat && (
+          <div className="fixed bottom-6 right-6 z-50">
+            <button
+              onClick={() => setShowChat(true)}
+              className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-xl hover:shadow-2xl transform hover:scale-110 transition-all duration-200 flex items-center justify-center"
+              title="Conversar sobre este contrato"
+            >
+              <span className="text-xl">💬</span>
+            </button>
+          </div>
+        )}
+
         {/* Chat Integrado */}
         {showChat && (
-          <div className="mt-6 bg-white rounded-lg shadow">
-            <div className="p-4 border-b flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">Chat sobre o Contrato</h3>
-              <button
-                onClick={() => setShowChat(false)}
-                className="p-1 text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            
-            <div className="h-80 overflow-y-auto p-4 space-y-4">
-              {chatMessages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" onClick={() => setShowChat(false)}>
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-xl">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                    <span className="text-lg">🤖</span>
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">Assistente Jurídico IA</h3>
+                    <p className="text-xs text-purple-100">Especialista em {analysisResult.contractType}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowChat(false)}
+                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 >
-                  <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
-                    message.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}>
-                    {message.sender === 'ai' && (
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            
+              <div className="h-80 overflow-y-auto p-4 space-y-4">
+                {chatMessages.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
+                      message.sender === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-100 text-gray-900'
+                    }`}>
+                      {message.sender === 'ai' && (
+                        <div className="flex items-center mb-1">
+                          <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
+                            AI
+                          </div>
+                          <span className="text-xs text-gray-500">Democratiza AI</span>
+                        </div>
+                      )}
+                      <p>{message.text}</p>
+                      <p className={`text-xs mt-1 ${
+                        message.sender === 'user' ? 'text-blue-200' : 'text-gray-400'
+                      }`}>
+                        {message.timestamp.toLocaleTimeString('pt-BR', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-gray-100 text-gray-900 max-w-[80%] px-3 py-2 rounded-lg text-sm">
                       <div className="flex items-center mb-1">
                         <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
                           AI
                         </div>
-                        <span className="text-xs text-gray-500">Democratiza AI</span>
+                        <span className="text-xs text-gray-500">Analisando...</span>
                       </div>
-                    )}
-                    <p>{message.text}</p>
-                    <p className={`text-xs mt-1 ${
-                      message.sender === 'user' ? 'text-blue-200' : 'text-gray-400'
-                    }`}>
-                      {message.timestamp.toLocaleTimeString('pt-BR', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 text-gray-900 max-w-[80%] px-3 py-2 rounded-lg text-sm">
-                    <div className="flex items-center mb-1">
-                      <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
-                        AI
+                      <div className="flex space-x-1">
+                        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                       </div>
-                      <span className="text-xs text-gray-500">Analisando...</span>
-                    </div>
-                    <div className="flex space-x-1">
-                      <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-            
-            <div className="p-4 border-t">
-              {/* Perguntas Sugeridas */}
-              {chatMessages.length <= 1 && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-2">Perguntas sugeridas:</p>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      'Como posso contestar a multa?',
-                      'Quais são meus direitos?',
-                      'A empresa é confiável?',
-                      'O reajuste está correto?',
-                      'Posso negociar as cláusulas?'
-                    ].map((suggestion) => (
-                      <button
-                        key={suggestion}
-                        onClick={() => setChatInput(suggestion)}
-                        className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                )}
+              </div>
               
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Pergunte sobre o contrato..."
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                />
-                <button
-                  onClick={handleSendMessage}
-                  disabled={!chatInput.trim() || isTyping}
-                  className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-                    chatInput.trim() && !isTyping
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  Enviar
-                </button>
+              <div className="p-4 border-t">
+                {/* Perguntas Sugeridas */}
+                {chatMessages.length <= 1 && (
+                  <div className="mb-4">
+                    <p className="text-xs text-gray-500 mb-2">Perguntas sugeridas:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        'Como posso contestar a multa?',
+                        'Quais são meus direitos?',
+                        'A empresa é confiável?',
+                        'O reajuste está correto?',
+                        'Posso negociar as cláusulas?'
+                      ].map((suggestion) => (
+                        <button
+                          key={suggestion}
+                          onClick={() => setChatInput(suggestion)}
+                          className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Pergunte sobre o contrato..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!chatInput.trim() || isTyping}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                      chatInput.trim() && !isTyping
+                        ? 'bg-blue-600 text-white hover:bg-blue-700'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+                  >
+                    Enviar
+                  </button>
+                </div>
               </div>
             </div>
           </div>

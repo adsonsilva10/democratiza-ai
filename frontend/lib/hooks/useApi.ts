@@ -2,6 +2,41 @@
 import { useState, useCallback } from 'react'
 import apiClient, { Contract, ChatSession, ChatMessage } from '../api'
 
+// Hook genérico para chamadas de API
+export const useApi = () => {
+  const apiRequest = useCallback(async (url: string, options: RequestInit = {}) => {
+    try {
+      const token = localStorage.getItem('token')
+      const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      }
+
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${url}`, {
+        ...options,
+        headers,
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || 'Erro na API')
+      }
+
+      return { success: true, data }
+    } catch (error) {
+      console.error('API Error:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'Erro desconhecido' 
+      }
+    }
+  }, [])
+
+  return { apiRequest }
+}
+
 export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)

@@ -14,6 +14,7 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
   const [isLargeScreen, setIsLargeScreen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [userClosedSidebar, setUserClosedSidebar] = useState(false)
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false)
 
   // Callback estável para verificar tamanho da tela
   const checkScreenSize = useCallback(() => {
@@ -63,6 +64,27 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
     }
   }, [isLargeScreen])
 
+  const handleProfileToggle = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setProfileDropdownOpen(prev => !prev)
+  }, [])
+
+  // Fechar dropdown quando clicar fora
+  const handleClickOutside = useCallback((e: MouseEvent) => {
+    const target = e.target as Element
+    if (!target.closest('[data-profile-dropdown]')) {
+      setProfileDropdownOpen(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (profileDropdownOpen) {
+      document.addEventListener('click', handleClickOutside)
+      return () => document.removeEventListener('click', handleClickOutside)
+    }
+  }, [profileDropdownOpen, handleClickOutside])
+
   // Previne problemas de hidratação
   if (!mounted) {
     return (
@@ -74,69 +96,88 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
     )
   }
 
-  const menuItems = [
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      ), 
-      label: 'Home', 
-      href: '/dashboard', 
-      id: 'home' 
+  // Menu organizado por categoria com emojis modernos
+  const menuSections = [
+    {
+      title: "Análise de Contratos",
+      items: [
+        { 
+          icon: '🏠', 
+          label: 'Visão Geral', 
+          href: '/dashboard', 
+          id: 'home',
+          description: 'Painel principal'
+        },
+        { 
+          icon: '🔍', 
+          label: 'Nova Análise', 
+          href: '/dashboard/analise', 
+          id: 'analise',
+          description: 'Analisar novo contrato'
+        },
+        { 
+          icon: '📜', 
+          label: 'Histórico', 
+          href: '/dashboard/historico', 
+          id: 'historico',
+          description: 'Contratos analisados'
+        },
+      ]
     },
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
-      ), 
-      label: 'Análise', 
-      href: '/dashboard/analise', 
-      id: 'analise' 
+    {
+      title: "Assinatura Digital",
+      items: [
+        { 
+          icon: '✍️', 
+          label: 'Assinatura', 
+          href: '/dashboard/assinatura', 
+          id: 'assinatura',
+          description: 'Gerenciar assinaturas'
+        },
+      ]
     },
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ), 
-      label: 'Histórico', 
-      href: '/dashboard/historico', 
-      id: 'historico' 
+    {
+      title: "Planos e Assistência",
+      items: [
+        { 
+          icon: '💳', 
+          label: 'Planos', 
+          href: '/dashboard/planos', 
+          id: 'planos',
+          description: 'Gerenciar assinatura'
+        },
+        { 
+          icon: '🤖', 
+          label: 'Chat IA', 
+          href: '/dashboard/chat', 
+          id: 'chat',
+          description: 'Assistente jurídico'
+        },
+      ]
     },
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-        </svg>
-      ), 
-      label: 'Chat IA', 
-      href: '/dashboard/chat', 
-      id: 'chat' 
-    },
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-        </svg>
-      ), 
-      label: 'Configurações', 
-      href: '/dashboard/configuracoes', 
-      id: 'configuracoes' 
-    },
-    { 
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      ), 
-      label: 'Ajuda e Suporte', 
-      href: '/dashboard/suporte', 
-      id: 'suporte' 
-    },
+    {
+      title: "Conta",
+      items: [
+        { 
+          icon: '⚙️', 
+          label: 'Configurações', 
+          href: '/dashboard/configuracoes', 
+          id: 'configuracoes',
+          description: 'Configurações da conta'
+        },
+        { 
+          icon: '💬', 
+          label: 'Suporte', 
+          href: '/dashboard/suporte', 
+          id: 'suporte',
+          description: 'Ajuda e suporte'
+        },
+      ]
+    }
   ]
+
+  // Lista plana para compatibilidade com código existente
+  const menuItems = menuSections.flatMap(section => section.items)
 
   // Determina se o sidebar deve estar visível
   const sidebarVisible = isLargeScreen ? !userClosedSidebar : sidebarOpen
@@ -148,15 +189,25 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         ${sidebarVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}
       `}>
         <div className={`h-full flex flex-col ${sidebarVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-300`}>
-          {/* Sidebar Header */}
-          <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
-            <div className="text-white font-bold text-lg truncate">
-              Democratiza AI
+          {/* Sidebar Header - Design Elegante */}
+          <div className="flex items-center justify-between px-4 py-4 border-b border-white/20 flex-shrink-0">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 via-cyan-400 to-blue-400 rounded-lg flex items-center justify-center text-xl font-bold shadow-lg">
+                ⚖️
+              </div>
+              <div className="min-w-0">
+                <div className="text-white font-bold text-lg truncate">
+                  Democratiza AI
+                </div>
+                <div className="text-white/70 text-xs truncate">
+                  Análise Jurídica Inteligente
+                </div>
+              </div>
             </div>
             <button
               onClick={closeSidebar}
-              className="text-white hover:bg-white/10 p-2 rounded-lg transition-colors flex-shrink-0"
-              title={isLargeScreen ? "Fechar sidebar" : "Fechar menu"}
+              className="text-white/60 hover:text-white hover:bg-white/20 p-2 rounded-lg transition-all flex-shrink-0 backdrop-blur-sm"
+              title={isLargeScreen ? "Minimizar sidebar" : "Fechar menu"}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -164,58 +215,65 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
             </button>
           </div>
 
-          {/* Menu Items */}
-          <nav className="mt-8 px-2 flex-1 overflow-y-auto">
-            {menuItems.map((item, index) => (
-              <Link
-                key={index}
-                href={item.href}
-                className={`flex items-center px-3 py-3 mb-2 text-white rounded-lg transition-all duration-200 group relative ${
-                  currentPage === item.id 
-                    ? 'bg-white/20 shadow-lg' 
-                    : 'hover:bg-white/10 hover:shadow-md'
-                }`}
-              >
-                <div className="flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                  {item.icon}
+          {/* Menu Items - Design Otimizado */}
+          <nav className="flex-1 px-3 py-4">
+            <div className="space-y-4">
+              {menuSections.map((section, sectionIndex) => (
+                <div key={sectionIndex}>
+                  {/* Section Title - Compacto */}
+                  <div className="mb-2">
+                    <h3 className="text-xs font-semibold text-white/70 uppercase tracking-wider px-2">
+                      {section.title}
+                    </h3>
+                    <div className="mt-1 h-px bg-gradient-to-r from-white/20 to-transparent"></div>
+                  </div>
+                  
+                  {/* Section Items - Otimizado */}
+                  <div className="space-y-1">
+                    {section.items.map((item, itemIndex) => (
+                      <Link
+                        key={itemIndex}
+                        href={item.href}
+                        className={`flex items-center px-3 py-3 text-white rounded-lg transition-all duration-200 group relative ${
+                          currentPage === item.id 
+                            ? 'bg-white/25 shadow-lg border border-white/30' 
+                            : 'hover:bg-white/15 hover:shadow-md'
+                        }`}
+                      >
+                        <div className="flex-shrink-0 text-xl mr-3">
+                          {item.icon}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold truncate">{item.label}</div>
+                          <div className="text-xs text-white/60 truncate">{item.description}</div>
+                        </div>
+                        {currentPage === item.id && (
+                          <div className="flex-shrink-0">
+                            <div className="w-2 h-2 bg-emerald-400 rounded-full shadow-sm animate-pulse"></div>
+                          </div>
+                        )}
+                      </Link>
+                    ))}
+                  </div>
                 </div>
-                <span className="ml-3 text-sm font-medium truncate">{item.label}</span>
-                {currentPage === item.id && (
-                  <div className="absolute right-2 w-2 h-2 bg-green-400 rounded-full flex-shrink-0 animate-pulse"></div>
-                )}
-              </Link>
-            ))}
+              ))}
+            </div>
           </nav>
 
-          {/* User Section */}
-          <div className="absolute bottom-20 left-0 right-0 px-2">
-            <div className="flex items-center px-3 py-3 text-white justify-start bg-white/5 rounded-lg backdrop-blur-sm">
-              <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 shadow-lg">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <div className="text-sm font-medium truncate">Usuário</div>
-                <div className="text-xs text-gray-300 truncate flex items-center">
-                  <div className="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></div>
-                  Plano Free
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Logout Button */}
-          <div className="absolute bottom-4 left-0 right-0 px-2">
+          {/* Footer Section com Logout */}
+          <div className="px-3 pb-3">
+            {/* Logout Button */}
             <Link
               href="/login"
-              className="flex items-center justify-center px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all duration-200 hover:shadow-lg"
+              className="flex items-center justify-center px-3 py-2.5 bg-gradient-to-r from-red-600/90 to-red-700/90 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 w-full group shadow-md"
             >
-              <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              <span className="ml-2 text-sm truncate">Sair</span>
+              <span className="text-base mr-2 group-hover:animate-pulse">🚪</span>
+              <span className="text-sm font-medium">Sair da Conta</span>
             </Link>
+            
+            <div className="text-center text-xs text-white/60 mt-2 py-1">
+              Democratiza AI © 2024
+            </div>
           </div>
         </div>
       </div>
@@ -230,96 +288,85 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
 
       {/* Mobile Navigation Bar - aparece quando sidebar está fechado no mobile */}
       {!isLargeScreen && !sidebarOpen && (
-        <div className="fixed left-0 top-0 bottom-0 w-16 bg-gradient-to-b from-blue-900 to-purple-900 z-30 flex flex-col shadow-lg">
-          {/* Hamburger button no topo */}
+        <div className="fixed left-0 top-0 bottom-0 w-16 bg-gradient-to-b from-blue-900 to-purple-900 z-30 flex flex-col shadow-xl">
+          {/* Logo compacto no topo */}
+          <div className="flex items-center justify-center h-16 border-b border-white/10">
+            <span className="text-2xl">⚖️</span>
+          </div>
+          
+          {/* Menu button */}
           <button
             onClick={handleSidebarToggle}
-            className="flex items-center justify-center h-16 text-white hover:bg-white/10 transition-colors"
+            className="flex items-center justify-center h-12 text-white/60 hover:text-white hover:bg-white/10 transition-colors mx-2 my-2 rounded-lg"
             title="Abrir menu completo"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
 
           {/* Ícones dos menu items principais */}
-          <nav className="flex-1 flex flex-col items-center py-4 space-y-2">
-            {menuItems.slice(0, 4).map((item, index) => (
+          <nav className="flex-1 flex flex-col items-center py-2 space-y-1">
+            {menuItems.slice(0, 5).map((item, index) => (
               <Link
                 key={index}
                 href={item.href}
-                className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200 relative ${
+                className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 relative text-xl ${
                   currentPage === item.id 
-                    ? 'bg-white/20 text-white shadow-lg' 
-                    : 'text-white/70 hover:bg-white/10 hover:text-white'
+                    ? 'bg-white/20 text-white shadow-lg scale-110' 
+                    : 'text-white/70 hover:bg-white/10 hover:text-white hover:scale-105'
                 }`}
                 title={item.label}
               >
-                <div className="w-5 h-5">
-                  {item.icon}
-                </div>
+                {item.icon}
                 {currentPage === item.id && (
-                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-green-400 rounded-full"></div>
+                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-emerald-400 rounded-full"></div>
                 )}
               </Link>
             ))}
           </nav>
 
           {/* Ícones inferiores: Configurações, Suporte, Usuário, Logout */}
-          <div className="flex flex-col items-center space-y-2 p-2">
+          <div className="flex flex-col items-center space-y-2 p-2 border-t border-white/10">
             {/* Configurações */}
             <Link
               href="/dashboard/configuracoes"
-              className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200 relative ${
+              className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 relative text-lg ${
                 currentPage === 'configuracoes' 
-                  ? 'bg-white/20 text-white shadow-lg' 
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  ? 'bg-white/20 text-white shadow-lg scale-110' 
+                  : 'text-white/70 hover:bg-white/10 hover:text-white hover:scale-105'
               }`}
               title="Configurações"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              ⚙️
               {currentPage === 'configuracoes' && (
-                <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-green-400 rounded-full"></div>
+                <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-emerald-400 rounded-full"></div>
               )}
             </Link>
 
             {/* Ajuda e Suporte */}
             <Link
               href="/dashboard/suporte"
-              className={`w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200 relative ${
+              className={`w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 relative text-lg ${
                 currentPage === 'suporte' 
-                  ? 'bg-white/20 text-white shadow-lg' 
-                  : 'text-white/70 hover:bg-white/10 hover:text-white'
+                  ? 'bg-white/20 text-white shadow-lg scale-110' 
+                  : 'text-white/70 hover:bg-white/10 hover:text-white hover:scale-105'
               }`}
               title="Ajuda e Suporte"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
+              💬
               {currentPage === 'suporte' && (
-                <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-green-400 rounded-full"></div>
+                <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 w-1 h-6 bg-emerald-400 rounded-full"></div>
               )}
             </Link>
-
-            {/* Indicador de usuário */}
-            <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center mt-2">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            </div>
 
             {/* Logout */}
             <Link
               href="/login"
-              className="w-12 h-12 flex items-center justify-center rounded-lg transition-all duration-200 text-red-400 hover:bg-red-600/10 hover:text-red-300"
-              title="Sair"
+              className="w-12 h-12 flex items-center justify-center rounded-xl transition-all duration-200 text-red-400 hover:bg-red-600/20 hover:text-red-300 hover:scale-105 text-lg"
+              title="Sair da Conta"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
+              🚪
             </Link>
           </div>
         </div>
@@ -357,16 +404,94 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
               
               <div>
                 <h1 className="text-lg sm:text-xl font-semibold text-gray-800 truncate">
-                  {menuItems.find(item => item.id === currentPage)?.label || 'Dashboard'}
+                  {menuItems.find(item => item.id === currentPage)?.label || 'Visão Geral'}
                 </h1>
               </div>
             </div>
             
-            <div className="flex items-center gap-4 flex-shrink-0">
-              <span className="text-sm text-gray-600 hidden sm:block truncate">
-                Protegendo contratos desde 2024
-              </span>
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex-shrink-0"></div>
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {/* Perfil do usuário */}
+              <div className="relative" data-profile-dropdown>
+                <button 
+                  onClick={handleProfileToggle}
+                  className="flex items-center gap-3 hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                >
+                  <div className="hidden sm:flex flex-col items-end">
+                    <span className="text-sm font-medium text-gray-700">Adson Silva</span>
+                    <span className="text-xs text-gray-500">Plano Premium</span>
+                  </div>
+                  <div className="relative">
+                    <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-white font-semibold text-lg">👤</span>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
+                  </div>
+                  <svg className={`w-4 h-4 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Dropdown Menu */}
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-80 sm:w-80 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
+                    {/* Header do Perfil */}
+                    <div className="bg-gradient-to-r from-emerald-500 to-cyan-500 p-4 text-white">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center text-xl font-bold">
+                          👤
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg">Adson Silva</h3>
+                          <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 bg-green-300 rounded-full"></div>
+                            <span className="text-sm text-emerald-100">Plano Premium</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Estatísticas */}
+                    <div className="p-4 border-b border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Estatísticas</h4>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-blue-600">5</div>
+                          <div className="text-xs text-gray-500">📊 Análises</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-green-600">2</div>
+                          <div className="text-xs text-gray-500">✍️ Assinaturas</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-emerald-600">85%</div>
+                          <div className="text-xs text-gray-500">💰 Economia</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-2">
+                      <Link href="/dashboard/configuracoes" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                        <span className="text-lg">⚙️</span>
+                        <span className="text-sm font-medium">Configurações</span>
+                      </Link>
+                      <Link href="/dashboard/suporte" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                        <span className="text-lg">💬</span>
+                        <span className="text-sm font-medium">Suporte</span>
+                      </Link>
+                      <Link href="/dashboard/gerenciar-plano" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                        <span className="text-lg">💳</span>
+                        <span className="text-sm font-medium">Gerenciar Plano</span>
+                      </Link>
+                      <hr className="my-2" />
+                      <Link href="/login" className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 transition-colors">
+                        <span className="text-lg">🚪</span>
+                        <span className="text-sm font-medium">Sair da Conta</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

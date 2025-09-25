@@ -8,9 +8,10 @@ from app.agents.base_agent import BaseContractAgent
 class AgentFactory:
     """Factory for creating specialized contract analysis agents"""
     
-    def __init__(self, claude_client, rag_service):
+    def __init__(self, claude_client, rag_service, db_session=None):
         self.claude_client = claude_client
         self.rag_service = rag_service
+        self.db_session = db_session
         self.classifier = ClassifierAgent(claude_client, rag_service)
         
         # Agent registry
@@ -37,7 +38,7 @@ class AgentFactory:
         # Create the appropriate specialized agent
         if contract_type in self._agents:
             agent_class = self._agents[contract_type]
-            return agent_class(self.claude_client, self.rag_service)
+            return agent_class(self.claude_client, self.rag_service, self.db_session)
         else:
             # Fallback to a generic agent or raise an error
             raise ValueError(f"No specialized agent available for contract type: {contract_type}")

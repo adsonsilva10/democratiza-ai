@@ -14,11 +14,12 @@ class ContractAnalysis(BaseModel):
     confidence_score: float
 
 class BaseContractAgent(ABC):
-    """Base class for all contract analysis agents"""
+    """Base class for all contract analysis agents with RAG integration"""
     
-    def __init__(self, claude_client, rag_service):
+    def __init__(self, claude_client, rag_service, db_session=None):
         self.claude_client = claude_client
         self.rag_service = rag_service
+        self.db = db_session
         self.agent_type = self.__class__.__name__.replace("Agent", "").lower()
     
     @abstractmethod
@@ -31,8 +32,25 @@ class BaseContractAgent(ABC):
         """Get the specialized prompt for this agent type"""
         pass
     
+    async def get_enriched_context(self, contract_text: str, analysis_type: str = "analysis") -> Dict[str, Any]:
+        """Get enriched context from RAG knowledge base"""
+        if not self.db:
+            # Fallback to basic search
+            return await self.get_rag_context(contract_text)
+        
+        # Use advanced RAG context building
+        context = await self.rag_service.build_context_for_agent(
+            query=contract_text[:1000],  # First 1000 chars for context
+            contract_type=self.agent_type,
+            context_type=analysis_type,
+            max_context_length=4000,
+            db=self.db
+        )
+        
+        return context
+    
     async def get_rag_context(self, contract_text: str) -> str:
-        """Retrieve relevant context from RAG knowledge base"""
+        """Retrieve relevant context from RAG knowledge base (legacy method)"""
         # Extract key terms for RAG search
         search_terms = await self._extract_search_terms(contract_text)
         
@@ -40,10 +58,23 @@ class BaseContractAgent(ABC):
         rag_results = await self.rag_service.search(
             query=" ".join(search_terms),
             contract_type=self.agent_type,
-            limit=5
+            limit=5,
+            db=self.db
         )
         
         return "\n".join([result["content"] for result in rag_results])
+    
+    async def get_legal_precedents(self, contract_clause: str) -> List[Dict[str, Any]]:
+        """Get legal precedents for specific contract clauses"""
+        if not self.db:
+            return []
+        
+        return await self.rag_service.get_legal_precedents(
+            contract_clause=contract_clause,
+            contract_type=self.agent_type,
+            limit=3,
+            db=self.db
+        )
     
     async def _extract_search_terms(self, contract_text: str) -> List[str]:
         """Extract relevant search terms for RAG queries"""

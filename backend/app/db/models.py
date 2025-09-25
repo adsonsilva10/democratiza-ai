@@ -25,6 +25,9 @@ class User(Base):
     # Relationships
     contracts = relationship("Contract", back_populates="owner")
     chat_sessions = relationship("ChatSession", back_populates="user")
+    subscriptions = relationship("UserSubscription", back_populates="user")
+    transactions = relationship("Transaction", back_populates="user")
+    signature_requests = relationship("SignatureRequest", back_populates="user")
 
 class Contract(Base):
     __tablename__ = "contracts"
@@ -58,6 +61,7 @@ class Contract(Base):
     
     # Relationships
     owner = relationship("User", back_populates="contracts")
+    signature_requests = relationship("SignatureRequest", back_populates="contract")
     chat_sessions = relationship("ChatSession", back_populates="contract")
     risk_factors = relationship("RiskFactor", back_populates="contract")
 
@@ -149,6 +153,88 @@ class KnowledgeBase(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+class LegalDocument(Base):
+    __tablename__ = "legal_documents"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # Document metadata
+    title = Column(String, nullable=False)
+    document_type = Column(String, nullable=False)  # lei, decreto, jurisprudencia, doutrina, etc.
+    category = Column(String, nullable=False)  # locacao, telecom, financeiro, geral
+    subcategory = Column(String)
+    
+    # Content
+    content = Column(Text, nullable=False)
+    summary = Column(Text)
+    abstract = Column(Text)  # For jurisprudence cases
+    
+    # Source information
+    source = Column(String, nullable=False)  # STF, STJ, TJ-SP, etc.
+    source_url = Column(String)
+    reference_number = Column(String)  # Process number, law number, etc.
+    publication_date = Column(DateTime(timezone=True))
+    
+    # Legal metadata
+    court = Column(String)  # For jurisprudence
+    judge = Column(String)  # For jurisprudence
+    legal_area = Column(JSON)  # Array of legal areas
+    keywords = Column(JSON)  # Array of keywords
+    
+    # Processing status
+    processing_status = Column(String, default="pending")  # pending, processing, indexed, failed
+    chunk_count = Column(Integer, default=0)
+    
+    # Quality metrics
+    relevance_score = Column(Float, default=1.0)
+    authority_level = Column(String, default="medium")  # high, medium, low
+    
+    # Metadata
+    is_active = Column(Boolean, default=True)
+    indexed_at = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    chunks = relationship("LegalChunk", back_populates="document", cascade="all, delete-orphan")
+
+class LegalChunk(Base):
+    __tablename__ = "legal_chunks"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    document_id = Column(UUID(as_uuid=True), ForeignKey("legal_documents.id"), nullable=False)
+    
+    # Chunk content and metadata
+    content = Column(Text, nullable=False)
+    chunk_type = Column(String, default="text")  # text, article, paragraph, summary
+    chunk_order = Column(Integer, nullable=False)
+    
+    # Position in document
+    start_position = Column(Integer)
+    end_position = Column(Integer)
+    page_number = Column(Integer)
+    section_title = Column(String)
+    
+    # Vector embedding
+    embedding = Column(Vector(1536))  # OpenAI embeddings dimension
+    
+    # Content analysis
+    word_count = Column(Integer)
+    char_count = Column(Integer)
+    importance_score = Column(Float, default=1.0)
+    
+    # Legal context
+    legal_concepts = Column(JSON)  # Array of identified legal concepts
+    entities = Column(JSON)  # Named entities (laws, articles, etc.)
+    
+    # Metadata
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    document = relationship("LegalDocument", back_populates="chunks")
 
 class PaymentTransaction(Base):
     __tablename__ = "payment_transactions"

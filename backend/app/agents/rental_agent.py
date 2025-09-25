@@ -5,15 +5,21 @@ from app.agents.base_agent import BaseContractAgent, ContractAnalysis
 class RentalAgent(BaseContractAgent):
     """Specialized agent for rental/lease contract analysis"""
     
-    def __init__(self, claude_client, rag_service):
-        super().__init__(claude_client, rag_service)
+    def __init__(self, claude_client, rag_service, db_session=None):
+        super().__init__(claude_client, rag_service, db_session)
         self.agent_type = "locacao"
     
     async def analyze_contract(self, contract_text: str, context: Dict[str, Any] = None) -> ContractAnalysis:
         """Analyze rental contract with specialized knowledge"""
         
-        # Get relevant RAG context
-        rag_context = await self.get_rag_context(contract_text)
+        # Get enriched RAG context
+        enriched_context = await self.get_enriched_context(
+            contract_text, 
+            analysis_type="rental_analysis"
+        )
+        
+        # Format context for prompt
+        rag_context = self._format_context_for_prompt(enriched_context)
         
         # Create specialized prompt
         prompt = self.get_specialized_prompt(contract_text, rag_context)
@@ -127,3 +133,91 @@ class RentalAgent(BaseContractAgent):
             clauses_analysis=[],
             confidence_score=0.3
         )
+    
+    def _format_context_for_prompt(self, enriched_context: Dict[str, Any]) -> str:
+        """Format enriched RAG context for use in prompts"""
+        
+        if isinstance(enriched_context, str):
+            return enriched_context  # Fallback for legacy format
+        
+        formatted_context = ""
+        
+        # Add legal framework
+        if enriched_context.get("legal_framework"):
+            formatted_context += "## LEGISLAÇÃO APLICÁVEL:\n"
+            for law in enriched_context["legal_framework"]:
+                formatted_context += f"- {law['source']}: {law['content']}\n"
+            formatted_context += "\n"
+        
+        # Add jurisprudence
+        if enriched_context.get("jurisprudence"):
+            formatted_context += "## JURISPRUDÊNCIA:\n"
+            for case in enriched_context["jurisprudence"]:
+                formatted_context += f"- {case['source']}: {case['content']}\n"
+            formatted_context += "\n"
+        
+        # Add recommendations
+        if enriched_context.get("recommendations"):
+            formatted_context += "## DIRETRIZES ESPECIALIZADAS:\n"
+            for rec in enriched_context["recommendations"]:
+                formatted_context += f"- {rec['title']}: {rec['content']}\n"
+            formatted_context += "\n"
+        
+        return formatted_context
+    
+    async def analyze_specific_clause(self, clause_text: str, clause_type: str) -> Dict[str, Any]:
+        """Analyze a specific rental contract clause with legal precedents"""
+        
+        # Get legal precedents for this clause
+        precedents = await self.get_legal_precedents(f"{clause_type} {clause_text}")
+        
+        # Build analysis context
+        context = f"Cláusula: {clause_text}\n\nTipo: {clause_type}\n\n"
+        
+        if precedents:
+            context += "PRECEDENTES LEGAIS:\n"
+            for precedent in precedents:
+                context += f"- {precedent['court']}: {precedent['content'][:200]}...\n"
+        
+        prompt = f"""
+        Analise esta cláusula específica de contrato de locação:
+
+        {context}
+
+        Forneça uma análise detalhada considerando:
+        1. Legalidade da cláusula
+        2. Riscos para o locatário
+        3. Riscos para o locador
+        4. Precedentes jurisprudenciais aplicáveis
+        5. Recomendações de alteração
+
+        Responda em formato JSON:
+        {{
+            "legality": "legal|questionável|ilegal",
+            "tenant_risks": ["risco1", "risco2"],
+            "landlord_risks": ["risco1", "risco2"],
+            "legal_basis": "base legal aplicável",
+            "recommendations": ["recomendação1", "recomendação2"],
+            "severity": "alta|média|baixa"
+        }}
+        """
+        
+        try:
+            response = await self.claude_client.completions.create(
+                model="claude-3-sonnet-20240229",
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=2000,
+                temperature=0.1
+            )
+            
+            return json.loads(response.content[0].text.strip())
+            
+        except Exception as e:
+            return {
+                "legality": "questionável",
+                "tenant_risks": ["Análise indisponível devido a erro técnico"],
+                "landlord_risks": [],
+                "legal_basis": "Não disponível",
+                "recommendations": ["Solicitar análise manual"],
+                "severity": "média"
+            }

@@ -314,3 +314,168 @@ async def delete_contract(
     # TODO: Delete file from Cloudflare R2
     
     return {"message": "Contract deleted successfully"}
+
+# RAG Service Endpoints
+
+class RAGSearchRequest(BaseModel):
+    query: str
+    contract_category: Optional[str] = None
+    document_types: Optional[List[str]] = None
+    authority_level: Optional[str] = None
+    limit: int = 10
+    similarity_threshold: float = 0.75
+
+class RAGSearchResponse(BaseModel):
+    legal_chunks: List[dict]
+    knowledge_base: List[dict]
+    query_metadata: dict
+
+@router.post("/rag/search", response_model=RAGSearchResponse)
+async def search_legal_knowledge(
+    request: RAGSearchRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Search legal knowledge base using RAG"""
+    
+    try:
+        from app.services.rag_service import rag_service
+        
+        results = await rag_service.search_legal_knowledge(
+            query=request.query,
+            contract_category=request.contract_category,
+            document_types=request.document_types,
+            authority_level=request.authority_level,
+            limit=request.limit,
+            similarity_threshold=request.similarity_threshold,
+            db=db
+        )
+        
+        return RAGSearchResponse(**results)
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error searching legal knowledge: {str(e)}"
+        )
+
+class EnhancedAnalysisRequest(BaseModel):
+    contract_text: str
+    contract_category: Optional[str] = None
+    analysis_type: str = "analysis"
+
+@router.post("/{contract_id}/enhanced-analysis")
+async def get_enhanced_contract_analysis(
+    contract_id: str,
+    request: EnhancedAnalysisRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get enhanced contract analysis using RAG Service"""
+    
+    # Verify contract ownership
+    result = await db.execute(
+        select(Contract)
+        .where(Contract.id == contract_id, Contract.owner_id == current_user.id)
+    )
+    contract = result.scalar_one_or_none()
+    
+    if not contract:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Contract not found"
+        )
+    
+    try:
+        from app.services.rag_service import rag_service
+        from app.agents.factory import AgentFactory
+        
+        # Create agent factory with database session
+        agent_factory = AgentFactory(
+            claude_client=None,  # TODO: Initialize Claude client
+            rag_service=rag_service,
+            db_session=db
+        )
+        
+        # Get enhanced analysis using RAG
+        enhanced_analysis = await agent_factory.analyze_contract(
+            contract_text=request.contract_text or contract.extracted_text,
+            context={"contract_id": contract_id, "enhanced_rag": True}
+        )
+        
+        # Update contract with enhanced analysis
+        if enhanced_analysis["status"] == "success":
+            contract.analysis_results = enhanced_analysis["analysis"]
+            contract.risk_level = enhanced_analysis["analysis"]["risk_level"]
+            contract.analysis_summary = enhanced_analysis["analysis"]["summary"]
+            contract.confidence_score = enhanced_analysis["analysis"]["confidence_score"]
+            contract.analyzed_at = datetime.utcnow()
+            
+            await db.commit()
+        
+        return {
+            "contract_id": contract_id,
+            "enhanced_analysis": enhanced_analysis,
+            "rag_enhanced": True
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error in enhanced analysis: {str(e)}"
+        )
+
+class LegalPrecedentsRequest(BaseModel):
+    contract_clause: str
+    contract_type: str
+
+@router.post("/legal-precedents")
+async def get_legal_precedents(
+    request: LegalPrecedentsRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get legal precedents for specific contract clauses"""
+    
+    try:
+        from app.services.rag_service import rag_service
+        
+        precedents = await rag_service.get_legal_precedents(
+            contract_clause=request.contract_clause,
+            contract_type=request.contract_type,
+            limit=5,
+            db=db
+        )
+        
+        return {
+            "contract_clause": request.contract_clause,
+            "contract_type": request.contract_type,
+            "precedents": precedents,
+            "total_found": len(precedents)
+        }
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving legal precedents: {str(e)}"
+        )
+
+@router.get("/rag/stats")
+async def get_rag_statistics(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get RAG knowledge base statistics"""
+    
+    try:
+        from app.services.rag_service import rag_service
+        
+        stats = await rag_service.get_knowledge_stats(db)
+        
+        return stats
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving RAG statistics: {str(e)}"
+        )
