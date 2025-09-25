@@ -281,9 +281,10 @@ async def send_chat_message(
         )
 
 async def generate_ai_response(session: ChatSession, message: str, db: AsyncSession) -> Dict[str, Any]:
-    """Generate AI response using appropriate agent"""
+    """Generate AI response using intelligent agent system"""
     
     context = {"session_id": str(session.id)}
+    contract_text = ""
     
     # If session has a contract, get contract context
     if session.contract_id:
@@ -293,29 +294,58 @@ async def generate_ai_response(session: ChatSession, message: str, db: AsyncSess
         contract = contract_result.scalar_one_or_none()
         
         if contract and contract.extracted_text:
-            # Use agent factory to get appropriate agent
-            agent_factory = AgentFactory(None, None)  # TODO: Initialize with proper clients
-            
-            try:
-                # For now, return a simple response
-                # TODO: Implement proper agent integration
-                response = f"Entendi sua pergunta sobre o contrato '{contract.title}'. "
-                response += "Esta funcionalidade está sendo implementada e em breve você poderá "
-                response += "conversar diretamente sobre os detalhes do seu contrato."
-                
-                context["contract_id"] = str(contract.id)
-                context["contract_type"] = contract.contract_type
-                
-            except Exception as e:
-                response = "Desculpe, ocorreu um erro ao analisar seu contrato. Tente novamente."
-                context["error"] = str(e)
+            contract_text = contract.extracted_text
+            context["contract_id"] = str(contract.id)
+            context["contract_type"] = contract.contract_type
+            context["contract_title"] = contract.title
         else:
-            response = "Este contrato ainda não foi analisado. Aguarde o processamento ser concluído."
-    else:
-        # General legal advice
-        response = "Olá! Sou seu assistente especializado em contratos brasileiros. "
-        response += "Como posso ajudá-lo hoje? Você pode fazer upload de um contrato para análise "
-        response += "ou tirar dúvidas gerais sobre direitos do consumidor."
+            # No contract text available
+            return {
+                "message": "Este contrato ainda não foi analisado. Aguarde o processamento ser concluído.",
+                "context": context
+            }
+    
+    # Use intelligent agent factory for automatic classification and response
+    try:
+        agent_factory = AgentFactory(None, None)  # Initialize with minimal setup
+        
+        # Use the new intelligent analysis method
+        result = await agent_factory.analyze_contract_intelligent(
+            contract_text=contract_text,
+            question=message,
+            context=context
+        )
+        
+        if result["status"] == "success":
+            # Successful intelligent analysis
+            context.update({
+                "agent_type": result["agent_info"]["type"],
+                "agent_name": result["agent_info"]["name"], 
+                "agent_icon": result["agent_info"]["icon"],
+                "classification": result["classification"],
+                "intelligent_version": result["version"]
+            })
+            
+            response = result["response"]
+            
+        else:
+            # Error in intelligent analysis - fallback
+            response = "Desculpe, ocorreu um erro na análise. Vou tentar responder de forma geral."
+            if "error" in result:
+                context["error"] = result["error"]
+            
+    except Exception as e:
+        # Complete fallback for any errors
+        if contract_text:
+            response = f"Entendi sua pergunta sobre o contrato. Devido a um erro técnico temporário, "
+            response += f"não posso fazer uma análise especializada no momento. "
+            response += f"Por favor, tente novamente em alguns instantes."
+        else:
+            response = "Olá! Sou seu assistente especializado em contratos brasileiros. "
+            response += "Como posso ajudá-lo hoje? Você pode fazer upload de um contrato para análise "
+            response += "ou tirar dúvidas gerais sobre direitos do consumidor."
+        
+        context["fallback_error"] = str(e)
     
     return {
         "message": response,
