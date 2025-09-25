@@ -72,13 +72,57 @@ export const useContractAnalysis = () => {
 export const useChat = () => {
   const { apiRequest, loading, error } = useApi();
 
-  const sendMessage = useCallback(async (message: string, context?: string) => {
-    const response = await apiRequest('/api/v1/demo/chat', {
-      method: 'POST',
-      body: JSON.stringify({ message, context }),
+  const sendMessage = useCallback(async (
+    message: string, 
+    agentType: string = 'general', 
+    contractId?: string
+  ) => {
+    const params = new URLSearchParams({
+      question: message,
+      agent_type: agentType
+    });
+    
+    if (contractId) {
+      params.append('contract_id', contractId);
+    }
+    
+    const response = await apiRequest(`/api/v1/demo/chat?${params}`, {
+      method: 'GET',
     });
     return response;
   }, [apiRequest]);
 
   return { sendMessage, loading, error };
+};
+
+export interface AgentInfo {
+  name: string;
+  icon: string;
+  description: string;
+  areas: string[];
+  color: string;
+}
+
+export const useAgents = () => {
+  const { apiRequest, loading, error } = useApi();
+
+  const getAvailableAgents = useCallback(async (): Promise<Record<string, AgentInfo>> => {
+    const response = await apiRequest('/api/v1/demo/agents', {
+      method: 'GET',
+    });
+    return response.agents;
+  }, [apiRequest]);
+
+  const classifyContract = useCallback(async (text: string, contractType?: string) => {
+    const params = new URLSearchParams();
+    if (text) params.append('text', text);
+    if (contractType) params.append('contract_type', contractType);
+    
+    const response = await apiRequest(`/api/v1/demo/classify-contract?${params}`, {
+      method: 'GET',
+    });
+    return response;
+  }, [apiRequest]);
+
+  return { getAvailableAgents, classifyContract, loading, error };
 };

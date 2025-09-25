@@ -1,5 +1,3 @@
-import { theme } from './lib/design-tokens';
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
