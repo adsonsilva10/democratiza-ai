@@ -23,6 +23,17 @@ interface AnalysisResult {
     legalCompliance: number
     consumerRights: number
   }
+  companyInfo?: {
+    cnpj: string
+    razaoSocial: string
+    situacao: 'ATIVA' | 'SUSPENSA' | 'INAPTA' | 'BAIXADA'
+    porte: string
+    dataAbertura: string
+    capitalSocial: string
+    atividadePrincipal: string
+    endereco: string
+    telefone: string
+  }
 }
 
 interface ChatMessage {
@@ -153,6 +164,17 @@ export default function AnalisePage() {
           financialRisks: 3,
           legalCompliance: 6,
           consumerRights: 4
+        },
+        companyInfo: {
+          cnpj: '12.345.678/0001-90',
+          razaoSocial: 'Empresa Exemplo Telecomunicações LTDA',
+          situacao: 'ATIVA',
+          porte: 'PEQUENO',
+          dataAbertura: '15/03/2020',
+          capitalSocial: '500.000,00',
+          atividadePrincipal: 'Telecomunicações por fio',
+          endereco: 'Rua das Comunicações, 123 - São Paulo/SP',
+          telefone: '(11) 3333-4444'
         }
       }
       setAnalysisResult(mockResult)
@@ -221,6 +243,19 @@ export default function AnalisePage() {
 
   const generateContextualResponse = (question: string, contract: AnalysisResult | null): string => {
     const lowerQuestion = question.toLowerCase()
+    
+    // Respostas sobre a empresa (CNPJ)
+    if (lowerQuestion.includes('empresa') || lowerQuestion.includes('confiável') || lowerQuestion.includes('cnpj')) {
+      if (contract?.companyInfo) {
+        const situacao = contract.companyInfo.situacao
+        if (situacao === 'ATIVA') {
+          return `✅ A empresa ${contract.companyInfo.razaoSocial} está com situação ATIVA na Receita Federal. É uma empresa de porte ${contract.companyInfo.porte}, fundada em ${contract.companyInfo.dataAbertura}, com capital social de R$ ${contract.companyInfo.capitalSocial}. A atividade principal é "${contract.companyInfo.atividadePrincipal}". Isso são bons sinais de regularidade!`
+        } else {
+          return `⚠️ ATENÇÃO: A empresa ${contract.companyInfo.razaoSocial} está com situação ${situacao} na Receita Federal. Isso pode indicar problemas fiscais ou administrativos. Recomendo NÃO assinar o contrato até que a empresa regularize sua situação.`
+        }
+      }
+      return "Não foi possível identificar o CNPJ da empresa no contrato para fazer a verificação."
+    }
     
     if (lowerQuestion.includes('multa') || lowerQuestion.includes('rescisão')) {
       return 'Sobre a multa de rescisão: identifiquei que o contrato prevê 6 meses de aluguel, o que é excessivo. Pela Lei do Inquilinato (Lei 8.245/91), a multa não pode exceder 3 meses. Você pode negociar a redução ou questionar juridicamente se já assinou.'
@@ -293,6 +328,31 @@ export default function AnalisePage() {
           </div>
           <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{analysisResult.summary}</p>
         </div>
+
+        {/* Informações da Empresa */}
+        {analysisResult.companyInfo && (
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-purple-900 mb-3">📋 Análise da Empresa</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-purple-700"><strong>Razão Social:</strong> {analysisResult.companyInfo.razaoSocial}</p>
+                <p className="text-sm text-purple-700"><strong>CNPJ:</strong> {analysisResult.companyInfo.cnpj}</p>
+                <p className="text-sm text-purple-700"><strong>Situação:</strong> 
+                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                    analysisResult.companyInfo.situacao === 'ATIVA' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {analysisResult.companyInfo.situacao}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-purple-700"><strong>Porte:</strong> {analysisResult.companyInfo.porte}</p>
+                <p className="text-sm text-purple-700"><strong>Abertura:</strong> {analysisResult.companyInfo.dataAbertura}</p>
+                <p className="text-sm text-purple-700"><strong>Capital:</strong> R$ {analysisResult.companyInfo.capitalSocial}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Métricas de Análise */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
@@ -456,6 +516,7 @@ export default function AnalisePage() {
                     {[
                       'Como posso contestar a multa?',
                       'Quais são meus direitos?',
+                      'A empresa é confiável?',
                       'O reajuste está correto?',
                       'Posso negociar as cláusulas?'
                     ].map((suggestion) => (

@@ -1,16 +1,28 @@
 from typing import Dict, Any, List
 import json
 from app.agents.base_agent import BaseContractAgent, ContractAnalysis
+from app.services.cnpj_service import CNPJService
 
 class TelecomAgent(BaseContractAgent):
     """Specialized agent for telecommunications contract analysis"""
     
     def __init__(self, claude_client, rag_service):
         super().__init__(claude_client, rag_service)
+        self.cnpj_service = CNPJService()
         self.agent_type = "telecom"
     
     async def analyze_contract(self, contract_text: str, context: Dict[str, Any] = None) -> ContractAnalysis:
         """Analyze telecom contract with specialized knowledge"""
+        
+        # 1. Análise de CNPJ da empresa prestadora
+        cnpj = self.cnpj_service.extract_cnpj_from_text(contract_text)
+        company_analysis = None
+        if cnpj:
+            company_data = await self.cnpj_service.get_company_data(cnpj)
+            company_analysis = self.cnpj_service.analyze_company_risk(
+                company_data, 
+                {"contract_type": "telecom"}
+            )
         
         # Get relevant RAG context
         rag_context = await self.get_rag_context(contract_text)
@@ -29,12 +41,46 @@ class TelecomAgent(BaseContractAgent):
             # Parse structured response
             analysis_data = json.loads(response.content[0].text.strip())
             
+            # Integrar análise da empresa (CNPJ) se disponível
+            if company_analysis:
+                # Adicionar riscos da empresa aos riscos do contrato
+                company_risk_factors = []
+                for risk_factor in company_analysis.get("risk_factors", []):
+                    company_risk_factors.append({
+                        "type": "empresa_prestadora",
+                        "description": risk_factor,
+                        "severity": "high" if company_analysis["risk_level"] == "high" else "medium",
+                        "clause": "Dados da empresa prestadora",
+                        "recommendation": "; ".join(company_analysis.get("recommendations", []))
+                    })
+                
+                # Combinar risk factors
+                all_risk_factors = analysis_data.get("risk_factors", []) + company_risk_factors
+                
+                # Ajustar nível de risco geral se empresa tem problema
+                contract_risk_level = self._calculate_risk_level(analysis_data.get("risk_factors", []))
+                if company_analysis["risk_level"] == "high":
+                    final_risk_level = "Alto Risco"
+                elif company_analysis["risk_level"] == "medium" and contract_risk_level != "Alto Risco":
+                    final_risk_level = "Médio Risco"
+                else:
+                    final_risk_level = contract_risk_level
+                
+                # Adicionar informações da empresa ao summary
+                company_info = company_analysis.get("company_info", {})
+                enhanced_summary = f"{analysis_data.get('summary', '')}\n\n📋 EMPRESA: {company_info.get('razao_social', 'N/A')} | Situação: {company_info.get('situacao', 'N/A')} | Porte: {company_info.get('porte', 'N/A')}"
+                
+            else:
+                all_risk_factors = analysis_data.get("risk_factors", [])
+                final_risk_level = self._calculate_risk_level(analysis_data.get("risk_factors", []))
+                enhanced_summary = analysis_data.get("summary", "")
+            
             return ContractAnalysis(
                 contract_type="telecom",
-                risk_level=self._calculate_risk_level(analysis_data.get("risk_factors", [])),
-                summary=analysis_data.get("summary", ""),
+                risk_level=final_risk_level,
+                summary=enhanced_summary,
                 key_findings=analysis_data.get("key_findings", []),
-                risk_factors=analysis_data.get("risk_factors", []),
+                risk_factors=all_risk_factors,
                 recommendations=analysis_data.get("recommendations", []),
                 clauses_analysis=analysis_data.get("clauses_analysis", []),
                 confidence_score=analysis_data.get("confidence_score", 0.0)
