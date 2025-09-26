@@ -6,11 +6,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button } from '../components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card';
-import { Badge, RiskBadge, ContractTypeBadge } from '../components/ui/badge';
-import { Alert, AlertTitle, AlertDescription, ContractAlert } from '../components/ui/alert';
-import { Input, Textarea, CPFInput } from '../components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge, RiskBadge, ContractTypeBadge } from '@/components/ui/badge';
+import { Alert, AlertTitle, AlertDescription, ContractAlert } from '@/components/ui/alert';
+import { Input, Textarea, CPFInput } from '@/components/ui/input';
 
 export default function DesignSystemPage() {
   const [formData, setFormData] = useState({

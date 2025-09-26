@@ -1,4 +1,4 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from app.agents.classifier_agent import ClassifierAgent
 from app.agents.intelligent_factory import agent_factory as intelligent_agent_factory
 from app.agents.base_agent import BaseContractAgent
