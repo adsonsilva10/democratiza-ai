@@ -2,6 +2,8 @@ from typing import Dict, Any, Optional
 from app.agents.classifier_agent import ClassifierAgent
 from app.agents.intelligent_factory import agent_factory as intelligent_agent_factory
 from app.agents.base_agent import BaseContractAgent
+from app.legal.terms_of_service import terms_service, ServiceType, UserType
+from app.legal.privacy_service import privacy_service, ProcessingPurpose
 
 # Import all specialized agents
 from app.agents.rental_agent import RentalAgent
@@ -271,6 +273,143 @@ class AgentFactory:
         """Get list of supported contract types"""
         return list(self._agents.keys())
     
+    async def analyze_contract_ethically(self, 
+                                       contract_text: str,
+                                       user_id: str,
+                                       user_type_str: str = "CPF",  # "CPF" ou "CNPJ"
+                                       context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        Ponto de entrada principal com conformidade ética completa
+        
+        Implementa todo o pipeline ético:
+        1. Verificação de consentimento LGPD
+        2. Classificação inteligente com entidades
+        3. Análise por agente especializado 
+        4. Auditoria de viés automatizada
+        5. Aplicação de disclaimers legais
+        """
+        
+        # Mapeia tipo de usuário para enum
+        user_type = UserType.INDIVIDUAL_CPF if user_type_str == "CPF" else UserType.SMALL_BUSINESS_CNPJ
+        
+        # Verifica se requer consentimento explícito
+        if terms_service.should_require_explicit_consent(ServiceType.CONTRACT_ANALYSIS, user_type):
+            if not privacy_service.check_consent_valid(user_id, ProcessingPurpose.CONTRACT_ANALYSIS):
+                return {
+                    "requires_consent": True,
+                    "consent_text": privacy_service._generate_consent_text([
+                        ProcessingPurpose.CONTRACT_ANALYSIS,
+                        ProcessingPurpose.SERVICE_PROVISION
+                    ]),
+                    "pre_analysis_warning": terms_service.get_pre_analysis_warning(user_type),
+                    "user_type": user_type.value,
+                    "status": "awaiting_consent"
+                }
+        
+        # Executa análise inteligente com entidades
+        try:
+            result = await intelligent_agent_factory.analyze_contract_intelligent_with_entities(
+                contract_text=contract_text,
+                context=context or {}
+            )
+            
+            if result.get("status") == "error":
+                return result
+            
+            # Obtém o agente usado
+            agent_type = result.get("agent_type")
+            agent = self.create_agent(agent_type) if agent_type else None
+            
+            if agent and hasattr(agent, 'analyze_contract_with_ethics'):
+                # Usa análise ética completa do agente
+                ethical_result = await agent.analyze_contract_with_ethics(
+                    contract_text=contract_text,
+                    user_id=user_id,
+                    user_type=user_type,
+                    context=context
+                )
+                
+                # Combina resultados
+                result["ethical_analysis"] = ethical_result
+                result["compliance_status"] = ethical_result.get("compliance_status", "approved")
+                result["bias_audit"] = ethical_result.get("bias_audit")
+                result["processing_record_id"] = ethical_result.get("processing_record_id")
+            
+            # Adiciona informações de conformidade
+            result["user_type"] = user_type.value
+            result["terms_version"] = terms_service.version
+            result["privacy_compliant"] = True
+            result["timestamp"] = privacy_service.datetime.now().isoformat()
+            
+            return result
+            
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "message": "Erro durante análise ética do contrato",
+                "user_type": user_type.value,
+                "timestamp": privacy_service.datetime.now().isoformat()
+            }
+    
+    def record_user_consent(self, user_id: str, purposes: List[ProcessingPurpose],
+                           ip_address: str = "", user_agent: str = "") -> Dict[str, Any]:
+        """Registra consentimento do usuário"""
+        try:
+            consent_id = privacy_service.record_consent(
+                user_id=user_id,
+                purposes=purposes,
+                ip_address=ip_address,
+                user_agent=user_agent
+            )
+            
+            return {
+                "consent_id": consent_id,
+                "status": "success",
+                "message": "Consentimento registrado com sucesso",
+                "purposes": [p.value for p in purposes],
+                "timestamp": privacy_service.datetime.now().isoformat()
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "message": "Erro ao registrar consentimento"
+            }
+    
+    def get_user_data_summary(self, user_id: str) -> Dict[str, Any]:
+        """Exporta dados do usuário para conformidade LGPD"""
+        try:
+            return privacy_service.export_user_data(user_id)
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e),
+                "message": "Erro ao exportar dados do usuário"
+            }
+    
+    def delete_user_data(self, user_id: str) -> Dict[str, Any]:
+        """Exerce direito de eliminação do usuário"""
+        try:
+            return privacy_service.delete_user_data(user_id)
+        except Exception as e:
+            return {
+                "status": "error", 
+                "error": str(e),
+                "message": "Erro ao deletar dados do usuário"
+            }
+    
+    def get_compliance_report(self) -> Dict[str, Any]:
+        """Gera relatório completo de conformidade"""
+        return {
+            "terms_of_service": terms_service.export_terms_summary(),
+            "privacy_compliance": privacy_service.generate_compliance_report(),
+            "bias_audit": privacy_service.bias_auditor.export_audit_report(),
+            "supported_agents": self.get_supported_contract_types(),
+            "factory_version": "1.0.0-ethical",
+            "generated_at": privacy_service.datetime.now().isoformat()
+        }
+
     def register_agent(self, contract_type: str, agent_class: type):
         """Register a new agent type"""
         self._agents[contract_type] = agent_class
