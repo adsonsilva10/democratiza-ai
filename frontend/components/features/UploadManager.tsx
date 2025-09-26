@@ -4,6 +4,8 @@ import { useState, useRef } from 'react'
 import apiClient from '../../lib/api'
 import { MobileAwareDocumentUpload } from './MobileAwareDocumentUpload'
 import { useDeviceDetection } from '@/lib/hooks/useDeviceDetection'
+import { useAsyncJobs } from '@/lib/hooks/useAsyncJobs'
+import { JobTracker } from './JobTracker'
 
 interface UploadManagerProps {
   onContractUploaded?: (contractId: string) => void
@@ -28,6 +30,7 @@ export default function UploadManager({
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { isMobile } = useDeviceDetection()
+  const { createJob, jobs } = useAsyncJobs()
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || !contractTitle.trim()) {
@@ -39,56 +42,59 @@ export default function UploadManager({
 
     setUploading(true)
 
-    for (const file of Array.from(files).slice(0, maxFiles)) {
-      const fileUpload = {
-        file,
-        status: 'uploading' as const
+    try {
+      const fileArray = Array.from(files).slice(0, maxFiles)
+      
+      // Validar tamanho dos arquivos
+      const oversizedFiles = fileArray.filter(file => file.size > maxFileSize * 1024 * 1024)
+      if (oversizedFiles.length > 0) {
+        alert(`Alguns arquivos são muito grandes (máximo ${maxFileSize}MB): ${oversizedFiles.map(f => f.name).join(', ')}`)
+        setUploading(false)
+        return
       }
 
-      setUploadedFiles(prev => [...prev, fileUpload])
+      // Simular upload dos arquivos e obter URLs (em produção, fazer upload real)
+      const fileUrls = fileArray.map(file => `/uploads/${file.name}`)
+      
+      // Determinar tipo de job baseado nos arquivos
+      const hasImages = fileArray.some(file => file.type.startsWith('image/'))
+      const jobType = hasImages ? 'full_pipeline' : 'contract_analysis'
 
-      if (file.size > maxFileSize) {
-        setUploadedFiles(prev =>
-          prev.map(f =>
-            f.file === file
-              ? { ...f, status: 'error' as const, error: 'Arquivo muito grande (máximo 10MB)' }
-              : f
-          )
-        )
-        continue
-      }
-
-      try {
-        const contract = await apiClient.uploadContract(file)
-
-        setUploadedFiles(prev =>
-          prev.map(f =>
-            f.file === file
-              ? { ...f, contractId: contract.data.id, status: 'processing' as const }
-              : f
-          )
-        )
-
-        // Poll for completion
-        pollContractStatus(contract.data.id, file)
-
-        if (onContractUploaded) {
-          onContractUploaded(contract.data.id)
+      // Criar job assíncrono
+      const jobId = await createJob({
+        job_type: jobType,
+        files: fileUrls,
+        contract_title: contractTitle,
+        user_email: 'user@example.com', // Em produção, obter do contexto do usuário
+        options: {
+          auto_enhance_images: hasImages,
+          priority: 'normal'
         }
-      } catch (error) {
-        console.error('Upload error:', error)
-        setUploadedFiles(prev =>
-          prev.map(f =>
-            f.file === file
-              ? { ...f, status: 'error' as const, error: 'Erro no upload' }
-              : f
-          )
-        )
-      }
-    }
+      })
 
-    setUploading(false)
-    setUploadProgress(0)
+      // Atualizar estado local
+      const newFiles = fileArray.map(file => ({
+        file,
+        contractId: jobId,
+        status: 'processing' as const
+      }))
+
+      setUploadedFiles(prev => [...prev, ...newFiles])
+
+      if (onContractUploaded) {
+        onContractUploaded(jobId)
+      }
+
+      // Resetar form
+      setContractTitle('')
+      
+    } catch (error) {
+      console.error('Erro ao criar job:', error)
+      alert('Erro ao iniciar processamento do contrato')
+    } finally {
+      setUploading(false)
+      setUploadProgress(0)
+    }
   }
 
   const pollContractStatus = async (contractId: string, file: File) => {
@@ -330,6 +336,15 @@ export default function UploadManager({
           </ul>
         </div>
       )}
+
+      {/* Job Tracker */}
+      <div className="mt-8">
+        <JobTracker 
+          userId="demo_user"
+          autoRefresh={true}
+          showOnlyActive={false}
+        />
+      </div>
     </div>
   )
 }
