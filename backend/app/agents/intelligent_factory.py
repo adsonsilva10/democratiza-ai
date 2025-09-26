@@ -12,6 +12,10 @@ from app.agents.internet_agent import InternetAgent
 from app.agents.vehicle_insurance_agent import VehicleInsuranceAgent
 from app.agents.credit_card_agent import CreditCardAgent
 from app.agents.employment_clt_agent import EmploymentCLTAgent
+from app.agents.vehicle_financing_agent import VehicleFinancingAgent
+from app.agents.consortium_agent import ConsortiumAgent
+from app.agents.tv_subscription_agent import TVSubscriptionAgent
+from app.agents.life_insurance_agent import LifeInsuranceAgent
 from app.agents.telecom_agent import TelecomAgent  # Geral telecom
 from app.agents.financial_agent import FinancialAgent  # Geral financeiro
 
@@ -32,17 +36,17 @@ class IntelligentAgentFactory:
             # FINANCEIRO  
             'personal_loan': PersonalLoanAgent,
             'credit_card': CreditCardAgent,
-            'vehicle_financing': FinancialAgent,  # Usar geral por enquanto
-            'consortium': FinancialAgent,  # Usar geral por enquanto
+            'vehicle_financing': VehicleFinancingAgent,
+            'consortium': ConsortiumAgent,
             
             # TELECOMUNICAÇÕES
             'internet': InternetAgent,
             'mobile': TelecomAgent,  # Usar geral por enquanto
-            'tv_subscription': TelecomAgent,  # Usar geral por enquanto
+            'tv_subscription': TVSubscriptionAgent,
             
             # SAÚDE
             'health_insurance': HealthInsuranceAgent,
-            'life_insurance': FinancialAgent,  # Usar geral financeiro por enquanto
+            'life_insurance': LifeInsuranceAgent,
             
             # ENERGIA
             'electricity': TelecomAgent,  # Usar geral telecom por similaridade regulatória

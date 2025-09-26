@@ -15,6 +15,10 @@ from app.agents.financial_agent import FinancialAgent
 from app.agents.vehicle_insurance_agent import VehicleInsuranceAgent
 from app.agents.credit_card_agent import CreditCardAgent
 from app.agents.employment_clt_agent import EmploymentCLTAgent
+from app.agents.vehicle_financing_agent import VehicleFinancingAgent
+from app.agents.consortium_agent import ConsortiumAgent
+from app.agents.tv_subscription_agent import TVSubscriptionAgent
+from app.agents.life_insurance_agent import LifeInsuranceAgent
 
 class AgentFactory:
     """Factory for creating specialized contract analysis agents"""
@@ -38,18 +42,18 @@ class AgentFactory:
             "financeiro": FinancialAgent,  # Backward compatibility  
             "personal_loan": PersonalLoanAgent,
             "credit_card": CreditCardAgent,
-            "vehicle_financing": FinancialAgent,
-            "consortium": FinancialAgent,
+            "vehicle_financing": VehicleFinancingAgent,
+            "consortium": ConsortiumAgent,
             
             # TELECOMUNICAÇÕES
             "telecom": TelecomAgent,  # Backward compatibility
             "internet": InternetAgent,
             "mobile": TelecomAgent,
-            "tv_subscription": TelecomAgent,
+            "tv_subscription": TVSubscriptionAgent,
             
             # SAÚDE & SEGUROS
             "health_insurance": HealthInsuranceAgent,
-            "life_insurance": FinancialAgent,
+            "life_insurance": LifeInsuranceAgent,
             "vehicle_insurance": VehicleInsuranceAgent,
             
             # ENERGIA
