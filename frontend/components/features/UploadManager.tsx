@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import apiClient from '@/lib/api'
+import apiClient from '../../lib/api'
+import { MobileAwareDocumentUpload } from './MobileAwareDocumentUpload'
+import { useDeviceDetection } from '@/lib/hooks/useDeviceDetection'
 
 interface UploadManagerProps {
   onContractUploaded?: (contractId: string) => void
@@ -12,7 +14,7 @@ interface UploadManagerProps {
 export default function UploadManager({ 
   onContractUploaded, 
   maxFiles = 5, 
-  maxFileSize = 10 * 1024 * 1024 // 10MB
+  maxFileSize = 10
 }: UploadManagerProps) {
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
@@ -25,6 +27,7 @@ export default function UploadManager({
   const [contractTitle, setContractTitle] = useState('')
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { isMobile } = useDeviceDetection()
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || !contractTitle.trim()) {
@@ -107,7 +110,7 @@ export default function UploadManager({
           return
         }
 
-        if (contract.data.status === 'failed') {
+        if (contract.data.status === 'error') {
           setUploadedFiles(prev =>
             prev.map(f =>
               f.file === file
@@ -232,49 +235,17 @@ export default function UploadManager({
         />
       </div>
 
-      {/* Upload Area */}
-      <div
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-          isDragOver
-            ? 'border-blue-500 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
-        }`}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          onChange={handleFileInputChange}
-          multiple
-          accept=".pdf,.doc,.docx,.txt"
-          className="hidden"
-          disabled={uploading || !contractTitle.trim()}
-        />
-
-        <div className="text-6xl mb-4">📁</div>
-
-        {isDragOver ? (
-          <p className="text-lg text-blue-600 mb-4">Solte os arquivos aqui</p>
-        ) : (
-          <div>
-            <p className="text-lg text-gray-600 mb-4">
-              Arraste arquivos aqui ou{' '}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading || !contractTitle.trim()}
-                className="text-blue-600 hover:text-blue-800 font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                clique para selecionar
-              </button>
-            </p>
-            <p className="text-sm text-gray-500">
-              Máximo {maxFiles} arquivos • Até {Math.round(maxFileSize / 1024 / 1024)}MB cada
-            </p>
-          </div>
-        )}
-      </div>
+      {/* Mobile-Aware Upload Area */}
+      <MobileAwareDocumentUpload
+        onFilesUploaded={(files) => handleFileSelect({ 
+          ...files, 
+          length: files.length,
+          item: (index: number) => files[index]
+        } as FileList)}
+        maxFiles={maxFiles}
+        maxFileSize={maxFileSize}
+        acceptedTypes={['.pdf', '.doc', '.docx', '.txt', 'image/*']}
+      />
 
       {/* Upload Progress */}
       {uploading && (
