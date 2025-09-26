@@ -16,6 +16,11 @@ from app.agents.vehicle_financing_agent import VehicleFinancingAgent
 from app.agents.consortium_agent import ConsortiumAgent
 from app.agents.tv_subscription_agent import TVSubscriptionAgent
 from app.agents.life_insurance_agent import LifeInsuranceAgent
+from app.agents.energy_agent import EnergyAgent
+from app.agents.mobile_agent import MobileAgent
+from app.agents.education_agent import EducationAgent
+from app.agents.ecommerce_agent import EcommerceAgent
+from app.agents.gas_agent import GasAgent
 from app.agents.telecom_agent import TelecomAgent  # Geral telecom
 from app.agents.financial_agent import FinancialAgent  # Geral financeiro
 
@@ -41,7 +46,7 @@ class IntelligentAgentFactory:
             
             # TELECOMUNICAÇÕES
             'internet': InternetAgent,
-            'mobile': TelecomAgent,  # Usar geral por enquanto
+            'mobile': MobileAgent,
             'tv_subscription': TVSubscriptionAgent,
             
             # SAÚDE
@@ -49,23 +54,23 @@ class IntelligentAgentFactory:
             'life_insurance': LifeInsuranceAgent,
             
             # ENERGIA
-            'electricity': TelecomAgent,  # Usar geral telecom por similaridade regulatória
-            'gas_supply': TelecomAgent,
+            'electricity': EnergyAgent,
+            'gas_supply': GasAgent,
             
             # TRANSPORTE
             'vehicle_insurance': VehicleInsuranceAgent,
             'vehicle_rental': RentalAgent,
             
             # EDUCAÇÃO
-            'higher_education': FinancialAgent,  # Aspectos contratuais similares
-            'professional_course': FinancialAgent,
+            'higher_education': EducationAgent,
+            'professional_course': EducationAgent,
             
             # TRABALHO
             'employment_clt': EmploymentCLTAgent,
             'service_contract': FinancialAgent,
             
             # CONSUMO
-            'ecommerce': FinancialAgent,  # CDC similar
+            'ecommerce': EcommerceAgent,
             'subscription_service': TelecomAgent,  # Similar a telecom
             
             # GERAL (fallback)

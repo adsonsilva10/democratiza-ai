@@ -19,6 +19,11 @@ from app.agents.vehicle_financing_agent import VehicleFinancingAgent
 from app.agents.consortium_agent import ConsortiumAgent
 from app.agents.tv_subscription_agent import TVSubscriptionAgent
 from app.agents.life_insurance_agent import LifeInsuranceAgent
+from app.agents.energy_agent import EnergyAgent
+from app.agents.mobile_agent import MobileAgent
+from app.agents.education_agent import EducationAgent
+from app.agents.ecommerce_agent import EcommerceAgent
+from app.agents.gas_agent import GasAgent
 
 class AgentFactory:
     """Factory for creating specialized contract analysis agents"""
@@ -48,7 +53,7 @@ class AgentFactory:
             # TELECOMUNICAÇÕES
             "telecom": TelecomAgent,  # Backward compatibility
             "internet": InternetAgent,
-            "mobile": TelecomAgent,
+            "mobile": MobileAgent,
             "tv_subscription": TVSubscriptionAgent,
             
             # SAÚDE & SEGUROS
@@ -57,22 +62,22 @@ class AgentFactory:
             "vehicle_insurance": VehicleInsuranceAgent,
             
             # ENERGIA
-            "electricity": TelecomAgent,
-            "gas_supply": TelecomAgent,
+            "electricity": EnergyAgent,
+            "gas_supply": GasAgent,
             
             # TRANSPORTE
             "vehicle_rental": RentalAgent,
             
             # EDUCAÇÃO
-            "higher_education": FinancialAgent,
-            "professional_course": FinancialAgent,
+            "higher_education": EducationAgent,
+            "professional_course": EducationAgent,
             
             # TRABALHO
             "employment_clt": EmploymentCLTAgent,
             "service_contract": FinancialAgent,
             
             # CONSUMO
-            "ecommerce": FinancialAgent,
+            "ecommerce": EcommerceAgent,
             "subscription_service": TelecomAgent,
         }
     
