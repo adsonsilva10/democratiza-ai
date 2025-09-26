@@ -24,6 +24,12 @@ sentence-transformers==2.2.2
 pgvector==0.2.3
 numpy==1.24.3
 
+# Image Processing & Computer Vision
+opencv-python==4.8.1.78
+opencv-contrib-python==4.8.1.78
+Pillow==10.1.0
+scikit-image==0.22.0
+
 # Cloud Services
 boto3==1.34.0  # AWS SQS
 google-cloud-vision==3.5.0

@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { 
   Camera, 
@@ -12,11 +12,13 @@ import {
   X, 
   Image as ImageIcon,
   Smartphone,
-  Monitor
+  Monitor,
+  Sparkles
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useDeviceDetection } from '@/lib/hooks/useDeviceDetection'
 import { MobileCameraCapture } from './MobileCameraCapture'
+import { ImageOptimizer } from './ImageOptimizer'
 
 interface UploadedFile {
   id: string
@@ -30,6 +32,7 @@ interface MobileAwareDocumentUploadProps {
   maxFiles?: number
   maxFileSize?: number // in MB
   acceptedTypes?: string[]
+  enableImageOptimization?: boolean
   className?: string
 }
 
@@ -38,11 +41,14 @@ export function MobileAwareDocumentUpload({
   maxFiles = 10,
   maxFileSize = 10,
   acceptedTypes = ['image/*', '.pdf', '.doc', '.docx'],
+  enableImageOptimization = true,
   className
 }: MobileAwareDocumentUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [showCamera, setShowCamera] = useState(false)
   const [uploadMode, setUploadMode] = useState<'files' | 'camera'>('files')
+  const [showImageOptimizer, setShowImageOptimizer] = useState(false)
+  const [imagesToOptimize, setImagesToOptimize] = useState<File[]>([])
   
   const { isMobile, hasCamera, isIOS, isAndroid } = useDeviceDetection()
 
@@ -61,8 +67,16 @@ export function MobileAwareDocumentUpload({
     })
 
     setUploadedFiles(prev => [...prev, ...newFiles])
-    onFilesUploaded(files)
-  }, [onFilesUploaded])
+    
+    // Verificar se há imagens para otimizar
+    const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    if (enableImageOptimization && imageFiles.length > 0) {
+      setImagesToOptimize(imageFiles)
+      setShowImageOptimizer(true)
+    } else {
+      onFilesUploaded(files)
+    }
+  }, [onFilesUploaded, enableImageOptimization])
 
   // Configurar dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -102,6 +116,25 @@ export function MobileAwareDocumentUpload({
     setShowCamera(true)
   }, [])
 
+  // Lidar com imagens otimizadas
+  const handleImagesOptimized = useCallback((optimizedFiles: File[]) => {
+    // Combinar arquivos otimizados com não-imagens
+    const nonImageFiles = uploadedFiles
+      .filter(file => file.type !== 'image')
+      .map(file => file.file)
+    
+    const allFiles = [...optimizedFiles, ...nonImageFiles]
+    onFilesUploaded(allFiles)
+    setShowImageOptimizer(false)
+  }, [uploadedFiles, onFilesUploaded])
+
+  // Pular otimização e usar arquivos originais
+  const handleSkipOptimization = useCallback(() => {
+    const allFiles = uploadedFiles.map(file => file.file)
+    onFilesUploaded(allFiles)
+    setShowImageOptimizer(false)
+  }, [uploadedFiles, onFilesUploaded])
+
   // Renderizar modo câmera
   if (showCamera) {
     return (
@@ -111,6 +144,49 @@ export function MobileAwareDocumentUpload({
         maxImages={maxFiles}
         className={className}
       />
+    )
+  }
+
+  // Renderizar otimizador de imagens
+  if (showImageOptimizer && imagesToOptimize.length > 0) {
+    return (
+      <div className={cn("w-full space-y-4", className)}>
+        <Card className="border-purple-200 bg-purple-50">
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-600" />
+              Otimização Automática Detectada
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-purple-800 mb-4">
+              Detectamos {imagesToOptimize.length} imagem(ns). Deseja otimizá-las para melhor qualidade de OCR?
+            </p>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleSkipOptimization}
+                variant="outline"
+                size="sm"
+              >
+                Pular Otimização
+              </Button>
+              <Button
+                onClick={() => {/* O otimizador já está sendo mostrado */}}
+                size="sm"
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                Continuar com Otimização
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <ImageOptimizer
+          images={imagesToOptimize}
+          onImagesProcessed={handleImagesOptimized}
+          autoProcess={true}
+        />
+      </div>
     )
   }
 

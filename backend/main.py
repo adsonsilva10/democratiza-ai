@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import auth, contracts, chat, payments, signatures
+from app.api.v1 import auth, contracts, chat, payments, signatures, image_processing
 from app.core.config import settings
 
 app = FastAPI(
@@ -26,6 +26,7 @@ app.include_router(contracts.router, prefix="/api/v1/contracts", tags=["contract
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"])
 app.include_router(signatures.router, prefix="/api/v1/signatures", tags=["signatures"])
+app.include_router(image_processing.router, prefix="/api/v1", tags=["image-processing"])
 
 @app.get("/")
 async def root():
