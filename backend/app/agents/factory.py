@@ -154,6 +154,67 @@ class AgentFactory:
                 "version": "intelligent_v1"
             }
     
+    async def analyze_contract_intelligent_with_entities(self, contract_text: str, 
+                                                       question: str = "", 
+                                                       context: Dict[str, Any] = None) -> Dict[str, Any]:
+        """
+        NOVA: Análise inteligente completa com classificação de entidades (CPF/CNPJ)
+        
+        Identifica tanto o tipo de contrato quanto o tipo de entidade e aplica 
+        o framework jurídico adequado (CDC para B2C, Código Civil para B2B/P2P)
+        
+        Args:
+            contract_text: The contract text to analyze
+            question: User's specific question
+            context: Additional context for analysis
+            
+        Returns:
+            Complete analysis with entity context and legal framework
+        """
+        try:
+            # Use NEW intelligent factory with entity analysis
+            result = intelligent_agent_factory.classify_and_create_agent_with_entities(
+                text=contract_text,
+                question=question
+            )
+            
+            return {
+                "classification": {
+                    "contract_type": result['classification'],
+                    "agent_type": result['agent_type'], 
+                    "confidence": result['confidence'],
+                    "method": result['method'],
+                    "is_automatic": result['is_automatic'],
+                    "matched_keywords": result.get('matched_keywords', [])
+                },
+                "entity_analysis": result.get('entity_analysis', {}),
+                "legal_context": result.get('legal_context', 'Genérico'),
+                "agent_specialization": result.get('agent_specialization', 'general'),
+                "agent_info": {
+                    "name": result['agent_name'],
+                    "icon": result['agent_icon'],
+                    "type": result['agent_type']
+                },
+                "response": result['response'],
+                "question": result['question'],
+                "has_context": result['has_context'],
+                "has_question": result.get('has_question', False),
+                "status": "success",
+                "version": "intelligent_entities_v1"
+            }
+            
+        except Exception as e:
+            return {
+                "classification": None,
+                "entity_analysis": None,
+                "legal_context": None,
+                "agent_info": None,
+                "response": f"Erro na análise inteligente com entidades: {str(e)}",
+                "status": "error",
+                "error": str(e),
+                "version": "intelligent_entities_v1"
+            }
+    
     async def analyze_contract(self, contract_text: str, context: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Complete contract analysis workflow:

@@ -124,6 +124,60 @@ class IntelligentAgentFactory:
             'has_context': bool(text and text.strip())
         }
     
+    def classify_and_create_agent_with_entities(self, text: str, question: str = "") -> Dict[str, Any]:
+        """
+        NOVA: Classifica automaticamente considerando análise de entidades (CPF/CNPJ)
+        
+        Args:
+            text: Texto do contrato (se disponível)  
+            question: Pergunta do usuário
+            
+        Returns:
+            Dict com classificação completa, contexto jurídico e resposta
+        """
+        
+        # Usar tanto texto do contrato quanto pergunta para classificação
+        classification_text = f"{text} {question}".strip()
+        
+        # Classificar automaticamente COM análise de entidades
+        classification_result = self.classifier.classify_contract_with_entities(classification_text, question)
+        
+        # Obter classe do agente
+        agent_type = classification_result['agent_type']
+        agent_class = self._agent_registry.get(agent_type, FinancialAgent)
+        
+        # Criar instância do agente
+        agent_instance = agent_class()
+        
+        # Gerar resposta especializada (considerando contexto de entidade se disponível)
+        response = agent_instance.generate_response(question, text)
+        
+        return {
+            # Informações da classificação (incluindo entidades)
+            'classification': classification_result['classification'],
+            'agent_type': agent_type,
+            'confidence': classification_result['confidence'],
+            'matched_keywords': classification_result.get('matched_keywords', []),
+            'is_automatic': classification_result['is_automatic'],
+            'method': classification_result['method'],
+            
+            # NOVO: Análise de entidades
+            'entity_analysis': classification_result.get('entity_analysis', {}),
+            'legal_context': classification_result.get('legal_context', 'Genérico'),
+            'agent_specialization': classification_result.get('agent_specialization', 'general'),
+            
+            # Informações do agente
+            'agent_name': getattr(agent_instance, 'specialization', 'Assistente Geral'),
+            'agent_icon': getattr(agent_instance, 'icon', '🤖'),
+            
+            # Resposta gerada
+            'response': response,
+            'question': question,
+            'has_context': bool(text and text.strip()),
+            'has_question': classification_result.get('has_question', False),
+            'version': 'entities_v1'
+        }
+    
     def get_agent_by_type(self, agent_type: str) -> Optional[BaseContractAgent]:
         """Retorna instância de agente específico por tipo"""
         agent_class = self._agent_registry.get(agent_type)

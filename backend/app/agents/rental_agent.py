@@ -3,14 +3,19 @@ import json
 from app.agents.base_agent import BaseContractAgent, ContractAnalysis
 
 class RentalAgent(BaseContractAgent):
-    """Specialized agent for rental/lease contract analysis"""
+    """Specialized agent for rental/lease contract analysis with entity context support"""
     
     def __init__(self, claude_client, rag_service, db_session=None):
         super().__init__(claude_client, rag_service, db_session)
         self.agent_type = "locacao"
+        self.specialization = "Locação Residencial"
+        self.icon = "🏠"
     
     async def analyze_contract(self, contract_text: str, context: Dict[str, Any] = None) -> ContractAnalysis:
-        """Analyze rental contract with specialized knowledge"""
+        """Analyze rental contract with specialized knowledge and entity context"""
+        
+        # Perform entity analysis first
+        entity_info = self.entity_classifier.identify_entities(contract_text)
         
         # Get enriched RAG context
         enriched_context = await self.get_enriched_context(
@@ -21,8 +26,11 @@ class RentalAgent(BaseContractAgent):
         # Format context for prompt
         rag_context = self._format_context_for_prompt(enriched_context)
         
-        # Create specialized prompt
-        prompt = self.get_specialized_prompt(contract_text, rag_context)
+        # Get entity-specific context
+        entity_context = self._get_entity_context_for_prompt(entity_info)
+        
+        # Create specialized prompt with entity context
+        prompt = self.get_specialized_prompt(contract_text, rag_context, entity_context)
         
         try:
             response = await self.claude_client.completions.create(
@@ -50,11 +58,67 @@ class RentalAgent(BaseContractAgent):
             # Fallback analysis
             return self._create_fallback_analysis(contract_text, str(e))
     
-    def get_specialized_prompt(self, contract_text: str, rag_context: str = "") -> str:
-        """Get rental-specific analysis prompt"""
+    def _get_entity_context_for_prompt(self, entity_info) -> str:
+        """Generate entity-specific context for rental analysis"""
+        
+        if not entity_info:
+            return ""
+        
+        if entity_info.consumer_protection:
+            # B2C Rental - Individual renting from company/professional landlord
+            return """
+            CONTEXTO JURÍDICO ESPECÍFICO - LOCAÇÃO B2C:
+            - PROTEÇÃO DO CONSUMIDOR: Este contrato está sujeito ao CDC (Código de Defesa do Consumidor)
+            - LOCATÁRIO PESSOA FÍSICA: Aplicar proteções especiais ao inquilino consumidor
+            - LOCADOR EMPRESARIAL: Maior responsabilidade sobre informações e cláusulas
+            - CLÁUSULAS ABUSIVAS: Verificar rigorosamente cláusulas que limitem direitos do locatário
+            - FORO COMPETENTE: Deve ser o domicílio do consumidor (locatário)
+            - TRANSPARÊNCIA: Todas as informações sobre custos devem ser claras e adequadas
+            - GARANTIAS: Não podem ser excessivas ou desproporcionais
+            """
+        elif entity_info.party_relationship == "b2b":
+            # B2B Rental - Company to company
+            return """
+            CONTEXTO JURÍDICO ESPECÍFICO - LOCAÇÃO COMERCIAL B2B:
+            - RELAÇÃO EMPRESARIAL: Paridade entre as partes contraentes
+            - LIBERDADE CONTRATUAL: Maior autonomia para negociar condições especiais
+            - FORO DE ELEIÇÃO: Válido se não prejudicar o equilíbrio contratual
+            - GARANTIAS: Podem ser proporcionais ao porte e risco do negócio
+            - CLÁUSULAS ESPECIAIS: Permitidas cláusulas comerciais específicas
+            - ONEROSIDADE: Possibilidade de revisão por mudanças econômicas significativas
+            """
+        elif entity_info.party_relationship == "p2p":
+            # P2P Rental - Individual to individual
+            return """
+            CONTEXTO JURÍDICO ESPECÍFICO - LOCAÇÃO ENTRE PARTICULARES:
+            - CÓDIGO CIVIL: Relação regida pelo direito civil e Lei do Inquilinato
+            - BOA-FÉ OBJETIVA: Princípio fundamental nas obrigações
+            - EQUILÍBRIO: Verificar se obrigações estão equilibradas
+            - GARANTIAS: Devem ser proporcionais e razoáveis
+            - FUNÇÃO SOCIAL: Contrato deve cumprir função social
+            - VULNERABILIDADE: Proteger a parte mais vulnerável economicamente
+            """
+        else:
+            return """
+            CONTEXTO JURÍDICO GERAL - LOCAÇÃO:
+            - Aplicação da Lei do Inquilinato (8.245/91) e Código Civil
+            - Verificar equilíbrio entre direitos e deveres das partes
+            - Analisar proporcionalidade de garantias e obrigações
+            """
+    
+    def get_specialized_prompt(self, contract_text: str, rag_context: str = "", entity_context: str = "") -> str:
+        """Get rental-specific analysis prompt with entity awareness"""
+        
+        base_intro = "Você é um especialista em contratos de locação imobiliária no Brasil. Analise o seguinte contrato de locação considerando a legislação brasileira (Lei do Inquilinato - Lei 8.245/91) e práticas do mercado."
+        
+        # Add entity-specific context if available
+        if entity_context:
+            intro = f"{base_intro}\n\n{entity_context}"
+        else:
+            intro = base_intro
         
         return f"""
-        Você é um especialista em contratos de locação imobiliária no Brasil. Analise o seguinte contrato de locação considerando a legislação brasileira (Lei do Inquilinato - Lei 8.245/91) e práticas do mercado.
+        {intro}
 
         Contexto de conhecimento especializado:
         {rag_context}
@@ -221,3 +285,87 @@ class RentalAgent(BaseContractAgent):
                 "recommendations": ["Solicitar análise manual"],
                 "severity": "média"
             }
+    
+    def generate_response(self, question: str, contract_text: str = "") -> str:
+        """Generate specialized rental response with entity context awareness"""
+        
+        # Analyze entities if contract text is provided
+        entity_info = None
+        if contract_text:
+            entity_info = self.entity_classifier.identify_entities(contract_text)
+        
+        if not question:
+            base_response = """🏠 **Locação Residencial - Análise Especializada**
+
+Olá! Sou especialista em contratos de locação imobiliária. Posso ajudar com:
+
+**📋 Principais Análises:**
+• Valores de aluguel e reajustes
+• Garantias e cauções exigidas
+• Cláusulas de rescisão e multas
+• Responsabilidades de conservação
+• Direitos e deveres do locatário
+
+**⚠️ Pontos Críticos Comuns:**
+• Valores de caução excessivos
+• Cláusulas de reajuste abusivas
+• Multas desproporcionais
+• Transferência inadequada de responsabilidades
+
+**⚖️ Base Legal:**
+Lei do Inquilinato (8.245/91) + Código Civil"""
+
+            # Add entity-specific information if available
+            if entity_info:
+                if entity_info.consumer_protection:
+                    base_response += """
+
+**🛡️ PROTEÇÃO ESPECIAL - B2C:**
+Este contrato está sujeito ao CDC. Como locatário consumidor, você tem:
+• Proteção contra cláusulas abusivas
+• Direito a informações claras e adequadas
+• Foro competente no seu domicílio
+• Garantias proporcionais e razoáveis"""
+                elif entity_info.party_relationship == "b2b":
+                    base_response += """
+
+**🏢 LOCAÇÃO COMERCIAL - B2B:**
+Relação entre empresas com maior liberdade contratual:
+• Negociação paritária de condições
+• Cláusulas comerciais específicas permitidas
+• Garantias adequadas ao porte empresarial
+• Foro de eleição válido"""
+                elif entity_info.party_relationship == "p2p":
+                    base_response += """
+
+**👥 LOCAÇÃO ENTRE PARTICULARES - P2P:**
+Relação civil regida pelo Código Civil:
+• Princípio da boa-fé objetiva
+• Equilíbrio entre direitos e deveres
+• Função social do contrato
+• Proteção da parte mais vulnerável"""
+            
+            return base_response + "\n\nComo posso ajudar com sua situação específica?"
+        
+        # Handle specific questions with entity context
+        question_lower = question.lower()
+        
+        # Add entity context to responses
+        entity_context = ""
+        if entity_info and entity_info.consumer_protection:
+            entity_context = "\n\n**⚖️ Contexto Jurídico:** Como este é um contrato B2C (empresa→pessoa física), aplicam-se as proteções do CDC além da Lei do Inquilinato."
+        elif entity_info and entity_info.party_relationship == "b2b":
+            entity_context = "\n\n**⚖️ Contexto Jurídico:** Como este é um contrato B2B (empresa→empresa), há maior liberdade contratual, mas deve haver equilíbrio entre as partes."
+        elif entity_info and entity_info.party_relationship == "p2p":
+            entity_context = "\n\n**⚖️ Contexto Jurídico:** Como este é um contrato entre particulares, aplicam-se os princípios do Código Civil e boa-fé objetiva."
+        
+        # Return base response with context
+        base_response = "🏠 **Locação - Orientação Especializada**\n\n"
+        base_response += f"Sobre sua pergunta: \"{question}\"\n\n"
+        base_response += "Posso ajudar com análise detalhada de contratos de locação considerando:\n"
+        base_response += "• Lei do Inquilinato (8.245/91)\n"
+        base_response += "• Código de Defesa do Consumidor (quando aplicável)\n"  
+        base_response += "• Jurisprudência específica sobre locações\n"
+        base_response += entity_context
+        
+        return base_response

@@ -1,10 +1,14 @@
 import re
 from typing import Dict, Any, List, Tuple
+from app.agents.entity_classifier import EntityClassifier, EntityInfo
 
 class IntelligentClassifier:
     """Sistema inteligente de classificação automática de contratos"""
     
     def __init__(self):
+        # Initialize entity classifier for CPF/CNPJ detection
+        self.entity_classifier = EntityClassifier()
+        
         # Mapeamento completo: categoria -> (agente, palavras-chave, peso)
         self.classification_rules = {
             # HABITAÇÃO E IMOBILIÁRIO
@@ -296,6 +300,61 @@ class IntelligentClassifier:
             'total_categories_evaluated': len(self.classification_rules),
             'categories_with_matches': len(scores)
         }
+    
+    def classify_contract_with_entities(self, text: str, question: str = "") -> Dict[str, Any]:
+        """
+        Enhanced classification that includes entity analysis (CPF/CNPJ)
+        
+        Returns both contract type AND entity relationship classification
+        """
+        # Base contract classification
+        base_classification = self.classify_contract(text)
+        
+        # Entity classification (NEW)
+        entity_info = self.entity_classifier.identify_entities(text)
+        
+        # Enhanced classification combining both analyses
+        enhanced_classification = {
+            **base_classification,
+            "entity_analysis": {
+                "entity_type": entity_info.type,
+                "party_relationship": entity_info.party_relationship,
+                "consumer_protection_applies": entity_info.consumer_protection,
+                "legal_framework": entity_info.legal_framework,
+                "identified_entities": entity_info.identified_entities,
+                "applicable_rights": self.entity_classifier.get_applicable_rights(entity_info),
+                "specific_risk_factors": self.entity_classifier.get_risk_factors_by_entity_type(entity_info),
+                "confidence_score": entity_info.confidence_score
+            }
+        }
+        
+        # Adjust agent selection and confidence based on entity type
+        if entity_info.consumer_protection:
+            enhanced_classification["agent_specialization"] = "consumer_focused"
+            enhanced_classification["legal_context"] = "B2C - Proteção CDC"
+        elif entity_info.party_relationship == "b2b":
+            enhanced_classification["agent_specialization"] = "commercial_focused"
+            enhanced_classification["legal_context"] = "B2B - Código Civil + Comercial"
+        elif entity_info.party_relationship == "p2p":
+            enhanced_classification["agent_specialization"] = "civil_focused"
+            enhanced_classification["legal_context"] = "P2P - Código Civil"
+        else:
+            enhanced_classification["agent_specialization"] = "general"
+            enhanced_classification["legal_context"] = "Genérico - Código Civil"
+        
+        # Boost confidence if entity detection is strong
+        if entity_info.confidence_score > 0.5:
+            base_confidence = enhanced_classification.get("confidence", 0.0)
+            enhanced_classification["confidence"] = min(base_confidence + (entity_info.confidence_score * 0.2), 1.0)
+        
+        # Include question analysis if provided
+        if question and question.strip():
+            enhanced_classification["question_context"] = question.strip()
+            enhanced_classification["has_question"] = True
+        else:
+            enhanced_classification["has_question"] = False
+        
+        return enhanced_classification
     
     def _create_general_classification(self, reason: str) -> Dict[str, Any]:
         """Cria classificação para agente geral"""
