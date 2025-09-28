@@ -1,323 +1,573 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { 
+  Search, 
+  FileText, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  Eye,
+  Download,
+  ChevronDown,
+  ChevronRight,
+  PenTool,
+  Shield
+} from 'lucide-react'
+
+// Tipos de dados
+interface ContractAnalysis {
+  id: string
+  fileName: string
+  contractType: 'rental' | 'telecom' | 'financial' | 'insurance'
+  analysisDate: string
+  riskLevel: 'alto' | 'medio' | 'baixo'
+  status: 'completed' | 'processing' | 'error'
+  issuesFound: number
+  fileSize: string
+  assinado: boolean
+  podeAssinar: boolean
+}
+
+// Dados mock
+const mockContracts: ContractAnalysis[] = [
+  {
+    id: '1',
+    fileName: 'Contrato de Locação - Apto 101',
+    contractType: 'rental',
+    analysisDate: '2025-09-20T14:30:00Z',
+    riskLevel: 'alto',
+    status: 'completed',
+    issuesFound: 7,
+    fileSize: '2.4 MB',
+    assinado: false,
+    podeAssinar: true
+  },
+  {
+    id: '2', 
+    fileName: 'Contrato de Internet - Fibra 200MB',
+    contractType: 'telecom',
+    analysisDate: '2025-09-18T09:15:00Z',
+    riskLevel: 'medio',
+    status: 'completed',
+    issuesFound: 3,
+    fileSize: '1.8 MB',
+    assinado: true,
+    podeAssinar: false
+  },
+  {
+    id: '3',
+    fileName: 'Contrato de Financiamento Veicular',
+    contractType: 'financial', 
+    analysisDate: '2025-09-15T16:45:00Z',
+    riskLevel: 'baixo',
+    status: 'completed',
+    issuesFound: 1,
+    fileSize: '3.1 MB',
+    assinado: false,
+    podeAssinar: true
+  },
+  {
+    id: '4',
+    fileName: 'Contrato de Cartão de Crédito Premium',
+    contractType: 'financial',
+    analysisDate: '2025-09-12T11:20:00Z', 
+    riskLevel: 'alto',
+    status: 'completed',
+    issuesFound: 12,
+    fileSize: '1.2 MB',
+    assinado: false,
+    podeAssinar: true
+  },
+  {
+    id: '5',
+    fileName: 'Seguro Auto Porto Seguro',
+    contractType: 'insurance',
+    analysisDate: '2025-09-10T13:30:00Z',
+    riskLevel: 'baixo',
+    status: 'completed',
+    issuesFound: 2,
+    fileSize: '4.2 MB',
+    assinado: true,
+    podeAssinar: false
+  },
+  {
+    id: '6',
+    fileName: 'Contrato Plano de Saúde Familiar',
+    contractType: 'insurance',
+    analysisDate: '2025-09-05T10:15:00Z',
+    riskLevel: 'baixo',
+    status: 'processing',
+    issuesFound: 0,
+    fileSize: '2.8 MB',
+    assinado: false,
+    podeAssinar: false
+  }
+]
+
+const contractTypeLabels = {
+  rental: { label: 'Locação', icon: '🏠', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  telecom: { label: 'Telecom', icon: '📱', color: 'bg-green-50 text-green-700 border-green-200' },
+  financial: { label: 'Financeiro', icon: '💳', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  insurance: { label: 'Seguro', icon: '🛡️', color: 'bg-orange-50 text-orange-700 border-orange-200' }
+}
+
+const riskLevelConfig = {
+  alto: { label: 'Alto Risco', color: 'bg-red-100 text-red-800', icon: AlertTriangle },
+  medio: { label: 'Médio Risco', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+  baixo: { label: 'Baixo Risco', color: 'bg-green-100 text-green-800', icon: CheckCircle }
+}
 
 export default function HistoricoPage() {
-  const [filter, setFilter] = useState('todos')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterType, setFilterType] = useState<string>('all')
+  const [expandedCard, setExpandedCard] = useState<string | null>(null)
   const router = useRouter()
 
-  // Dados simulados com status de assinatura
-  const contratos = [
-    {
-      id: 1,
-      nome: 'Contrato de Locação - Apto 101',
-      data: '2025-09-20',
-      tipo: 'Locação',
-      risco: 'Alto',
-      riscoColor: 'bg-red-100 text-red-800',
-      arquivo: 'contrato_locacao_101.pdf',
-      assinado: false,
-      podeAssinar: true
-    },
-    {
-      id: 2,
-      nome: 'Contrato de Internet - Fibra 200MB',
-      data: '2025-09-18',
-      tipo: 'Telecomunicações',
-      risco: 'Médio',
-      riscoColor: 'bg-yellow-100 text-yellow-800',
-      arquivo: 'contrato_internet_fibra.pdf',
-      assinado: true,
-      podeAssinar: false
-    },
-    {
-      id: 3,
-      nome: 'Contrato de Financiamento Veicular',
-      data: '2025-09-15',
-      tipo: 'Financeiro',
-      risco: 'Baixo',
-      riscoColor: 'bg-green-100 text-green-800',
-      arquivo: 'financiamento_veiculo.pdf',
-      assinado: false,
-      podeAssinar: true
-    },
-    {
-      id: 4,
-      nome: 'Contrato de Cartão de Crédito Premium',
-      data: '2025-09-12',
-      tipo: 'Financeiro',
-      risco: 'Alto',
-      riscoColor: 'bg-red-100 text-red-800',
-      arquivo: 'cartao_credito_premium.pdf',
-      assinado: true,
-      podeAssinar: false
+  // Filtros e busca
+  const filteredContracts = useMemo(() => {
+    let filtered = mockContracts
+
+    // Busca por nome
+    if (searchTerm) {
+      filtered = filtered.filter(contract => 
+        contract.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     }
-  ]
 
-  const filteredContratos = filter === 'todos' 
-    ? contratos 
-    : contratos.filter(c => c.risco.toLowerCase() === filter)
+    // Filtro por tipo
+    if (filterType !== 'all') {
+      filtered = filtered.filter(contract => contract.contractType === filterType)
+    }
 
-  const handleViewContract = (contratoId: number) => {
-    router.push(`/dashboard/analise?contratoId=${contratoId}`)
+    // Ordenação por data
+    filtered.sort((a, b) => {
+      return new Date(b.analysisDate).getTime() - new Date(a.analysisDate).getTime()
+    })
+
+    return filtered
+  }, [searchTerm, filterType])
+
+  // Estatísticas
+  const stats = useMemo(() => {
+    const completed = mockContracts.filter(c => c.status === 'completed')
+    const totalIssues = completed.reduce((sum, c) => sum + c.issuesFound, 0)
+    const highRisk = completed.filter(c => c.riskLevel === 'alto').length
+    const assinados = mockContracts.filter(c => c.assinado).length
+    const podeAssinar = mockContracts.filter(c => c.podeAssinar && !c.assinado).length
+    
+    return {
+      total: mockContracts.length,
+      completed: completed.length,
+      processing: mockContracts.filter(c => c.status === 'processing').length,
+      totalIssues,
+      highRisk,
+      assinados,
+      podeAssinar
+    }
+  }, [])
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
   }
 
-  const handleSignContract = (contratoId: number) => {
-    router.push(`/dashboard/assinatura?contratoId=${contratoId}&fromHistory=true`)
+  const viewAnalysis = (contractId: string) => {
+    router.push(`/plataforma/analise/resultado?id=${contractId}`)
   }
 
-  const downloadContract = (contratoId: number) => {
-    // Simular download do contrato
-    console.log(`Baixando contrato ${contratoId}`)
+  const signContract = (contractId: string) => {
+    router.push(`/plataforma/assinatura?id=${contractId}`)
   }
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3 sm:mb-4">
-          📚 Histórico de Contratos
-        </h1>
-        
-        {/* Filtros - Otimizado para Mobile sem Scroll */}
-        <div className="grid grid-cols-4 gap-2 sm:flex sm:gap-3">
-          <button
-            onClick={() => setFilter('todos')}
-            className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-center ${
-              filter === 'todos' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              Histórico de Análises
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Acompanhe todas as suas análises e contratos assinados
+            </p>
+          </div>
+          
+          <Button 
+            onClick={() => router.push('/plataforma/analise')}
+            className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
           >
-            <span className="block sm:hidden">📋</span>
-            <span className="hidden sm:block">Todos</span>
-          </button>
-          <button
-            onClick={() => setFilter('alto')}
-            className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-center ${
-              filter === 'alto' ? 'bg-red-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <span className="block sm:hidden">🔴</span>
-            <span className="hidden sm:block">Alto Risco</span>
-          </button>
-          <button
-            onClick={() => setFilter('médio')}
-            className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-center ${
-              filter === 'médio' ? 'bg-yellow-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <span className="block sm:hidden">🟡</span>
-            <span className="hidden sm:block">Médio Risco</span>
-          </button>
-          <button
-            onClick={() => setFilter('baixo')}
-            className={`px-2 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors text-center ${
-              filter === 'baixo' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            <span className="block sm:hidden">🟢</span>
-            <span className="hidden sm:block">Baixo Risco</span>
-          </button>
-        </div>
-        
-        {/* Indicador do filtro ativo no mobile */}
-        <div className="block sm:hidden mt-2">
-          <span className="text-xs text-gray-500">
-            Filtro: <span className="font-medium text-gray-700">
-              {filter === 'todos' ? 'Todos os contratos' : 
-               filter === 'alto' ? 'Alto risco' : 
-               filter === 'médio' ? 'Médio risco' : 'Baixo risco'}
-            </span>
-          </span>
+            📄 Nova Análise
+          </Button>
         </div>
       </div>
 
-      {/* Estatísticas */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow">
-          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Total Analisado</h3>
-          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">{contratos.length}</p>
-        </div>
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow">
-          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Assinados</h3>
-          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-600">
-            {contratos.filter(c => c.assinado).length}
-          </p>
-        </div>
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow">
-          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Pendentes</h3>
-          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-600">
-            {contratos.filter(c => !c.assinado && c.podeAssinar).length}
-          </p>
-        </div>
-        <div className="bg-white p-3 sm:p-4 lg:p-6 rounded-lg shadow">
-          <h3 className="text-xs sm:text-sm font-medium text-gray-500">Alto Risco</h3>
-          <p className="text-lg sm:text-xl lg:text-2xl font-bold text-red-600">
-            {contratos.filter(c => c.risco === 'Alto').length}
-          </p>
-        </div>
-      </div>
+      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+        
+        {/* Estatísticas Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+          <Card>
+            <CardContent className="p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl font-bold text-blue-600">{stats.total}</div>
+              <div className="text-xs text-gray-500">Total</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl font-bold text-green-600">{stats.completed}</div>
+              <div className="text-xs text-gray-500">Concluídas</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl font-bold text-orange-600">{stats.processing}</div>
+              <div className="text-xs text-gray-500">Processando</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl font-bold text-red-600">{stats.totalIssues}</div>
+              <div className="text-xs text-gray-500">Problemas</div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardContent className="p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl font-bold text-red-600">{stats.highRisk}</div>
+              <div className="text-xs text-gray-500">Alto Risco</div>
+            </CardContent>
+          </Card>
 
-      {/* Lista de Contratos */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 sm:p-6 border-b">
-          <h2 className="text-base sm:text-lg font-medium text-gray-900">
-            Contratos Analisados ({filteredContratos.length})
-          </h2>
+          <Card>
+            <CardContent className="p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl font-bold text-green-600">{stats.assinados}</div>
+              <div className="text-xs text-gray-500">Assinados</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-3 md:p-4 text-center">
+              <div className="text-xl md:text-2xl font-bold text-blue-600">{stats.podeAssinar}</div>
+              <div className="text-xs text-gray-500">P/ Assinar</div>
+            </CardContent>
+          </Card>
         </div>
-        <div className="divide-y divide-gray-200">
-          {filteredContratos.map((contrato) => (
-            <div key={contrato.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
-              
-              {/* Mobile Layout */}
-              <div className="block sm:hidden">
-                {/* Header com ícone e título */}
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="text-blue-600 flex-shrink-0">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-medium text-gray-900 leading-tight mb-1">{contrato.nome}</h3>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span>📅 {new Date(contrato.data).toLocaleDateString('pt-BR')}</span>
-                      <span>📂 {contrato.tipo}</span>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Tags de status em linha separada */}
-                <div className="flex items-center gap-2 mb-3 flex-wrap">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${contrato.riscoColor}`}>
-                    {contrato.risco} Risco
-                  </span>
-                  {contrato.assinado && (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 flex items-center gap-1">
-                      ✅ Assinado
-                    </span>
-                  )}
-                  {contrato.podeAssinar && !contrato.assinado && (
-                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 flex items-center gap-1">
-                      ⏳ Pendente
-                    </span>
-                  )}
-                </div>
-                
-                {/* Rodapé com arquivo e ações */}
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500 truncate flex-1 pr-2">📎 {contrato.arquivo}</span>
-                  <div className="flex gap-1 flex-shrink-0">
-                    <button 
-                      onClick={() => handleViewContract(contrato.id)}
-                      className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                      title="Ver análise"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                    </button>
-                    {contrato.podeAssinar && !contrato.assinado && (
-                      <button 
-                        onClick={() => handleSignContract(contrato.id)}
-                        className="p-2 text-gray-400 hover:text-green-600 transition-colors"
-                        title="Assinar contrato"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => downloadContract(contrato.id)}
-                      className="p-2 text-gray-400 hover:text-blue-600 transition-colors"
-                      title="Download"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </button>
-                  </div>
+
+        {/* Filtros e Busca */}
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              {/* Busca */}
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Buscar por nome do contrato..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
               </div>
-
-              {/* Desktop Layout */}
-              <div className="hidden sm:flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-4">
-                    <div className="text-blue-600">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="text-lg font-medium text-gray-900">{contrato.nome}</h3>
-                      <div className="flex items-center gap-4 mt-1 text-sm text-gray-500">
-                        <span>📅 {new Date(contrato.data).toLocaleDateString('pt-BR')}</span>
-                        <span>📂 {contrato.tipo}</span>
-                        <span>📎 {contrato.arquivo}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${contrato.riscoColor}`}>
-                      {contrato.risco} Risco
-                    </span>
-                    
-                    {/* Status de Assinatura */}
-                    {contrato.assinado && (
-                      <span className="px-3 py-1 rounded-full bg-green-100 text-green-800 text-sm font-medium flex items-center gap-1">
-                        ✅ Assinado
-                      </span>
-                    )}
-                    
-                    {contrato.podeAssinar && !contrato.assinado && (
-                      <span className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-sm font-medium flex items-center gap-1">
-                        ⏳ Aguardando Assinatura
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <button 
-                      onClick={() => handleViewContract(contrato.id)}
-                      className="px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
-                      title="Ver análise"
-                    >
-                      👁️ Ver Análise
-                    </button>
-                    
-                    {contrato.assinado ? (
-                      <button 
-                        onClick={() => downloadContract(contrato.id)}
-                        className="px-3 py-2 text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
-                        title="Baixar contrato assinado"
-                      >
-                        📥 Download
-                      </button>
-                    ) : contrato.podeAssinar ? (
-                      <button 
-                        onClick={() => handleSignContract(contrato.id)}
-                        className="px-3 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1 text-sm font-medium"
-                        title="Assinar contrato"
-                      >
-                        ✍️ Assinar
-                      </button>
-                    ) : null}
-                    
-                    <button className="p-2 text-gray-400 hover:text-red-600 transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+              
+              {/* Filtros Simples */}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant={filterType === 'all' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterType('all')}
+                >
+                  Todos
+                </Button>
+                <Button
+                  variant={filterType === 'rental' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterType('rental')}
+                >
+                  🏠 Locação
+                </Button>
+                <Button
+                  variant={filterType === 'telecom' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterType('telecom')}
+                >
+                  📱 Telecom
+                </Button>
+                <Button
+                  variant={filterType === 'financial' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setFilterType('financial')}
+                >
+                  💳 Financeiro
+                </Button>
               </div>
             </div>
-          ))}
+          </CardContent>
+        </Card>
+
+        {/* Lista de Contratos */}
+        <div className="space-y-4">
+          {filteredContracts.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Nenhum contrato encontrado
+                </h3>
+                <p className="text-gray-500 mb-4">
+                  Ajuste os filtros ou faça uma nova análise
+                </p>
+                <Button 
+                  onClick={() => router.push('/plataforma/analise')}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600"
+                >
+                  📄 Nova Análise
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            filteredContracts.map((contract) => {
+              const contractConfig = contractTypeLabels[contract.contractType]
+              const riskConfig = riskLevelConfig[contract.riskLevel as keyof typeof riskLevelConfig]
+              const RiskIcon = riskConfig?.icon
+              const isExpanded = expandedCard === contract.id
+
+              return (
+                <Card key={contract.id} className="transition-all duration-200 hover:shadow-md">
+                  <CardContent className="p-4">
+                    {/* Desktop: Layout horizontal */}
+                    <div className="hidden md:flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1">
+                        {/* Ícone do tipo */}
+                        <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+                          {contractConfig.icon}
+                        </div>
+                        
+                        {/* Info principal */}
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-gray-900 truncate">{contract.fileName}</h3>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge className={contractConfig.color} variant="outline">
+                              {contractConfig.label}
+                            </Badge>
+                            {contract.status === 'completed' && riskConfig && (
+                              <Badge className={riskConfig.color} variant="outline">
+                                {RiskIcon && <RiskIcon className="h-3 w-3 mr-1" />}
+                                {riskConfig.label}
+                              </Badge>
+                            )}
+                            {contract.status === 'processing' && (
+                              <Badge className="bg-blue-100 text-blue-800" variant="outline">
+                                <Clock className="h-3 w-3 mr-1" />
+                                Processando
+                              </Badge>
+                            )}
+                            {contract.assinado && (
+                              <Badge className="bg-green-100 text-green-800" variant="outline">
+                                <PenTool className="h-3 w-3 mr-1" />
+                                Assinado
+                              </Badge>
+                            )}
+                            {contract.podeAssinar && !contract.assinado && (
+                              <Badge className="bg-blue-100 text-blue-800" variant="outline">
+                                <Shield className="h-3 w-3 mr-1" />
+                                Pode Assinar
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Estatísticas */}
+                        <div className="text-center px-4">
+                          <div className="font-semibold text-lg">
+                            {contract.status === 'completed' ? contract.issuesFound : '-'}
+                          </div>
+                          <div className="text-xs text-gray-500">Problemas</div>
+                        </div>
+                        
+                        {/* Data */}
+                        <div className="text-right px-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {formatDate(contract.analysisDate)}
+                          </div>
+                          <div className="text-xs text-gray-500">{contract.fileSize}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Ações */}
+                      <div className="flex items-center gap-2">
+                        {contract.status === 'completed' && (
+                          <Button
+                            size="sm"
+                            variant="outline" 
+                            onClick={() => viewAnalysis(contract.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-1" />
+                            Ver Análise
+                          </Button>
+                        )}
+                        {contract.podeAssinar && !contract.assinado && (
+                          <Button
+                            size="sm"
+                            className="bg-gradient-to-r from-green-600 to-blue-600"
+                            onClick={() => signContract(contract.id)}
+                          >
+                            <PenTool className="h-4 w-4 mr-1" />
+                            Assinar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Mobile: Layout vertical */}
+                    <div className="md:hidden">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
+                            {contractConfig.icon}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 text-sm line-clamp-2 leading-tight">
+                              {contract.fileName}
+                            </h3>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {formatDate(contract.analysisDate)} • {contract.fileSize}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedCard(isExpanded ? null : contract.id)}
+                          className="p-1"
+                        >
+                          {isExpanded ? 
+                            <ChevronDown className="h-4 w-4" /> : 
+                            <ChevronRight className="h-4 w-4" />
+                          }
+                        </Button>
+                      </div>
+                      
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        <Badge className={contractConfig.color} variant="outline">
+                          {contractConfig.label}
+                        </Badge>
+                        {contract.status === 'completed' && riskConfig && (
+                          <Badge className={riskConfig.color} variant="outline">
+                            {RiskIcon && <RiskIcon className="h-3 w-3 mr-1" />}
+                            {riskConfig.label}
+                          </Badge>
+                        )}
+                        {contract.status === 'processing' && (
+                          <Badge className="bg-blue-100 text-blue-800" variant="outline">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Processando
+                          </Badge>
+                        )}
+                        {contract.assinado && (
+                          <Badge className="bg-green-100 text-green-800" variant="outline">
+                            <PenTool className="h-3 w-3 mr-1" />
+                            Assinado
+                          </Badge>
+                        )}
+                        {contract.podeAssinar && !contract.assinado && (
+                          <Badge className="bg-blue-100 text-blue-800" variant="outline">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Pode Assinar
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      {/* Estatísticas rápidas */}
+                      {!isExpanded && contract.status === 'completed' && (
+                        <div className="text-sm text-gray-600">
+                          <strong>{contract.issuesFound}</strong> problemas encontrados
+                        </div>
+                      )}
+                      
+                      {/* Conteúdo expandido */}
+                      {isExpanded && (
+                        <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+                          {contract.status === 'completed' && (
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <div className="text-gray-500">Problemas</div>
+                                <div className="font-semibold">{contract.issuesFound}</div>
+                              </div>
+                              <div>
+                                <div className="text-gray-500">Status</div>
+                                <div className="font-semibold">
+                                  {contract.assinado ? 'Assinado' : contract.podeAssinar ? 'Pode Assinar' : 'Concluído'}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          
+                          <div className="flex gap-2">
+                            {contract.status === 'completed' && (
+                              <Button
+                                size="sm"
+                                className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600"
+                                onClick={() => viewAnalysis(contract.id)}
+                              >
+                                <Eye className="h-4 w-4 mr-1" />
+                                Ver Análise
+                              </Button>
+                            )}
+                            {contract.podeAssinar && !contract.assinado ? (
+                              <Button
+                                size="sm"
+                                className="flex-1 bg-gradient-to-r from-green-600 to-blue-600"
+                                onClick={() => signContract(contract.id)}
+                              >
+                                <PenTool className="h-4 w-4 mr-1" />
+                                Assinar
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="flex-1"
+                              >
+                                <Download className="h-4 w-4 mr-1" />
+                                Download
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )
+            })
+          )}
         </div>
+
+        {/* Paginação - Placeholder para implementação futura */}
+        {filteredContracts.length > 0 && (
+          <div className="flex justify-center mt-8">
+            <div className="text-sm text-gray-500">
+              Mostrando {filteredContracts.length} de {mockContracts.length} contratos
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
