@@ -36,12 +36,6 @@ export default function SidebarLayout({ children, currentPage }: SidebarLayoutPr
       href: '/contracts', 
       id: 'contracts' 
     },
-    { 
-      icon: '📊', 
-      label: 'Performance', 
-      href: '/performance', 
-      id: 'performance' 
-    },
   ]
 
   return (
