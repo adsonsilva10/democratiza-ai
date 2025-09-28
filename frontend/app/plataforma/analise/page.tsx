@@ -1,841 +1,370 @@
-'use client'
+﻿'use client'
 
-import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Upload, FileText, Scan, Zap, Clock, Shield, AlertCircle, Camera, FolderOpen, X } from 'lucide-react'
 
-interface AnalysisResult {
-  id: string
-  fileName: string
-  contractType: string
-  riskLevel: 'Alto' | 'Médio' | 'Baixo'
-  riskScore: number
-  summary: string
-  issues: Array<{
-    type: 'critical' | 'warning' | 'info'
-    title: string
-    description: string
-    clause: string
-    suggestion?: string
-  }>
-  analysis: {
-    abusiveClauses: number
-    financialRisks: number
-    legalCompliance: number
-    consumerRights: number
-  }
-  companyInfo?: {
-    cnpj: string
-    razaoSocial: string
-    situacao: 'ATIVA' | 'SUSPENSA' | 'INAPTA' | 'BAIXADA'
-    porte: string
-    dataAbertura: string
-    capitalSocial: string
-    atividadePrincipal: string
-    endereco: string
-    telefone: string
-  }
-}
 
-interface ChatMessage {
-  id: string
-  text: string
-  sender: 'user' | 'ai'
-  timestamp: Date
-}
+
+
 
 export default function AnalisePage() {
-  const searchParams = useSearchParams()
-  const contratoId = searchParams?.get('contratoId')
-  
+  const [dragActive, setDragActive] = useState(false)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null)
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
-  const [showResults, setShowResults] = useState(false)
-  const [showChat, setShowChat] = useState(false)
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [chatInput, setChatInput] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
+  const [showMobileModal, setShowMobileModal] = useState(false)
+  // Simulando tipo de usuário - em produção viria do contexto/API
+  const [userType, setUserType] = useState<'free' | 'basic' | 'premium'>('free')
+  const router = useRouter()
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file) {
-      setUploadedFile(file)
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
+    }
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setDragActive(false)
+    
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      setSelectedFile(e.dataTransfer.files[0])
+    }
+  }, [])
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setSelectedFile(e.target.files[0])
     }
   }
 
-  const handleAnalyzeContract = () => {
+  const handleCameraCapture = () => {
+    setShowMobileModal(false)
+    // Implementar captura de câmera
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*'
+    input.capture = 'environment'
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (file) setSelectedFile(file)
+    }
+    input.click()
+  }
+
+  const handleMobileFileSelect = () => {
+    setShowMobileModal(false)
+    document.getElementById('mobile-file-upload')?.click()
+  }
+
+  const startAnalysis = async () => {
+    if (!selectedFile) return
     setIsAnalyzing(true)
-    // Simular análise por 3 segundos
     setTimeout(() => {
-      setIsAnalyzing(false)
-      // Simular resultado da análise
-      const mockResult: AnalysisResult = {
-        id: 'analysis-' + Date.now(),
-        fileName: uploadedFile?.name || 'contrato.pdf',
-        contractType: 'Locação Residencial',
-        riskLevel: 'Alto',
-        riskScore: 8.2,
-        summary: 'Este contrato apresenta várias cláusulas que podem ser prejudiciais ao locatário, incluindo multas excessivas e limitações de direitos.',
-        issues: [
-          {
-            type: 'critical',
-            title: 'Cláusula de Multa Abusiva',
-            description: 'Multa de rescisão de 6 meses de aluguel é considerada excessiva pela legislação.',
-            clause: 'Cláusula 15.2 - "Em caso de rescisão antecipada pelo locatário, será cobrada multa de 6 (seis) meses de aluguel."',
-            suggestion: 'A multa máxima legal é de 3 meses de aluguel. Negocie a redução desta cláusula.'
-          },
-          {
-            type: 'critical',
-            title: 'Transferência Indevida de Responsabilidade',
-            description: 'O locatário está assumindo responsabilidades que são do proprietário.',
-            clause: 'Cláusula 8.1 - "Todas as despesas de manutenção e reparos são de responsabilidade do locatário."',
-            suggestion: 'Reparos estruturais e manutenção predial devem ser responsabilidade do proprietário.'
-          },
-          {
-            type: 'warning',
-            title: 'Reajuste Anual Automático',
-            description: 'Cláusula de reajuste pode gerar aumentos acima da inflação.',
-            clause: 'Cláusula 4.3 - "O valor do aluguel será reajustado anualmente pelo IGPM."',
-            suggestion: 'Considere negociar um teto máximo para o reajuste anual.'
-          },
-          {
-            type: 'info',
-            title: 'Prazo de Aviso Prévio',
-            description: 'Prazo de 90 dias para aviso prévio está dentro da normalidade.',
-            clause: 'Cláusula 12.1 - "O aviso prévio para rescisão deve ser de 90 dias."'
-          }
-        ],
-        analysis: {
-          abusiveClauses: 2,
-          financialRisks: 3,
-          legalCompliance: 6,
-          consumerRights: 4
-        }
-      }
-      setAnalysisResult(mockResult)
-      setShowResults(true)
+      router.push('/plataforma/analise/resultado')
     }, 3000)
   }
 
-  const handleNewAnalysis = () => {
-    setShowResults(false)
-    setAnalysisResult(null)
-    setUploadedFile(null)
-    setShowChat(false)
-    setChatMessages([])
-  }
-
-  // Carregar contrato existente se vier do histórico
-  useEffect(() => {
-    if (contratoId) {
-      // Simular carregamento do contrato do histórico
-      const mockResult: AnalysisResult = {
-        id: contratoId,
-        fileName: 'contrato_locacao_101.pdf',
-        contractType: 'Locação Residencial',
-        riskLevel: 'Alto',
-        riskScore: 8.2,
-        summary: 'Este contrato apresenta várias cláusulas que podem ser prejudiciais ao locatário, incluindo multas excessivas e limitações de direitos.',
-        issues: [
-          {
-            type: 'critical',
-            title: 'Cláusula de Multa Abusiva',
-            description: 'Multa de rescisão de 6 meses de aluguel é considerada excessiva pela legislação.',
-            clause: 'Cláusula 15.2 - "Em caso de rescisão antecipada pelo locatário, será cobrada multa de 6 (seis) meses de aluguel."',
-            suggestion: 'A multa máxima legal é de 3 meses de aluguel. Negocie a redução desta cláusula.'
-          },
-          {
-            type: 'critical',
-            title: 'Transferência Indevida de Responsabilidade',
-            description: 'O locatário está assumindo responsabilidades que são do proprietário.',
-            clause: 'Cláusula 8.1 - "Todas as despesas de manutenção e reparos são de responsabilidade do locatário."',
-            suggestion: 'Reparos estruturais e manutenção predial devem ser responsabilidade do proprietário.'
-          },
-          {
-            type: 'warning',
-            title: 'Reajuste Anual Automático',
-            description: 'Cláusula de reajuste pode gerar aumentos acima da inflação.',
-            clause: 'Cláusula 4.3 - "O valor do aluguel será reajustado anualmente pelo IGPM."',
-            suggestion: 'Considere negociar um teto máximo para o reajuste anual.'
-          }
-        ],
-        analysis: {
-          abusiveClauses: 2,
-          financialRisks: 3,
-          legalCompliance: 6,
-          consumerRights: 4
-        },
-        companyInfo: {
-          cnpj: '12.345.678/0001-90',
-          razaoSocial: 'Empresa Exemplo Telecomunicações LTDA',
-          situacao: 'ATIVA',
-          porte: 'PEQUENO',
-          dataAbertura: '15/03/2020',
-          capitalSocial: '500.000,00',
-          atividadePrincipal: 'Telecomunicações por fio',
-          endereco: 'Rua das Comunicações, 123 - São Paulo/SP',
-          telefone: '(11) 3333-4444'
-        }
-      }
-      setAnalysisResult(mockResult)
-      setShowResults(true)
-    }
-  }, [contratoId])
-
-  const handleChatToggle = () => {
-    setShowChat(!showChat)
-    if (!showChat && chatMessages.length === 0) {
-      // Inicializar chat com mensagem da IA
-      const welcomeMessage: ChatMessage = {
-        id: 'welcome-' + Date.now(),
-        text: `Olá! Analisei seu contrato "${analysisResult?.fileName}" e identifiquei alguns pontos importantes. Posso esclarecer dúvidas sobre as cláusulas, explicar os riscos encontrados ou sugerir como proceder. O que gostaria de saber?`,
-        sender: 'ai',
-        timestamp: new Date()
-      }
-      setChatMessages([welcomeMessage])
-    }
-  }
-
-  const handleSendMessage = async () => {
-    if (!chatInput.trim() || isTyping) return
-
-    const userMessage: ChatMessage = {
-      id: 'user-' + Date.now(),
-      text: chatInput,
-      sender: 'user',
-      timestamp: new Date()
-    }
-
-    setChatMessages(prev => [...prev, userMessage])
-    setChatInput('')
-    setIsTyping(true)
-
-    // Simular chamada RAG para o backend
-    try {
-      // Aqui seria a chamada real para o backend com RAG
-      const response = await fetch('/api/v1/chat/contract', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contractId: analysisResult?.id,
-          message: chatInput,
-          context: analysisResult
-        }),
-      })
-
-      // Por enquanto, simular resposta
-      setTimeout(() => {
-        const aiResponse: ChatMessage = {
-          id: 'ai-' + Date.now(),
-          text: generateContextualResponse(chatInput, analysisResult),
-          sender: 'ai',
-          timestamp: new Date()
-        }
-        setChatMessages(prev => [...prev, aiResponse])
-        setIsTyping(false)
-      }, 2000)
-    } catch (error) {
-      setIsTyping(false)
-    }
-  }
-
-  const generateContextualResponse = (question: string, contract: AnalysisResult | null): string => {
-    const lowerQuestion = question.toLowerCase()
-    
-    // Respostas sobre a empresa (CNPJ)
-    if (lowerQuestion.includes('empresa') || lowerQuestion.includes('confiável') || lowerQuestion.includes('cnpj')) {
-      if (contract?.companyInfo) {
-        const situacao = contract.companyInfo.situacao
-        if (situacao === 'ATIVA') {
-          return `✅ A empresa ${contract.companyInfo.razaoSocial} está com situação ATIVA na Receita Federal. É uma empresa de porte ${contract.companyInfo.porte}, fundada em ${contract.companyInfo.dataAbertura}, com capital social de R$ ${contract.companyInfo.capitalSocial}. A atividade principal é "${contract.companyInfo.atividadePrincipal}". Isso são bons sinais de regularidade!`
-        } else {
-          return `⚠️ ATENÇÃO: A empresa ${contract.companyInfo.razaoSocial} está com situação ${situacao} na Receita Federal. Isso pode indicar problemas fiscais ou administrativos. Recomendo NÃO assinar o contrato até que a empresa regularize sua situação.`
-        }
-      }
-      return "Não foi possível identificar o CNPJ da empresa no contrato para fazer a verificação."
-    }
-    
-    if (lowerQuestion.includes('multa') || lowerQuestion.includes('rescisão')) {
-      return 'Sobre a multa de rescisão: identifiquei que o contrato prevê 6 meses de aluguel, o que é excessivo. Pela Lei do Inquilinato (Lei 8.245/91), a multa não pode exceder 3 meses. Você pode negociar a redução ou questionar juridicamente se já assinou.'
-    }
-    
-    if (lowerQuestion.includes('manutenção') || lowerQuestion.includes('reparo')) {
-      return 'Quanto à manutenção: o contrato transfere todos os reparos para você, mas isso não é correto. Reparos estruturais, problemas elétricos/hidráulicos principais e questões prediais são responsabilidade do proprietário. Apenas pequenos reparos e manutenção básica são do locatário.'
-    }
-    
-    if (lowerQuestion.includes('reajuste') || lowerQuestion.includes('aumento')) {
-      return 'Sobre o reajuste: o contrato usa o IGPM, que pode ser mais alto que outros índices. Você pode sugerir o IPCA ou negociar um teto máximo anual. O reajuste só pode ocorrer após 12 meses do contrato ou do último reajuste.'
-    }
-    
-    if (lowerQuestion.includes('direito') || lowerQuestion.includes('posso')) {
-      return 'Seus direitos como locatário incluem: receber o imóvel em boas condições, ter privacidade, não sofrer aumentos abusivos, e poder rescindir o contrato (respeitando as condições). Posso explicar qualquer direito específico que tenha dúvida.'
-    }
-    
-    return `Analisando sua pergunta sobre o contrato de ${contract?.contractType}, posso dizer que é importante sempre verificar se as cláusulas respeitam seus direitos como consumidor. Gostaria que eu explique algum ponto específico das ${contract?.issues.length} questões que identifiquei?`
-  }
-
-  if (showResults && analysisResult) {
-    return (
-      <div className="p-4 sm:p-6">
-        {/* Header com resultado */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+        <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">Análise Concluída</h1>
-            <p className="text-sm sm:text-base text-gray-600">{analysisResult.fileName}</p>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              Nova Análise de Contrato
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Analise contratos com IA especializada em direito brasileiro
+            </p>
           </div>
-          <button
-            onClick={handleNewAnalysis}
-            className="mt-3 sm:mt-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
-          >
-            Nova Análise
-          </button>
-        </div>
-
-        {/* Resumo do Risco */}
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Nível de Risco</h2>
-              <p className="text-sm text-gray-600">{analysisResult.contractType}</p>
-            </div>
-            <div className="mt-3 sm:mt-0 flex items-center gap-3">
-              <div className="text-right">
-                <div className={`text-2xl sm:text-3xl font-bold ${
-                  analysisResult.riskLevel === 'Alto' ? 'text-red-600' :
-                  analysisResult.riskLevel === 'Médio' ? 'text-yellow-600' : 'text-green-600'
-                }`}>
-                  {analysisResult.riskScore}/10
-                </div>
-                <div className={`text-sm font-medium ${
-                  analysisResult.riskLevel === 'Alto' ? 'text-red-600' :
-                  analysisResult.riskLevel === 'Médio' ? 'text-yellow-600' : 'text-green-600'
-                }`}>
-                  {analysisResult.riskLevel} Risco
-                </div>
-              </div>
-              <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center ${
-                analysisResult.riskLevel === 'Alto' ? 'bg-red-100' :
-                analysisResult.riskLevel === 'Médio' ? 'bg-yellow-100' : 'bg-green-100'
-              }`}>
-                <span className="text-xl sm:text-2xl">
-                  {analysisResult.riskLevel === 'Alto' ? '⚠️' :
-                   analysisResult.riskLevel === 'Médio' ? '⚡' : '✅'}
-                </span>
-              </div>
-            </div>
-          </div>
-          <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{analysisResult.summary}</p>
-        </div>
-
-        {/* Informações da Empresa */}
-        {analysisResult.companyInfo && (
-          <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4 mb-6">
-            <h3 className="text-lg font-semibold text-purple-900 mb-3">📋 Análise da Empresa</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-purple-700"><strong>Razão Social:</strong> {analysisResult.companyInfo.razaoSocial}</p>
-                <p className="text-sm text-purple-700"><strong>CNPJ:</strong> {analysisResult.companyInfo.cnpj}</p>
-                <p className="text-sm text-purple-700"><strong>Situação:</strong> 
-                  <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                    analysisResult.companyInfo.situacao === 'ATIVA' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                  }`}>
-                    {analysisResult.companyInfo.situacao}
-                  </span>
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-purple-700"><strong>Porte:</strong> {analysisResult.companyInfo.porte}</p>
-                <p className="text-sm text-purple-700"><strong>Abertura:</strong> {analysisResult.companyInfo.dataAbertura}</p>
-                <p className="text-sm text-purple-700"><strong>Capital:</strong> R$ {analysisResult.companyInfo.capitalSocial}</p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Métricas de Análise */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
-          <div className="bg-white p-3 sm:p-4 rounded-lg shadow text-center">
-            <div className="text-lg sm:text-2xl font-bold text-red-600">{analysisResult.analysis.abusiveClauses}</div>
-            <div className="text-xs sm:text-sm text-gray-600">Cláusulas Abusivas</div>
-          </div>
-          <div className="bg-white p-3 sm:p-4 rounded-lg shadow text-center">
-            <div className="text-lg sm:text-2xl font-bold text-yellow-600">{analysisResult.analysis.financialRisks}</div>
-            <div className="text-xs sm:text-sm text-gray-600">Riscos Financeiros</div>
-          </div>
-          <div className="bg-white p-3 sm:p-4 rounded-lg shadow text-center">
-            <div className="text-lg sm:text-2xl font-bold text-blue-600">{analysisResult.analysis.legalCompliance}</div>
-            <div className="text-xs sm:text-sm text-gray-600">Conformidade Legal</div>
-          </div>
-          <div className="bg-white p-3 sm:p-4 rounded-lg shadow text-center">
-            <div className="text-lg sm:text-2xl font-bold text-green-600">{analysisResult.analysis.consumerRights}</div>
-            <div className="text-xs sm:text-sm text-gray-600">Direitos Protegidos</div>
+          <div className="hidden lg:flex items-center gap-4">
+            <Badge variant="secondary" className="bg-green-100 text-green-700">
+              ⚡ Análise em 45s
+            </Badge>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+              🛡️ 98.7% de precisão
+            </Badge>
           </div>
         </div>
+      </div>
 
-        {/* Fluxo de Assinatura Integrado */}
-        <div className="mb-6">
-          {analysisResult.riskLevel === 'Baixo' ? (
-            // Contrato com baixo risco - recomenda assinatura
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-4xl">✅</div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-green-900 mb-2">
-                    Contrato Aprovado para Assinatura
-                  </h3>
-                  <p className="text-green-800 mb-4">
-                    A análise indica que este contrato tem baixo risco e pode ser assinado com segurança. 
-                    Você pode prosseguir diretamente para a assinatura eletrônica.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button 
-                      onClick={() => window.open('/dashboard/assinatura', '_blank')}
-                      className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all font-medium shadow-lg hover:shadow-xl transform hover:scale-105"
-                    >
-                      ✍️ Assinar Agora
-                    </button>
-                    <button 
-                      onClick={() => setShowChat(true)}
-                      className="px-6 py-3 bg-white text-green-700 border border-green-300 rounded-lg hover:bg-green-50 transition-colors font-medium"
-                    >
-                      💬 Tirar Dúvidas Antes
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : analysisResult.riskLevel === 'Médio' ? (
-            // Contrato com risco médio - assinatura condicional
-            <div className="bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-4xl">⚠️</div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-yellow-900 mb-2">
-                    Assinatura Requer Atenção
-                  </h3>
-                  <p className="text-yellow-800 mb-4">
-                    Identifiquei alguns pontos que merecem atenção. Recomendo negociar os termos antes da assinatura 
-                    ou consultar nossa IA para orientações específicas.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button 
-                      onClick={() => setShowChat(true)}
-                      className="px-6 py-3 bg-gradient-to-r from-yellow-600 to-amber-600 text-white rounded-lg hover:from-yellow-700 hover:to-amber-700 transition-all font-medium shadow-lg"
-                    >
-                      🤖 Consultar IA Primeiro
-                    </button>
-                    <button 
-                      onClick={() => {
-                        if(confirm('Este contrato tem riscos médios. Tem certeza que deseja prosseguir para assinatura?')) {
-                          window.open('/dashboard/assinatura', '_blank')
-                        }
-                      }}
-                      className="px-6 py-3 bg-white text-yellow-700 border border-yellow-300 rounded-lg hover:bg-yellow-50 transition-colors font-medium"
-                    >
-                      ✍️ Assinar Mesmo Assim
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Contrato com alto risco - não recomenda assinatura
-            <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-xl p-6">
-              <div className="flex items-start gap-4">
-                <div className="text-4xl">🚨</div>
-                <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-red-900 mb-2">
-                    ⚠️ Assinatura NÃO Recomendada
-                  </h3>
-                  <p className="text-red-800 mb-4">
-                    Este contrato apresenta <strong>riscos significativos</strong>. Recomendo fortemente renegociar 
-                    os termos ou buscar assessoria jurídica antes de assinar.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <button 
-                      onClick={() => setShowChat(true)}
-                      className="px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-lg hover:from-red-700 hover:to-rose-700 transition-all font-medium shadow-lg"
-                    >
-                      🆘 Buscar Orientação
-                    </button>
-                    <button 
-                      onClick={() => setChatInput('Como posso renegociar este contrato para reduzir os riscos?')}
-                      className="px-6 py-3 bg-white text-red-700 border border-red-300 rounded-lg hover:bg-red-50 transition-colors font-medium"
-                    >
-                      🤝 Dicas de Renegociação
-                    </button>
-                  </div>
-                  <div className="mt-4 p-3 bg-red-100 rounded-lg">
-                    <p className="text-xs text-red-800">
-                      <strong>Importante:</strong> A assinatura eletrônica estará disponível somente após a resolução dos principais riscos identificados.
+      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
+        <div className="max-w-2xl mx-auto space-y-6">
+            
+            {/* Upload Area */}
+            <Card className="border-2 border-dashed border-gray-300">
+              <CardContent 
+                className={dragActive 
+                  ? 'p-6 md:p-12 text-center bg-blue-50 border-blue-400 transition-colors duration-200' 
+                  : 'p-6 md:p-12 text-center transition-colors duration-200'
+                }
+                onDragEnter={handleDrag}
+                onDragLeave={handleDrag}
+                onDragOver={handleDrag}
+                onDrop={handleDrop}
+              >
+                {!selectedFile ? (
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                      <Upload className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <div>
+                      {/* Desktop: Arraste seu contrato */}
+                      <h3 className="hidden md:block text-lg font-semibold text-gray-900 mb-2">
+                        Arraste seu contrato aqui
+                      </h3>
+                      {/* Mobile: Selecione seu contrato */}
+                      <h3 className="md:hidden text-lg font-semibold text-gray-900 mb-2">
+                        Selecione seu contrato
+                      </h3>
+                      
+                      <p className="hidden md:block text-gray-500 mb-4">
+                        ou clique para selecionar um arquivo
+                      </p>
+                      <p className="md:hidden text-gray-500 mb-4">
+                        Escolha entre câmera ou arquivo
+                      </p>
+
+                      {/* Desktop: Input direto */}
+                      <div className="hidden md:block">
+                        <input
+                          type="file"
+                          id="file-upload"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx"
+                          onChange={handleFileSelect}
+                        />
+                        <label htmlFor="file-upload">
+                          <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+                            Selecionar Arquivo
+                          </Button>
+                        </label>
+                      </div>
+
+                      {/* Mobile: Modal com opções */}
+                      <div className="md:hidden">
+                        <Button 
+                          className="bg-gradient-to-r from-blue-600 to-purple-600"
+                          onClick={() => setShowMobileModal(true)}
+                        >
+                          Selecionar Arquivo
+                        </Button>
+                        <input
+                          type="file"
+                          id="mobile-file-upload"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,image/*"
+                          onChange={handleFileSelect}
+                        />
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      Formatos aceitos: PDF, DOC, DOCX • Máximo 10MB
                     </p>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Ações Recomendadas */}
-        <div className="bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-200 rounded-lg p-4 mb-6">
-          <h3 className="text-lg font-semibold text-indigo-900 mb-3">Ações Adicionais</h3>
-          <div className="flex flex-wrap gap-2">
-            <button 
-              onClick={() => setChatInput('Como posso contestar as cláusulas abusivas?')}
-              className="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm"
-            >
-              📋 Contestar Cláusulas
-            </button>
-            <button 
-              onClick={() => setChatInput('Quais são meus direitos neste contrato?')}
-              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-            >
-              ⚖️ Meus Direitos
-            </button>
-            <button 
-              onClick={() => setChatInput('Como posso negociar melhores condições?')}
-              className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-            >
-              🤝 Negociar
-            </button>
-            <button className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
-              📄 Gerar Relatório
-            </button>
-            <button 
-              onClick={() => window.open('/dashboard/historico', '_blank')}
-              className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-            >
-              📂 Salvar no Histórico
-            </button>
-          </div>
-        </div>
-
-        {/* Problemas Identificados */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="p-4 sm:p-6 border-b">
-            <h3 className="text-lg font-semibold text-gray-900">Problemas Identificados</h3>
-          </div>
-          <div className="divide-y divide-gray-200">
-            {analysisResult.issues.map((issue, index) => (
-              <div key={index} className="p-4 sm:p-6">
-                <div className="flex items-start gap-3">
-                  <div className={`flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center ${
-                    issue.type === 'critical' ? 'bg-red-100 text-red-600' :
-                    issue.type === 'warning' ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-blue-600'
-                  }`}>
-                    <span className="text-sm sm:text-base">
-                      {issue.type === 'critical' ? '🚨' : issue.type === 'warning' ? '⚠️' : 'ℹ️'}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-2">{issue.title}</h4>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-3">{issue.description}</p>
-                    
-                    <div className="bg-gray-50 p-3 rounded-lg mb-3">
-                      <p className="text-xs sm:text-sm font-medium text-gray-700 mb-1">Cláusula:</p>
-                      <p className="text-xs sm:text-sm text-gray-600 italic">"{issue.clause}"</p>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                      <FileText className="h-8 w-8 text-green-600" />
                     </div>
-                    
-                    {issue.suggestion && (
-                      <div className="bg-green-50 p-3 rounded-lg">
-                        <p className="text-xs sm:text-sm font-medium text-green-800 mb-1">💡 Sugestão:</p>
-                        <p className="text-xs sm:text-sm text-green-700">{issue.suggestion}</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Botão de Chat Flutuante */}
-        {!showChat && (
-          <div className="fixed bottom-6 right-6 z-50">
-            <button
-              onClick={() => setShowChat(true)}
-              className="w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-xl hover:shadow-2xl transform hover:scale-110 transition-all duration-200 flex items-center justify-center"
-              title="Conversar sobre este contrato"
-            >
-              <span className="text-xl">💬</span>
-            </button>
-          </div>
-        )}
-
-        {/* Chat Integrado */}
-        {showChat && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50" onClick={() => setShowChat(false)}>
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
-              <div className="p-4 border-b flex items-center justify-between bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-t-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                    <span className="text-lg">🤖</span>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold">Assistente Jurídico IA</h3>
-                    <p className="text-xs text-purple-100">Especialista em {analysisResult.contractType}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowChat(false)}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            
-              <div className="h-80 overflow-y-auto p-4 space-y-4">
-                {chatMessages.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-[80%] px-3 py-2 rounded-lg text-sm ${
-                      message.sender === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}>
-                      {message.sender === 'ai' && (
-                        <div className="flex items-center mb-1">
-                          <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
-                            AI
-                          </div>
-                          <span className="text-xs text-gray-500">Democratiza AI</span>
-                        </div>
-                      )}
-                      <p>{message.text}</p>
-                      <p className={`text-xs mt-1 ${
-                        message.sender === 'user' ? 'text-blue-200' : 'text-gray-400'
-                      }`}>
-                        {message.timestamp.toLocaleTimeString('pt-BR', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })}
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        {selectedFile.name}
+                      </h3>
+                      <p className="text-gray-500">
+                        {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
                       </p>
                     </div>
-                  </div>
-                ))}
-                
-                {isTyping && (
-                  <div className="flex justify-start">
-                    <div className="bg-gray-100 text-gray-900 max-w-[80%] px-3 py-2 rounded-lg text-sm">
-                      <div className="flex items-center mb-1">
-                        <div className="w-4 h-4 bg-purple-600 rounded-full flex items-center justify-center text-white text-xs font-bold mr-2">
-                          AI
-                        </div>
-                        <span className="text-xs text-gray-500">Analisando...</span>
-                      </div>
-                      <div className="flex space-x-1">
-                        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-1 h-1 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      </div>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Button 
+                        onClick={startAnalysis}
+                        disabled={isAnalyzing}
+                        className="bg-gradient-to-r from-blue-600 to-purple-600"
+                      >
+                        {isAnalyzing ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            Analisando...
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="w-4 h-4 mr-2" />
+                            Iniciar Análise
+                          </>
+                        )}
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setSelectedFile(null)}
+                        disabled={isAnalyzing}
+                      >
+                        Remover
+                      </Button>
                     </div>
                   </div>
                 )}
-              </div>
-              
-              <div className="p-4 border-t">
-                {/* Perguntas Sugeridas */}
-                {chatMessages.length <= 1 && (
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-2">Perguntas sugeridas:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        'Como posso contestar a multa?',
-                        'Quais são meus direitos?',
-                        'A empresa é confiável?',
-                        'O reajuste está correto?',
-                        'Posso negociar as cláusulas?'
-                      ].map((suggestion) => (
-                        <button
-                          key={suggestion}
-                          onClick={() => setChatInput(suggestion)}
-                          className="px-2 py-1 text-xs bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
-                        >
-                          {suggestion}
-                        </button>
-                      ))}
+              </CardContent>
+            </Card>
+            {/* Como Funciona */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg text-center">Como Funciona</CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 md:px-6">
+                {/* Mobile: Layout vertical compacto */}
+                <div className="md:hidden space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">
+                      📤
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm text-gray-900">Upload</h4>
+                      <p className="text-xs text-gray-500">Envie seu arquivo</p>
                     </div>
                   </div>
-                )}
-                
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Pergunte sobre o contrato..."
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!chatInput.trim() || isTyping}
-                    className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
-                      chatInput.trim() && !isTyping
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
-                  >
-                    Enviar
-                  </button>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">
+                      🤖
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm text-gray-900">IA Analisa</h4>
+                      <p className="text-xs text-gray-500">Claude processa</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">
+                      �
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm text-gray-900">Relatório</h4>
+                      <p className="text-xs text-gray-500">Receba alertas</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Ações Rápidas */}
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-          <button 
-            onClick={handleChatToggle}
-            className={`flex items-center justify-center gap-2 p-3 sm:p-4 rounded-lg transition-colors ${
-              showChat 
-                ? 'bg-blue-700 text-white' 
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            <span className="text-sm sm:text-base">💬</span>
-            <span className="text-sm sm:text-base font-medium">
-              {showChat ? 'Fechar Chat' : 'Conversar com IA'}
-            </span>
-          </button>
-          <button className="flex items-center justify-center gap-2 p-3 sm:p-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-            <span className="text-sm sm:text-base">📄</span>
-            <span className="text-sm sm:text-base font-medium">Baixar Relatório</span>
-          </button>
-          <button className="flex items-center justify-center gap-2 p-3 sm:p-4 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
-            <span className="text-sm sm:text-base">📤</span>
-            <span className="text-sm sm:text-base font-medium">Compartilhar</span>
-          </button>
+                {/* Desktop: Layout horizontal */}
+                <div className="hidden md:block">
+                  <div className="flex items-center justify-center">
+                    {/* Passo 1 */}
+                    <div className="flex-1 text-center">
+                      <div className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm mb-2">
+                        📤
+                      </div>
+                      <h4 className="font-semibold text-sm text-gray-900">Upload</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">Envie arquivo</p>
+                    </div>
+
+                    {/* Seta 1 */}
+                    <div className="flex-shrink-0 px-4">
+                      <div className="w-8 h-0.5 bg-gray-300"></div>
+                    </div>
+
+                    {/* Passo 2 */}
+                    <div className="flex-1 text-center">
+                      <div className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm mb-2">
+                        🤖
+                      </div>
+                      <h4 className="font-semibold text-sm text-gray-900">IA Analisa</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">Claude processa</p>
+                    </div>
+
+                    {/* Seta 2 */}
+                    <div className="flex-shrink-0 px-4">
+                      <div className="w-8 h-0.5 bg-gray-300"></div>
+                    </div>
+
+                    {/* Passo 3 */}
+                    <div className="flex-1 text-center">
+                      <div className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm mb-2">
+                        📊
+                      </div>
+                      <h4 className="font-semibold text-sm text-gray-900">Relatório</h4>
+                      <p className="text-xs text-gray-500 mt-0.5">Receba alertas</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Upgrade de Planos - Apenas para usuários free/basic */}
+            {(userType === 'free' || userType === 'basic') && (
+              <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+                <CardContent className="p-6 text-center">
+                  <h3 className="font-bold text-lg mb-2">
+                    {userType === 'free' ? 'Análises Ilimitadas' : 'Upgrade Premium'}
+                  </h3>
+                  <p className="text-sm opacity-90 mb-4">
+                    {userType === 'free' 
+                      ? 'Comece com plano básico para mais funcionalidades'
+                      : 'Upgrade para Premium e analise quantos contratos quiser'
+                    }
+                  </p>
+                  <Button 
+                    variant="secondary" 
+                    className="w-full bg-white text-blue-600 hover:bg-gray-100"
+                    onClick={() => router.push('/plataforma/planos')}
+                  >
+                    Ver Planos
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
         </div>
       </div>
-    )
-  }
 
-  return (
-    <div className="p-4 sm:p-6">
-      <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6">Análise de Contratos</h1>
-      
-      {/* Upload Section */}
-      <div className="bg-white rounded-lg shadow p-4 sm:p-6 mb-6 sm:mb-8">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Fazer Upload do Contrato</h2>
-        
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 sm:p-8 text-center hover:border-blue-400 transition-colors">
-          <div className="space-y-3 sm:space-y-4">
-            <div className="text-gray-400">
-              <svg className="w-10 h-10 sm:w-12 sm:h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-              </svg>
-            </div>
-            
-            <div>
-              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-                {uploadedFile ? uploadedFile.name : 'Arraste e solte seu contrato aqui'}
-              </h3>
-              <p className="text-sm sm:text-base text-gray-500">
-                {uploadedFile ? 'Arquivo selecionado! Clique em analisar para continuar.' : 'Ou clique para selecionar um arquivo'}
-              </p>
-              <p className="text-xs sm:text-sm text-gray-400 mt-2">Suporta PDF, DOC, DOCX até 10MB</p>
-            </div>
-            
-            <div>
-              <input
-                type="file"
-                accept=".pdf,.doc,.docx"
-                onChange={handleFileUpload}
-                className="hidden"
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                className="inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border border-transparent text-sm sm:text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 cursor-pointer transition-colors"
+      {/* Modal Mobile */}
+      {showMobileModal && (
+        <div className="md:hidden fixed inset-0 bg-black/50 z-50 flex items-end">
+          <div className="bg-white w-full rounded-t-xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold">Selecionar Arquivo</h3>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setShowMobileModal(false)}
               >
-                📎 Selecionar Arquivo
-              </label>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="space-y-3">
+              <Button 
+                className="w-full flex items-center gap-3 justify-start h-12"
+                variant="outline"
+                onClick={handleCameraCapture}
+              >
+                <Camera className="h-5 w-5" />
+                <div className="text-left">
+                  <div className="font-medium">Câmera</div>
+                  <div className="text-xs text-gray-500">Fotografar documento</div>
+                </div>
+              </Button>
+              
+              <Button 
+                className="w-full flex items-center gap-3 justify-start h-12"
+                variant="outline"
+                onClick={handleMobileFileSelect}
+              >
+                <FolderOpen className="h-5 w-5" />
+                <div className="text-left">
+                  <div className="font-medium">Arquivo</div>
+                  <div className="text-xs text-gray-500">Escolher da galeria</div>
+                </div>
+              </Button>
             </div>
           </div>
         </div>
-        
-        {uploadedFile && (
-          <div className="mt-4 sm:mt-6 flex justify-center">
-            <button
-              onClick={handleAnalyzeContract}
-              disabled={isAnalyzing}
-              className={`px-6 sm:px-8 py-2 sm:py-3 rounded-lg font-semibold transition-colors text-sm sm:text-base ${
-                isAnalyzing 
-                  ? 'bg-gray-400 text-gray-700 cursor-not-allowed' 
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              {isAnalyzing ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-4 w-4 sm:h-5 sm:w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Analisando...
-                </span>
-              ) : (
-                '🔍 Analisar Contrato'
-              )}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Analysis Types */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <div className="text-blue-600 mb-3 sm:mb-4">
-            <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Análise Rápida</h3>
-          <p className="text-sm sm:text-base text-gray-600">Identificação automática de cláusulas abusivas e pontos de atenção</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6">
-          <div className="text-purple-600 mb-3 sm:mb-4">
-            <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Análise Profunda</h3>
-          <p className="text-sm sm:text-base text-gray-600">Análise detalhada com sugestões de melhorias e alternativas</p>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
-          <div className="text-green-600 mb-3 sm:mb-4">
-            <svg className="w-6 h-6 sm:w-8 sm:h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Chat Assistido</h3>
-          <p className="text-sm sm:text-base text-gray-600">Converse com nossa IA sobre dúvidas específicas do contrato</p>
-        </div>
-      </div>
-
-      {/* Recent Analysis */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 sm:p-6 border-b">
-          <h2 className="text-base sm:text-lg font-medium text-gray-900">Análises Recentes</h2>
-        </div>
-        <div className="p-4 sm:p-6">
-          <div className="text-center py-6 sm:py-8 text-gray-500">
-            <svg className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-3 sm:mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="text-sm sm:text-base">Nenhuma análise realizada ainda. Faça upload de um contrato para começar!</p>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   )
 }
