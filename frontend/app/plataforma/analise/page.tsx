@@ -96,15 +96,15 @@ export default function AnalisePage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <div className="container mx-auto px-6 md:px-6 py-8 md:py-8">
+        <div className="max-w-2xl mx-auto space-y-8 md:space-y-6">
             
             {/* Upload Area */}
             <Card className="border-2 border-dashed border-gray-300">
               <CardContent 
                 className={dragActive 
-                  ? 'p-6 md:p-12 text-center bg-blue-50 border-blue-400 transition-colors duration-200' 
-                  : 'p-6 md:p-12 text-center transition-colors duration-200'
+                  ? 'p-8 md:p-12 text-center bg-blue-50 border-blue-400 transition-colors duration-200' 
+                  : 'p-8 md:p-12 text-center transition-colors duration-200'
                 }
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
@@ -112,9 +112,9 @@ export default function AnalisePage() {
                 onDrop={handleDrop}
               >
                 {!selectedFile ? (
-                  <div className="space-y-4">
-                    <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
-                      <Upload className="h-10 w-10 md:h-12 md:w-12 text-gray-400" />
+                  <div className="space-y-6">
+                    <div className="w-20 h-20 md:w-20 md:h-20 mx-auto bg-gray-100 rounded-full flex items-center justify-center">
+                      <Upload className="h-14 w-14 md:h-12 md:w-12 text-gray-400" />
                     </div>
                     <div>
                       {/* Desktop: Arraste seu contrato */}
@@ -122,14 +122,14 @@ export default function AnalisePage() {
                         Arraste seu contrato aqui
                       </h3>
                       {/* Mobile: Selecione seu contrato */}
-                      <h3 className="md:hidden text-xl font-semibold text-gray-900 mb-3">
+                      <h3 className="md:hidden text-2xl font-semibold text-gray-900 mb-4">
                         Selecione seu contrato
                       </h3>
                       
                       <p className="hidden md:block text-gray-500 mb-4">
                         ou clique para selecionar um arquivo
                       </p>
-                      <p className="md:hidden text-base text-gray-500 mb-6">
+                      <p className="md:hidden text-lg text-gray-600 mb-8">
                         Escolha entre câmera ou arquivo
                       </p>
 
@@ -152,7 +152,7 @@ export default function AnalisePage() {
                       {/* Mobile: Modal com opções */}
                       <div className="md:hidden">
                         <Button 
-                          className="bg-gradient-to-r from-blue-600 to-purple-600 h-12 text-base px-6"
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 h-14 text-lg px-8 min-w-[200px]"
                           onClick={() => setShowMobileModal(true)}
                         >
                           Selecionar Arquivo
@@ -166,20 +166,20 @@ export default function AnalisePage() {
                         />
                       </div>
                     </div>
-                    <p className="text-sm md:text-xs text-gray-400 mt-2">
+                    <p className="text-base md:text-xs text-gray-500 mt-3">
                       Formatos aceitos: PDF, DOC, DOCX • Máximo 10MB
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    <div className="w-16 h-16 md:w-20 md:h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center">
-                      <FileText className="h-10 w-10 md:h-12 md:w-12 text-green-600" />
+                  <div className="space-y-6">
+                    <div className="w-20 h-20 md:w-20 md:h-20 mx-auto bg-green-100 rounded-full flex items-center justify-center">
+                      <FileText className="h-14 w-14 md:h-12 md:w-12 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="text-xl md:text-lg font-semibold text-gray-900">
+                      <h3 className="text-2xl md:text-lg font-semibold text-gray-900 break-all">
                         {selectedFile.name}
                       </h3>
-                      <p className="text-base md:text-gray-500">
+                      <p className="text-lg md:text-base text-gray-600 mt-2">
                         {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
                       </p>
                     </div>
@@ -187,16 +187,16 @@ export default function AnalisePage() {
                       <Button 
                         onClick={startAnalysis}
                         disabled={isAnalyzing}
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 h-12 text-base px-6"
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 h-14 text-lg px-8 min-w-[180px]"
                       >
                         {isAnalyzing ? (
                           <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                            <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin mr-3" />
                             Analisando...
                           </>
                         ) : (
                           <>
-                            <Zap className="w-5 h-5 mr-2" />
+                            <Zap className="w-6 h-6 mr-3" />
                             Iniciar Análise
                           </>
                         )}
@@ -205,7 +205,7 @@ export default function AnalisePage() {
                         variant="outline" 
                         onClick={() => setSelectedFile(null)}
                         disabled={isAnalyzing}
-                        className="h-12 text-base px-6"
+                        className="h-14 text-lg px-8 min-w-[120px]"
                       >
                         Remover
                       </Button>
@@ -217,7 +217,7 @@ export default function AnalisePage() {
             {/* Como Funciona */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg text-center">Como Funciona</CardTitle>
+                <CardTitle className="text-xl md:text-lg text-center">Como Funciona</CardTitle>
               </CardHeader>
               <CardContent className="px-4 md:px-6">
                 {/* Mobile: Layout vertical compacto */}
@@ -300,11 +300,11 @@ export default function AnalisePage() {
             {/* Upgrade de Planos - Apenas para usuários free/basic */}
             {(userType === 'free' || userType === 'basic') && (
               <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-                <CardContent className="p-6 text-center">
-                  <h3 className="font-bold text-xl md:text-lg mb-3 md:mb-2">
+                <CardContent className="p-8 md:p-6 text-center">
+                  <h3 className="font-bold text-2xl md:text-lg mb-4 md:mb-2">
                     {userType === 'free' ? 'Análises Ilimitadas' : 'Upgrade Premium'}
                   </h3>
-                  <p className="text-base md:text-sm opacity-90 mb-6 md:mb-4">
+                  <p className="text-lg md:text-sm opacity-90 mb-8 md:mb-4">
                     {userType === 'free' 
                       ? 'Comece com plano básico para mais funcionalidades'
                       : 'Upgrade para Premium e analise quantos contratos quiser'
@@ -312,7 +312,7 @@ export default function AnalisePage() {
                   </p>
                   <Button 
                     variant="secondary" 
-                    className="w-full bg-white text-blue-600 hover:bg-gray-100 h-12 text-base"
+                    className="w-full bg-white text-blue-600 hover:bg-gray-100 h-14 text-lg min-h-[56px]"
                     onClick={() => router.push('/plataforma/planos')}
                   >
                     Ver Planos
@@ -326,40 +326,40 @@ export default function AnalisePage() {
       {/* Modal Mobile */}
       {showMobileModal && (
         <div className="md:hidden fixed inset-0 bg-black/50 z-50 flex items-end">
-          <div className="bg-white w-full rounded-t-xl p-6 space-y-6">
+          <div className="bg-white w-full rounded-t-xl p-8 space-y-8">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Selecionar Arquivo</h3>
+              <h3 className="text-2xl font-semibold">Selecionar Arquivo</h3>
               <Button 
                 variant="ghost" 
-                className="h-10 w-10 p-0"
+                className="h-12 w-12 p-0 min-h-[48px] min-w-[48px]"
                 onClick={() => setShowMobileModal(false)}
               >
-                <X className="h-6 w-6" />
+                <X className="h-8 w-8" />
               </Button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               <Button 
-                className="w-full flex items-center gap-4 justify-start h-16"
+                className="w-full flex items-center gap-6 justify-start h-20 px-6"
                 variant="outline"
                 onClick={handleCameraCapture}
               >
-                <Camera className="h-6 w-6" />
+                <Camera className="h-8 w-8" />
                 <div className="text-left">
-                  <div className="font-medium text-base">Câmera</div>
-                  <div className="text-sm text-gray-500">Fotografar documento</div>
+                  <div className="font-medium text-lg">Câmera</div>
+                  <div className="text-base text-gray-500">Fotografar documento</div>
                 </div>
               </Button>
               
               <Button 
-                className="w-full flex items-center gap-4 justify-start h-16"
+                className="w-full flex items-center gap-6 justify-start h-20 px-6"
                 variant="outline"
                 onClick={handleMobileFileSelect}
               >
-                <FolderOpen className="h-6 w-6" />
+                <FolderOpen className="h-8 w-8" />
                 <div className="text-left">
-                  <div className="font-medium text-base">Arquivo</div>
-                  <div className="text-sm text-gray-500">Escolher da galeria</div>
+                  <div className="font-medium text-lg">Arquivo</div>
+                  <div className="text-base text-gray-500">Escolher da galeria</div>
                 </div>
               </Button>
             </div>
