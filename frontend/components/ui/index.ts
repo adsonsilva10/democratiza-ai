@@ -44,5 +44,29 @@ export {
 } from './input';
 export type { InputProps, TextareaProps, CPFInputProps } from './input';
 
+// Dropdown Menu Components
+export {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from './dropdown-menu';
+
+// Tooltip Components
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from './tooltip';
+
+// Avatar Components
+export {
+  Avatar,
+  AvatarImage,
+  AvatarFallback,
+} from './avatar';
+
 // Toaster (mantendo compatibilidade)
 export { Toaster } from './toaster';
