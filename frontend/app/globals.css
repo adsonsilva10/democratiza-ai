@@ -83,4 +83,14 @@
   .chat-bubble-assistant {
     @apply bg-muted text-muted-foreground rounded-lg p-3 mr-auto max-w-[80%];
   }
+
+  /* Esconder scrollbar mas manter funcionalidade */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE e Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari e Opera */
+  }
 }

@@ -191,97 +191,164 @@ export default function HistoricoPage() {
 
       <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
         
-        {/* Estatísticas Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-3 md:p-4 text-center">
-              <div className="text-xl md:text-2xl font-bold text-blue-600">{stats.total}</div>
-              <div className="text-xs text-gray-500">Total</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-3 md:p-4 text-center">
-              <div className="text-xl md:text-2xl font-bold text-green-600">{stats.completed}</div>
-              <div className="text-xs text-gray-500">Concluídas</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-3 md:p-4 text-center">
-              <div className="text-xl md:text-2xl font-bold text-orange-600">{stats.processing}</div>
-              <div className="text-xs text-gray-500">Processando</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-3 md:p-4 text-center">
-              <div className="text-xl md:text-2xl font-bold text-red-600">{stats.totalIssues}</div>
-              <div className="text-xs text-gray-500">Problemas</div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardContent className="p-3 md:p-4 text-center">
-              <div className="text-xl md:text-2xl font-bold text-red-600">{stats.highRisk}</div>
-              <div className="text-xs text-gray-500">Alto Risco</div>
-            </CardContent>
-          </Card>
-
-
-        </div>
-
-        {/* Filtros e Busca */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              {/* Busca */}
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Buscar por nome do contrato..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
+        {/* Estatísticas - Mobile: Horizontal scroll / Desktop: Grid */}
+        <div className="mb-6">
+          {/* Mobile: Scroll horizontal */}
+          <div className="md:hidden">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+              <div className="flex-shrink-0 bg-white rounded-xl px-4 py-3 min-w-[100px] text-center shadow-sm border">
+                <div className="text-lg font-bold text-blue-600">{stats.total}</div>
+                <div className="text-xs text-gray-500">Total</div>
               </div>
               
-              {/* Filtros Simples */}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant={filterType === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('all')}
-                >
-                  Todos
-                </Button>
-                <Button
-                  variant={filterType === 'rental' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('rental')}
-                >
-                  🏠 Locação
-                </Button>
-                <Button
-                  variant={filterType === 'telecom' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('telecom')}
-                >
-                  📱 Telecom
-                </Button>
-                <Button
-                  variant={filterType === 'financial' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setFilterType('financial')}
-                >
-                  💳 Financeiro
-                </Button>
+              <div className="flex-shrink-0 bg-white rounded-xl px-4 py-3 min-w-[100px] text-center shadow-sm border">
+                <div className="text-lg font-bold text-green-600">{stats.completed}</div>
+                <div className="text-xs text-gray-500">Concluídas</div>
+              </div>
+              
+              <div className="flex-shrink-0 bg-white rounded-xl px-4 py-3 min-w-[100px] text-center shadow-sm border">
+                <div className="text-lg font-bold text-orange-600">{stats.processing}</div>
+                <div className="text-xs text-gray-500">Processando</div>
+              </div>
+              
+              <div className="flex-shrink-0 bg-white rounded-xl px-4 py-3 min-w-[100px] text-center shadow-sm border">
+                <div className="text-lg font-bold text-red-600">{stats.totalIssues}</div>
+                <div className="text-xs text-gray-500">Problemas</div>
+              </div>
+              
+              <div className="flex-shrink-0 bg-white rounded-xl px-4 py-3 min-w-[100px] text-center shadow-sm border">
+                <div className="text-lg font-bold text-red-600">{stats.highRisk}</div>
+                <div className="text-xs text-gray-500">Alto Risco</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          
+          {/* Desktop: Grid layout */}
+          <div className="hidden md:grid grid-cols-3 lg:grid-cols-5 gap-4">
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-blue-600">{stats.total}</div>
+                <div className="text-xs text-gray-500">Total</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-green-600">{stats.completed}</div>
+                <div className="text-xs text-gray-500">Concluídas</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-orange-600">{stats.processing}</div>
+                <div className="text-xs text-gray-500">Processando</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-red-600">{stats.totalIssues}</div>
+                <div className="text-xs text-gray-500">Problemas</div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4 text-center">
+                <div className="text-2xl font-bold text-red-600">{stats.highRisk}</div>
+                <div className="text-xs text-gray-500">Alto Risco</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Busca e Filtros Otimizados */}
+        <div className="mb-6 space-y-4">
+          {/* Busca */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+            <Input
+              placeholder="Buscar contratos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white border-gray-200 rounded-xl h-12 text-sm"
+            />
+          </div>
+          
+          {/* Filtros Mobile: Horizontal scroll / Desktop: Inline */}
+          <div className="md:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+              <Button
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('all')}
+                className="flex-shrink-0 rounded-full px-4 py-2 text-sm"
+              >
+                Todos
+              </Button>
+              <Button
+                variant={filterType === 'rental' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('rental')}
+                className="flex-shrink-0 rounded-full px-4 py-2 text-sm whitespace-nowrap"
+              >
+                🏠 Locação
+              </Button>
+              <Button
+                variant={filterType === 'telecom' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('telecom')}
+                className="flex-shrink-0 rounded-full px-4 py-2 text-sm whitespace-nowrap"
+              >
+                📱 Telecom
+              </Button>
+              <Button
+                variant={filterType === 'financial' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('financial')}
+                className="flex-shrink-0 rounded-full px-4 py-2 text-sm whitespace-nowrap"
+              >
+                💳 Financeiro
+              </Button>
+            </div>
+          </div>
+          
+          {/* Filtros Desktop */}
+          <div className="hidden md:flex gap-2">
+            <Button
+              variant={filterType === 'all' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilterType('all')}
+              className="rounded-full px-4 py-2"
+            >
+              Todos
+            </Button>
+            <Button
+              variant={filterType === 'rental' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilterType('rental')}
+              className="rounded-full px-4 py-2"
+            >
+              🏠 Locação
+            </Button>
+            <Button
+              variant={filterType === 'telecom' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilterType('telecom')}
+              className="rounded-full px-4 py-2"
+            >
+              📱 Telecom
+            </Button>
+            <Button
+              variant={filterType === 'financial' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setFilterType('financial')}
+              className="rounded-full px-4 py-2"
+            >
+              💳 Financeiro
+            </Button>
+          </div>
+        </div>
 
         {/* Lista de Contratos */}
         <div className="space-y-4">
