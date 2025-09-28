@@ -15,9 +15,7 @@ import {
   Eye,
   Download,
   ChevronDown,
-  ChevronRight,
-  PenTool,
-  Shield
+  ChevronRight
 } from 'lucide-react'
 
 // Tipos de dados
@@ -30,8 +28,6 @@ interface ContractAnalysis {
   status: 'completed' | 'processing' | 'error'
   issuesFound: number
   fileSize: string
-  assinado: boolean
-  podeAssinar: boolean
 }
 
 // Dados mock
@@ -44,9 +40,7 @@ const mockContracts: ContractAnalysis[] = [
     riskLevel: 'alto',
     status: 'completed',
     issuesFound: 7,
-    fileSize: '2.4 MB',
-    assinado: false,
-    podeAssinar: true
+    fileSize: '2.4 MB'
   },
   {
     id: '2', 
@@ -56,9 +50,7 @@ const mockContracts: ContractAnalysis[] = [
     riskLevel: 'medio',
     status: 'completed',
     issuesFound: 3,
-    fileSize: '1.8 MB',
-    assinado: true,
-    podeAssinar: false
+    fileSize: '1.8 MB'
   },
   {
     id: '3',
@@ -68,9 +60,7 @@ const mockContracts: ContractAnalysis[] = [
     riskLevel: 'baixo',
     status: 'completed',
     issuesFound: 1,
-    fileSize: '3.1 MB',
-    assinado: false,
-    podeAssinar: true
+    fileSize: '3.1 MB'
   },
   {
     id: '4',
@@ -80,9 +70,7 @@ const mockContracts: ContractAnalysis[] = [
     riskLevel: 'alto',
     status: 'completed',
     issuesFound: 12,
-    fileSize: '1.2 MB',
-    assinado: false,
-    podeAssinar: true
+    fileSize: '1.2 MB'
   },
   {
     id: '5',
@@ -92,9 +80,7 @@ const mockContracts: ContractAnalysis[] = [
     riskLevel: 'baixo',
     status: 'completed',
     issuesFound: 2,
-    fileSize: '4.2 MB',
-    assinado: true,
-    podeAssinar: false
+    fileSize: '4.2 MB'
   },
   {
     id: '6',
@@ -104,9 +90,7 @@ const mockContracts: ContractAnalysis[] = [
     riskLevel: 'baixo',
     status: 'processing',
     issuesFound: 0,
-    fileSize: '2.8 MB',
-    assinado: false,
-    podeAssinar: false
+    fileSize: '2.8 MB'
   }
 ]
 
@@ -158,17 +142,13 @@ export default function HistoricoPage() {
     const completed = mockContracts.filter(c => c.status === 'completed')
     const totalIssues = completed.reduce((sum, c) => sum + c.issuesFound, 0)
     const highRisk = completed.filter(c => c.riskLevel === 'alto').length
-    const assinados = mockContracts.filter(c => c.assinado).length
-    const podeAssinar = mockContracts.filter(c => c.podeAssinar && !c.assinado).length
     
     return {
       total: mockContracts.length,
       completed: completed.length,
       processing: mockContracts.filter(c => c.status === 'processing').length,
       totalIssues,
-      highRisk,
-      assinados,
-      podeAssinar
+      highRisk
     }
   }, [])
 
@@ -186,10 +166,6 @@ export default function HistoricoPage() {
     router.push(`/plataforma/analise/resultado?id=${contractId}`)
   }
 
-  const signContract = (contractId: string) => {
-    router.push(`/plataforma/assinatura?id=${contractId}`)
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* Header */}
@@ -200,7 +176,7 @@ export default function HistoricoPage() {
               Histórico de Análises
             </h1>
             <p className="text-sm md:text-base text-gray-600 mt-1">
-              Acompanhe todas as suas análises e contratos assinados
+              Acompanhe todas as suas análises de contratos
             </p>
           </div>
           
@@ -216,7 +192,7 @@ export default function HistoricoPage() {
       <div className="container mx-auto px-4 md:px-6 py-6 md:py-8">
         
         {/* Estatísticas Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
           <Card>
             <CardContent className="p-3 md:p-4 text-center">
               <div className="text-xl md:text-2xl font-bold text-blue-600">{stats.total}</div>
@@ -252,19 +228,7 @@ export default function HistoricoPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-3 md:p-4 text-center">
-              <div className="text-xl md:text-2xl font-bold text-green-600">{stats.assinados}</div>
-              <div className="text-xs text-gray-500">Assinados</div>
-            </CardContent>
-          </Card>
 
-          <Card>
-            <CardContent className="p-3 md:p-4 text-center">
-              <div className="text-xl md:text-2xl font-bold text-blue-600">{stats.podeAssinar}</div>
-              <div className="text-xs text-gray-500">P/ Assinar</div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Filtros e Busca */}
@@ -376,18 +340,7 @@ export default function HistoricoPage() {
                                 Processando
                               </Badge>
                             )}
-                            {contract.assinado && (
-                              <Badge className="bg-green-100 text-green-800" variant="outline">
-                                <PenTool className="h-3 w-3 mr-1" />
-                                Assinado
-                              </Badge>
-                            )}
-                            {contract.podeAssinar && !contract.assinado && (
-                              <Badge className="bg-blue-100 text-blue-800" variant="outline">
-                                <Shield className="h-3 w-3 mr-1" />
-                                Pode Assinar
-                              </Badge>
-                            )}
+
                           </div>
                         </div>
                         
@@ -420,16 +373,7 @@ export default function HistoricoPage() {
                             Ver Análise
                           </Button>
                         )}
-                        {contract.podeAssinar && !contract.assinado && (
-                          <Button
-                            size="sm"
-                            className="bg-gradient-to-r from-green-600 to-blue-600"
-                            onClick={() => signContract(contract.id)}
-                          >
-                            <PenTool className="h-4 w-4 mr-1" />
-                            Assinar
-                          </Button>
-                        )}
+
                       </div>
                     </div>
 
@@ -480,18 +424,7 @@ export default function HistoricoPage() {
                             Processando
                           </Badge>
                         )}
-                        {contract.assinado && (
-                          <Badge className="bg-green-100 text-green-800" variant="outline">
-                            <PenTool className="h-3 w-3 mr-1" />
-                            Assinado
-                          </Badge>
-                        )}
-                        {contract.podeAssinar && !contract.assinado && (
-                          <Badge className="bg-blue-100 text-blue-800" variant="outline">
-                            <Shield className="h-3 w-3 mr-1" />
-                            Pode Assinar
-                          </Badge>
-                        )}
+
                       </div>
                       
                       {/* Estatísticas rápidas */}
@@ -512,9 +445,7 @@ export default function HistoricoPage() {
                               </div>
                               <div>
                                 <div className="text-gray-500">Status</div>
-                                <div className="font-semibold">
-                                  {contract.assinado ? 'Assinado' : contract.podeAssinar ? 'Pode Assinar' : 'Concluído'}
-                                </div>
+                                <div className="font-semibold">Concluído</div>
                               </div>
                             </div>
                           )}
@@ -530,25 +461,14 @@ export default function HistoricoPage() {
                                 Ver Análise
                               </Button>
                             )}
-                            {contract.podeAssinar && !contract.assinado ? (
-                              <Button
-                                size="sm"
-                                className="flex-1 bg-gradient-to-r from-green-600 to-blue-600"
-                                onClick={() => signContract(contract.id)}
-                              >
-                                <PenTool className="h-4 w-4 mr-1" />
-                                Assinar
-                              </Button>
-                            ) : (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1"
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Download
-                              </Button>
-                            )}
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="flex-1"
+                            >
+                              <Download className="h-4 w-4 mr-1" />
+                              Download
+                            </Button>
                           </div>
                         </div>
                       )}
