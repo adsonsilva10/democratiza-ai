@@ -10,14 +10,14 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@/components/ui/tooltip'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@/components/ui'
 import Link from 'next/link'
 
 // Ícones usando emojis para compatibilidade
