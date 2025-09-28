@@ -16,7 +16,6 @@ module.exports = {
       },
     },
     extend: {
-      // Design System Colors - Integrando com tokens existentes
       colors: {
         // Mantendo compatibilidade com Shadcn/UI
         border: "hsl(var(--border))",
@@ -25,44 +24,95 @@ module.exports = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         
-        // Design System - Cores Principais
+        // Cores principais
         primary: {
-          ...theme.colors.primary,
-          DEFAULT: theme.colors.primary[500],
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+          DEFAULT: '#3b82f6',
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          ...theme.colors.secondary,
-          DEFAULT: theme.colors.secondary[500],
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          200: '#e2e8f0',
+          300: '#cbd5e1',
+          400: '#94a3b8',
+          500: '#64748b',
+          600: '#475569',
+          700: '#334155',
+          800: '#1e293b',
+          900: '#0f172a',
+          DEFAULT: '#64748b',
           foreground: "hsl(var(--secondary-foreground))",
         },
         
-        // Design System - Status Colors
-        destructive: {
-          ...theme.colors.danger,
-          DEFAULT: theme.colors.danger[500],
-          foreground: "hsl(var(--destructive-foreground))",
-        },
+        // Status colors
         success: {
-          ...theme.colors.success,
-          DEFAULT: theme.colors.success[500],
-          foreground: theme.colors.success[50],
+          50: '#f0fdf4',
+          100: '#dcfce7',
+          200: '#bbf7d0',
+          300: '#86efac',
+          400: '#4ade80',
+          500: '#22c55e',
+          600: '#16a34a',
+          700: '#15803d',
+          800: '#166534',
+          900: '#14532d',
+          DEFAULT: '#22c55e',
+          foreground: '#f0fdf4',
         },
         warning: {
-          ...theme.colors.warning,
-          DEFAULT: theme.colors.warning[500],
-          foreground: theme.colors.warning[50],
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+          DEFAULT: '#f59e0b',
+          foreground: '#fffbeb',
         },
         danger: {
-          ...theme.colors.danger,
-          DEFAULT: theme.colors.danger[500],
-          foreground: theme.colors.danger[50],
+          50: '#fef2f2',
+          100: '#fee2e2',
+          200: '#fecaca',
+          300: '#fca5a5',
+          400: '#f87171',
+          500: '#ef4444',
+          600: '#dc2626',
+          700: '#b91c1c',
+          800: '#991b1b',
+          900: '#7f1d1d',
+          DEFAULT: '#ef4444',
+          foreground: '#fef2f2',
         },
         
-        // Cores do Design System
-        neutral: theme.colors.neutral,
+        // Design System - cores neutras
+        neutral: {
+          50: '#fafafa',
+          100: '#f5f5f5',
+          200: '#e5e5e5',
+          300: '#d4d4d4',
+          400: '#a3a3a3',
+          500: '#737373',
+          600: '#525252',
+          700: '#404040',
+          800: '#262626',
+          900: '#171717',
+        },
         
-        // Mantendo cores Shadcn/UI
+        // Cores Shadcn/UI
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
@@ -79,27 +129,20 @@ module.exports = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        destructive: {
+          DEFAULT: "hsl(var(--destructive))",
+          foreground: "hsl(var(--destructive-foreground))",
+        },
       },
       
-      // Design System - Typography
-      fontFamily: theme.typography.fontFamily,
-      fontSize: theme.typography.fontSize,
-      fontWeight: theme.typography.fontWeight,
-      
-      // Design System - Spacing & Layout
-      spacing: theme.spacing,
-      screens: theme.breakpoints,
-      boxShadow: theme.shadows,
-      
-      // Design System - Border Radius
+      // Border Radius
       borderRadius: {
-        ...theme.borderRadius,
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
       },
       
-      // Design System - Animations + Existing
+      // Animações
       keyframes: {
         "accordion-down": {
           from: { height: 0 },
@@ -117,15 +160,14 @@ module.exports = {
           from: { transform: "translateY(100%)" },
           to: { transform: "translateY(0)" },
         },
-        // Novas animações do Design System
         "pulse-glow": {
           "0%, 100%": { 
             opacity: 1,
-            boxShadow: `0 0 20px ${theme.colors.primary[400]}`
+            boxShadow: "0 0 20px #60a5fa"
           },
           "50%": { 
             opacity: 0.8,
-            boxShadow: `0 0 40px ${theme.colors.primary[500]}`
+            boxShadow: "0 0 40px #3b82f6"
           },
         },
         "bounce-subtle": {
@@ -141,13 +183,6 @@ module.exports = {
         "pulse-glow": "pulse-glow 2s ease-in-out infinite",
         "bounce-subtle": "bounce-subtle 1s ease-in-out infinite",
       },
-      
-      // Design System - Z-Index
-      zIndex: theme.zIndex,
-      
-      // Design System - Transition
-      transitionDuration: theme.animations.duration,
-      transitionTimingFunction: theme.animations.ease,
     },
   },
   plugins: [],

@@ -104,21 +104,21 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         { 
           icon: '🏠', 
           label: 'Visão Geral', 
-          href: '/dashboard', 
+          href: '/plataforma', 
           id: 'home',
           description: 'Painel principal'
         },
         { 
           icon: '🔍', 
           label: 'Nova Análise', 
-          href: '/dashboard/analise', 
+          href: '/plataforma/analise', 
           id: 'analise',
           description: 'Analisar novo contrato'
         },
         { 
           icon: '📜', 
           label: 'Histórico', 
-          href: '/dashboard/historico', 
+          href: '/plataforma/historico', 
           id: 'historico',
           description: 'Contratos analisados'
         },
@@ -130,7 +130,7 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         { 
           icon: '✍️', 
           label: 'Assinatura', 
-          href: '/dashboard/assinatura', 
+          href: '/plataforma/assinatura', 
           id: 'assinatura',
           description: 'Gerenciar assinaturas'
         },
@@ -142,14 +142,14 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         { 
           icon: '💳', 
           label: 'Planos', 
-          href: '/dashboard/planos', 
+          href: '/plataforma/planos', 
           id: 'planos',
           description: 'Gerenciar assinatura'
         },
         { 
           icon: '🤖', 
           label: 'Chat IA', 
-          href: '/dashboard/chat', 
+          href: '/plataforma/chat', 
           id: 'chat',
           description: 'Assistente jurídico'
         },
@@ -161,14 +161,14 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
         { 
           icon: '⚙️', 
           label: 'Configurações', 
-          href: '/dashboard/configuracoes', 
+          href: '/plataforma/configuracoes', 
           id: 'configuracoes',
           description: 'Configurações da conta'
         },
         { 
           icon: '💬', 
           label: 'Suporte', 
-          href: '/dashboard/suporte', 
+          href: '/plataforma/suporte', 
           id: 'suporte',
           description: 'Ajuda e suporte'
         },
@@ -186,7 +186,7 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
     <div className="min-h-screen bg-gray-50 w-full overflow-x-hidden">
       {/* Sidebar Principal */}
       <div className={`fixed inset-y-0 left-0 z-30 bg-gradient-to-b from-blue-900 to-purple-900 transition-all duration-300 ease-in-out shadow-lg
-        ${sidebarVisible ? 'w-64 translate-x-0' : 'w-0 -translate-x-full'}
+        ${sidebarVisible ? 'w-72 translate-x-0' : 'w-0 -translate-x-full'}
       `}>
         <div className={`h-full flex flex-col ${sidebarVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} transition-opacity duration-300`}>
           {/* Sidebar Header - Design Elegante */}
@@ -375,7 +375,7 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
       {/* Main Content */}
       <div className={`transition-all duration-300 min-h-screen ${
         isLargeScreen 
-          ? (sidebarVisible ? 'ml-64' : 'ml-0') 
+          ? (sidebarVisible ? 'ml-72' : 'ml-0') 
           : (sidebarOpen ? 'ml-0' : 'ml-16')
       }`}>
         {/* Top Bar */}
@@ -424,7 +424,6 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
                     <div className="w-10 h-10 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full flex items-center justify-center shadow-lg">
                       <span className="text-white font-semibold text-lg">👤</span>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-white rounded-full"></div>
                   </div>
                   <svg className={`w-4 h-4 text-gray-400 transition-transform ${profileDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -455,31 +454,31 @@ export default function SidebarLayoutAdvanced({ children, currentPage }: Sidebar
                       <h4 className="text-sm font-medium text-gray-700 mb-3">Estatísticas</h4>
                       <div className="grid grid-cols-3 gap-4">
                         <div className="text-center">
-                          <div className="text-lg font-bold text-blue-600">5</div>
+                          <div className="text-lg font-bold text-blue-600">23</div>
                           <div className="text-xs text-gray-500">📊 Análises</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-lg font-bold text-green-600">2</div>
+                          <div className="text-lg font-bold text-green-600">12</div>
                           <div className="text-xs text-gray-500">✍️ Assinaturas</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-lg font-bold text-emerald-600">85%</div>
-                          <div className="text-xs text-gray-500">💰 Economia</div>
+                          <div className="text-lg font-bold text-red-500">15</div>
+                          <div className="text-xs text-gray-500">⚠️ Riscos Evitados</div>
                         </div>
                       </div>
                     </div>
 
                     {/* Menu Items */}
                     <div className="py-2">
-                      <Link href="/dashboard/configuracoes" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Link href="/plataforma/configuracoes" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
                         <span className="text-lg">⚙️</span>
                         <span className="text-sm font-medium">Configurações</span>
                       </Link>
-                      <Link href="/dashboard/suporte" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Link href="/plataforma/suporte" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
                         <span className="text-lg">💬</span>
                         <span className="text-sm font-medium">Suporte</span>
                       </Link>
-                      <Link href="/dashboard/gerenciar-plano" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
+                      <Link href="/plataforma/gerenciar-plano" className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors">
                         <span className="text-lg">💳</span>
                         <span className="text-sm font-medium">Gerenciar Plano</span>
                       </Link>

@@ -1,9 +1,9 @@
-import SidebarLayoutAdvanced from '@/components/layout/SidebarLayoutAdvanced'
+import CleanSidebarLayout from '@/components/layout/CleanSidebarLayoutSimple'
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return <SidebarLayoutAdvanced>{children}</SidebarLayoutAdvanced>
+  return <CleanSidebarLayout>{children}</CleanSidebarLayout>
 }
