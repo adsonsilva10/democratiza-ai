@@ -305,16 +305,29 @@ export default function HistoricoPage() {
             </div>
           </div>
           
-          {/* Filtros Desktop */}
-          <div className="hidden md:flex gap-2">
-            <Button
-              variant={filterType === 'all' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilterType('all')}
-              className="rounded-full px-4 py-2"
-            >
-              Todos
-            </Button>
+          {/* Desktop: Busca e Filtros Combinados */}
+          <div className="hidden md:flex items-center justify-between gap-4">
+            {/* Input de Busca Desktop */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <Input
+                placeholder="Buscar contratos..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-white border-gray-300 rounded-lg h-10"
+              />
+            </div>
+            
+            {/* Filtros Desktop */}
+            <div className="flex gap-2">
+              <Button
+                variant={filterType === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('all')}
+                className="rounded-full px-4 py-2"
+              >
+                Todos
+              </Button>
             <Button
               variant={filterType === 'rental' ? 'default' : 'outline'}
               size="sm"
@@ -323,22 +336,23 @@ export default function HistoricoPage() {
             >
               🏠 Locação
             </Button>
-            <Button
-              variant={filterType === 'telecom' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilterType('telecom')}
-              className="rounded-full px-4 py-2"
-            >
-              📱 Telecom
-            </Button>
-            <Button
-              variant={filterType === 'financial' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setFilterType('financial')}
-              className="rounded-full px-4 py-2"
-            >
-              💳 Financeiro
-            </Button>
+              <Button
+                variant={filterType === 'telecom' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('telecom')}
+                className="rounded-full px-4 py-2"
+              >
+                📱 Telecom
+              </Button>
+              <Button
+                variant={filterType === 'financial' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setFilterType('financial')}
+                className="rounded-full px-4 py-2"
+              >
+                💳 Financeiro
+              </Button>
+            </div>
           </div>
         </div>
 
