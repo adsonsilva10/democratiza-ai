@@ -164,10 +164,10 @@ export default function HistoricoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-x-hidden">
       {/* Header Responsivo */}
       <div className="bg-white border-b border-gray-200">
-        <div className="px-6 py-6 md:px-8 md:py-6">
+        <div className="px-4 py-4 md:px-8 md:py-6">
           <div className="flex flex-col gap-4">
             <div className="text-center md:text-left">
               <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
@@ -188,14 +188,14 @@ export default function HistoricoPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 md:px-8 py-8">
+      <div className="container mx-auto px-4 md:px-8 py-6 md:py-8 max-w-full overflow-x-hidden">
         
         {/* Estatísticas Responsivas */}
         <div className="mb-8">
           {/* Mobile: Grid 2x3 compacto */}
           <div className="md:hidden">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumo</h2>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 max-w-full">
               <div className="bg-white rounded-lg px-4 py-4 text-center shadow-sm border">
                 <div className="text-xl font-bold text-blue-600">{stats.total}</div>
                 <div className="text-sm text-gray-600 mt-1">Total</div>
@@ -272,33 +272,33 @@ export default function HistoricoPage() {
               />
             </div>
             
-            {/* Filtros Mobile: Grid 2x2 */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Filtros Mobile: Grid responsível */}
+            <div className="grid grid-cols-2 gap-2 max-w-full">
               <Button
                 variant={filterType === 'all' ? 'default' : 'outline'}
                 onClick={() => setFilterType('all')}
-                className="h-12 text-base justify-center"
+                className="h-11 text-sm justify-center min-w-0 px-2"
               >
                 Todos
               </Button>
               <Button
                 variant={filterType === 'rental' ? 'default' : 'outline'}
                 onClick={() => setFilterType('rental')}
-                className="h-12 text-base justify-center"
+                className="h-11 text-sm justify-center min-w-0 px-2"
               >
                 🏠 Locação
               </Button>
               <Button
                 variant={filterType === 'telecom' ? 'default' : 'outline'}
                 onClick={() => setFilterType('telecom')}
-                className="h-12 text-base justify-center"
+                className="h-11 text-sm justify-center min-w-0 px-2"
               >
                 📱 Telecom
               </Button>
               <Button
                 variant={filterType === 'financial' ? 'default' : 'outline'}
                 onClick={() => setFilterType('financial')}
-                className="h-12 text-base justify-center"
+                className="h-11 text-sm justify-center min-w-0 px-2"
               >
                 💳 Financeiro
               </Button>
@@ -357,7 +357,7 @@ export default function HistoricoPage() {
         </div>
 
         {/* Lista de Contratos Redesenhada */}
-        <div className="space-y-4">
+        <div className="space-y-3 max-w-full overflow-hidden">
           {filteredContracts.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
@@ -390,13 +390,13 @@ export default function HistoricoPage() {
                       <div className="hidden md:flex items-center p-4">
                         <div className="flex items-center gap-4 flex-1">
                           {/* Ícone e info principal */}
-                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="flex items-center gap-3 flex-1 min-w-0 overflow-hidden">
                             <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
                               {contractConfig.icon}
                             </div>
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-0 overflow-hidden">
                               <h3 className="font-semibold text-gray-900 truncate text-sm">{contract.fileName}</h3>
-                              <div className="flex items-center gap-2 mt-1">
+                              <div className="flex items-center gap-2 mt-1 flex-wrap">
                                 <Badge className={`${contractConfig.color} text-xs`} variant="outline">
                                   {contractConfig.label}
                                 </Badge>
@@ -441,27 +441,27 @@ export default function HistoricoPage() {
 
                       {/* Mobile: Layout vertical otimizado */}
                       <div className="md:hidden">
-                        <div className="p-4 pb-0">
+                        <div className="p-3 pb-0">
                           <div className="flex items-start gap-3 mb-3">
-                            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center text-xl flex-shrink-0">
+                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
                               {contractConfig.icon}
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold text-gray-900 text-base leading-tight mb-2">
+                            <div className="flex-1 min-w-0 overflow-hidden">
+                              <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-2 break-words">
                                 {contract.fileName}
                               </h3>
-                              <div className="flex flex-wrap gap-2 mb-2">
-                                <Badge className={`${contractConfig.color} text-sm`} variant="outline">
+                              <div className="flex flex-wrap gap-1 mb-2 max-w-full">
+                                <Badge className={`${contractConfig.color} text-xs`} variant="outline">
                                   {contractConfig.label}
                                 </Badge>
                                 {contract.status === 'completed' && riskConfig && (
-                                  <Badge className={`${riskConfig.color} text-sm`} variant="outline">
+                                  <Badge className={`${riskConfig.color} text-xs`} variant="outline">
                                     {RiskIcon && <RiskIcon className="h-3 w-3 mr-1" />}
                                     {riskConfig.label}
                                   </Badge>
                                 )}
                                 {contract.status === 'processing' && (
-                                  <Badge className="bg-blue-100 text-blue-800 text-sm" variant="outline">
+                                  <Badge className="bg-blue-100 text-blue-800 text-xs" variant="outline">
                                     <Clock className="h-3 w-3 mr-1" />
                                     Processando
                                   </Badge>
@@ -469,9 +469,9 @@ export default function HistoricoPage() {
                               </div>
                               
                               {/* Info compacta */}
-                              <div className="flex justify-between items-center text-sm text-gray-600">
-                                <span>{formatDate(contract.analysisDate)}</span>
-                                <span>{contract.fileSize}</span>
+                              <div className="flex justify-between items-center text-xs text-gray-600 gap-2">
+                                <span className="truncate">{formatDate(contract.analysisDate)}</span>
+                                <span className="flex-shrink-0">{contract.fileSize}</span>
                               </div>
                               
                               {/* Estatísticas */}
@@ -489,12 +489,12 @@ export default function HistoricoPage() {
                         
                         {/* Ações mobile */}
                         {contract.status === 'completed' && (
-                          <div className="p-4 pt-0">
+                          <div className="p-3 pt-0">
                             <Button
-                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 h-12 text-base"
+                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 h-11 text-sm"
                               onClick={() => viewAnalysis(contract.id)}
                             >
-                              <Eye className="h-5 w-5 mr-2" />
+                              <Eye className="h-4 w-4 mr-2" />
                               Ver Análise Completa
                             </Button>
                           </div>
