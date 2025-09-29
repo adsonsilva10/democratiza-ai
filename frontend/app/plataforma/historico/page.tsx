@@ -107,7 +107,7 @@ const riskLevelConfig = {
 
 export default function HistoricoPage() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterType, setFilterType] = useState<string>('all')
+  const [filterRisk, setFilterRisk] = useState<string>('all')
   const router = useRouter()
 
   // Filtros e busca
@@ -121,9 +121,9 @@ export default function HistoricoPage() {
       )
     }
 
-    // Filtro por tipo
-    if (filterType !== 'all') {
-      filtered = filtered.filter(contract => contract.contractType === filterType)
+    // Filtro por risco
+    if (filterRisk !== 'all') {
+      filtered = filtered.filter(contract => contract.riskLevel === filterRisk)
     }
 
     // Ordenação por data
@@ -132,7 +132,7 @@ export default function HistoricoPage() {
     })
 
     return filtered
-  }, [searchTerm, filterType])
+  }, [searchTerm, filterRisk])
 
   // Estatísticas
   const stats = useMemo(() => {
@@ -168,9 +168,10 @@ export default function HistoricoPage() {
       {/* Header Responsivo */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 py-4 md:px-8 md:py-6">
-          <div className="flex flex-col gap-4">
-            <div className="text-center md:text-left">
-              <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+          {/* Mobile: Layout em coluna */}
+          <div className="flex flex-col gap-4 md:hidden">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900">
                 Histórico de Análises
               </h1>
               <p className="text-base text-gray-600 mt-2">
@@ -180,7 +181,26 @@ export default function HistoricoPage() {
             
             <Button 
               onClick={() => router.push('/plataforma/analise')}
-              className="w-full md:w-auto md:self-end bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 text-base"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 text-base"
+            >
+              📄 Nova Análise
+            </Button>
+          </div>
+          
+          {/* Desktop: Layout em linha */}
+          <div className="hidden md:flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Histórico de Análises
+              </h1>
+              <p className="text-base text-gray-600 mt-1">
+                Acompanhe todas as suas análises de contratos
+              </p>
+            </div>
+            
+            <Button 
+              onClick={() => router.push('/plataforma/analise')}
+              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 text-base"
             >
               📄 Nova Análise
             </Button>
@@ -280,43 +300,39 @@ export default function HistoricoPage() {
               </div>
             </div>
             
-            {/* Filtros Mobile: Grid responsível */}
-            <div className="grid grid-cols-2 gap-2 max-w-full">
+            {/* Filtros Mobile: Linha horizontal com cores preenchidas */}
+            <div className="flex gap-2 justify-center">
               <Button
-                variant={filterType === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilterType('all')}
-                className="h-12 text-sm justify-center min-w-0 px-2"
+                onClick={() => setFilterRisk('all')}
+                className={`h-10 w-10 rounded-full p-0 border-2 ${filterRisk === 'all' ? 'border-gray-800 bg-gray-600' : 'border-gray-300 bg-gray-400'}`}
                 aria-label="Mostrar todos os contratos"
-                aria-pressed={filterType === 'all'}
+                aria-pressed={filterRisk === 'all'}
               >
-                Todos
+                <span className="text-white font-bold text-sm">★</span>
               </Button>
               <Button
-                variant={filterType === 'rental' ? 'default' : 'outline'}
-                onClick={() => setFilterType('rental')}
-                className="h-12 text-sm justify-center min-w-0 px-2"
-                aria-label="Filtrar contratos de locação"
-                aria-pressed={filterType === 'rental'}
+                onClick={() => setFilterRisk('alto')}
+                className={`h-10 w-10 rounded-full p-0 border-2 ${filterRisk === 'alto' ? 'border-red-800 bg-red-600' : 'border-red-300 bg-red-400'}`}
+                aria-label="Filtrar contratos de alto risco"
+                aria-pressed={filterRisk === 'alto'}
               >
-                <span aria-hidden="true">🏠</span> Locação
+                <span className="text-white font-bold text-sm">▲</span>
               </Button>
               <Button
-                variant={filterType === 'telecom' ? 'default' : 'outline'}
-                onClick={() => setFilterType('telecom')}
-                className="h-12 text-sm justify-center min-w-0 px-2"
-                aria-label="Filtrar contratos de telecomunicações"
-                aria-pressed={filterType === 'telecom'}
+                onClick={() => setFilterRisk('medio')}
+                className={`h-10 w-10 rounded-full p-0 border-2 ${filterRisk === 'medio' ? 'border-yellow-800 bg-yellow-500' : 'border-yellow-300 bg-yellow-400'}`}
+                aria-label="Filtrar contratos de médio risco"
+                aria-pressed={filterRisk === 'medio'}
               >
-                <span aria-hidden="true">📱</span> Telecom
+                <span className="text-white font-bold text-sm">●</span>
               </Button>
               <Button
-                variant={filterType === 'financial' ? 'default' : 'outline'}
-                onClick={() => setFilterType('financial')}
-                className="h-12 text-sm justify-center min-w-0 px-2"
-                aria-label="Filtrar contratos financeiros"
-                aria-pressed={filterType === 'financial'}
+                onClick={() => setFilterRisk('baixo')}
+                className={`h-10 w-10 rounded-full p-0 border-2 ${filterRisk === 'baixo' ? 'border-green-800 bg-green-600' : 'border-green-300 bg-green-400'}`}
+                aria-label="Filtrar contratos de baixo risco"
+                aria-pressed={filterRisk === 'baixo'}
               >
-                <span aria-hidden="true">💳</span> Financeiro
+                <span className="text-white font-bold text-sm">▼</span>
               </Button>
             </div>
           </div>
@@ -337,36 +353,36 @@ export default function HistoricoPage() {
             {/* Filtros Desktop */}
             <div className="flex gap-2">
               <Button
-                variant={filterType === 'all' ? 'default' : 'outline'}
+                variant={filterRisk === 'all' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilterType('all')}
+                onClick={() => setFilterRisk('all')}
                 className="rounded-full px-4 py-2"
               >
                 Todos
               </Button>
             <Button
-              variant={filterType === 'rental' ? 'default' : 'outline'}
+              variant={filterRisk === 'alto' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setFilterType('rental')}
+              onClick={() => setFilterRisk('alto')}
               className="rounded-full px-4 py-2"
             >
-              🏠 Locação
+              Alto Risco
             </Button>
               <Button
-                variant={filterType === 'telecom' ? 'default' : 'outline'}
+                variant={filterRisk === 'medio' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilterType('telecom')}
+                onClick={() => setFilterRisk('medio')}
                 className="rounded-full px-4 py-2"
               >
-                📱 Telecom
+                Médio Risco
               </Button>
               <Button
-                variant={filterType === 'financial' ? 'default' : 'outline'}
+                variant={filterRisk === 'baixo' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setFilterType('financial')}
+                onClick={() => setFilterRisk('baixo')}
                 className="rounded-full px-4 py-2"
               >
-                💳 Financeiro
+                Baixo Risco
               </Button>
             </div>
           </div>
@@ -474,9 +490,6 @@ export default function HistoricoPage() {
                       <div className="md:hidden">
                         <div className="p-3 pb-0">
                           <div className="flex items-start gap-3 mb-3">
-                            <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg flex-shrink-0">
-                              {contractConfig.icon}
-                            </div>
                             <div className="flex-1 min-w-0 overflow-hidden">
                               <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-2 break-words">
                                 {contract.fileName}
@@ -487,7 +500,6 @@ export default function HistoricoPage() {
                                 </Badge>
                                 {contract.status === 'completed' && riskConfig && (
                                   <Badge className={`${riskConfig.color} text-xs`} variant="outline">
-                                    {RiskIcon && <RiskIcon className="h-3 w-3 mr-1" />}
                                     {riskConfig.label}
                                   </Badge>
                                 )}
