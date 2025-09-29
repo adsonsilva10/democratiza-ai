@@ -377,24 +377,16 @@ export default function ResultadoPage() {
               <div className="flex-1">
                 <div className="flex flex-col gap-4">
                   {/* Primeira linha: Score/Problemas/Pontos + + Data/Tamanho */}
-                  <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-                    {/* Mobile: Ícone + Nome + Badges */}
-                    <div className="flex items-center gap-4 md:hidden">
+                  <div className="flex flex-col gap-4">
+                    {/* Mobile: Apenas Ícone + Flag de risco lado a lado */}
+                    <div className="flex items-center gap-4 md:hidden justify-center">
                       <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
                         {contractConfig.icon}
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-xl font-semibold text-gray-900 truncate">{analysis.fileName}</h2>
-                        <div className="flex flex-wrap gap-3 mt-3">
-                          <Badge className={`${contractConfig.color} text-sm px-3 py-1`} variant="outline">
-                            {contractConfig.label}
-                          </Badge>
-                          <Badge className={`${riskConfig.color} text-sm px-3 py-1`} variant="outline">
-                            <RiskIcon className="h-4 w-4 mr-1" />
-                            {riskConfig.label}
-                          </Badge>
-                        </div>
-                      </div>
+                      <Badge className={`${riskConfig.color} text-sm px-4 py-2 text-base inline-flex items-center gap-2`} variant="outline">
+                        <RiskIcon className="h-5 w-5 flex-shrink-0" />
+                        <span>{riskConfig.label}</span>
+                      </Badge>
                     </div>
 
                     {/* Estatísticas: Score, Problemas, Pontos + */}
