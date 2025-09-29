@@ -166,6 +166,28 @@ export default function ResultadoPage() {
   const [chatInput, setChatInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [isChatExpanded, setIsChatExpanded] = useState(false)
+  
+  // Hook para detectar se é mobile
+  const [isMobile, setIsMobile] = useState(false)
+  
+  useEffect(() => {
+    // Detectar se é mobile baseado no tamanho da tela
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768) // md breakpoint
+    }
+    
+    checkIsMobile()
+    window.addEventListener('resize', checkIsMobile)
+    
+    return () => window.removeEventListener('resize', checkIsMobile)
+  }, [])
+  
+  useEffect(() => {
+    // Definir chat expandido por padrão no mobile
+    if (isMobile) {
+      setIsChatExpanded(true)
+    }
+  }, [isMobile])
   const chatEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -290,23 +312,32 @@ export default function ResultadoPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-x-hidden">
+      {/* Skip Link para acessibilidade */}
+      <a 
+        href="#main-content" 
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded z-50"
+      >
+        Pular para o conteúdo principal
+      </a>
+      
       {/* Header Responsivo */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-4 md:px-8 py-4 md:py-6">
+      <header className="bg-white border-b border-gray-200" role="banner">
+        <div className="px-6 md:px-8 py-6 md:py-6">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
               onClick={() => router.push('/plataforma/historico')}
-              className="h-10 w-10 p-0"
+              className="h-14 w-14 p-0"
+              aria-label="Voltar para a página de histórico de contratos"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-6 w-6" aria-hidden="true" />
             </Button>
             
             <div className="flex-1">
-              <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl md:text-2xl font-bold text-gray-900">
                 Resultado da Análise
               </h1>
-              <p className="text-sm md:text-base text-gray-600 mt-1">
+              <p className="text-base md:text-base text-gray-600 mt-1">
                 {analysis.fileName}
               </p>
             </div>
@@ -323,48 +354,71 @@ export default function ResultadoPage() {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-3 md:px-8 py-4 md:py-8 max-w-4xl overflow-x-hidden">
+      <main id="main-content" className="container mx-auto px-6 md:px-8 py-6 md:py-8 max-w-4xl overflow-x-hidden">
         
         {/* Visão Geral do Contrato */}
         <Card className="mb-8">
-          <CardContent className="p-4 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
-              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-xl flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
+          <CardContent className="p-6 md:p-8">
+            <div className="flex flex-col md:flex-row gap-6">
+              {/* Desktop: Ícone + Flag de risco lado a lado */}
+              <div className="hidden md:flex items-center gap-4 flex-shrink-0">
+                <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
                   {contractConfig.icon}
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h2 className="text-lg md:text-xl font-semibold text-gray-900 truncate">{analysis.fileName}</h2>
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    <Badge className={contractConfig.color} variant="outline">
-                      {contractConfig.label}
-                    </Badge>
-                    <Badge className={riskConfig.color} variant="outline">
-                      <RiskIcon className="h-3 w-3 mr-1" />
-                      {riskConfig.label}
-                    </Badge>
-                  </div>
-                </div>
+                <Badge className={`${riskConfig.color} text-sm px-4 py-2 text-base inline-flex items-center gap-2`} variant="outline">
+                  <RiskIcon className="h-5 w-5 flex-shrink-0" />
+                  <span>{riskConfig.label}</span>
+                </Badge>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 md:ml-auto max-w-full">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900">{analysis.overallScore}</div>
-                  <div className="text-xs text-gray-500">Score Geral</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-red-600">{analysis.issuesFound}</div>
-                  <div className="text-xs text-gray-500">Problemas</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">{analysis.positivePoints}</div>
-                  <div className="text-xs text-gray-500">Pontos +</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-sm font-medium text-gray-900">{formatDate(analysis.analysisDate)}</div>
-                  <div className="text-xs text-gray-500">{analysis.fileSize}</div>
+
+              {/* Mobile: Layout original + Desktop: Apenas estatísticas */}
+              <div className="flex-1">
+                <div className="flex flex-col gap-4">
+                  {/* Primeira linha: Score/Problemas/Pontos + + Data/Tamanho */}
+                  <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+                    {/* Mobile: Ícone + Nome + Badges */}
+                    <div className="flex items-center gap-4 md:hidden">
+                      <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
+                        {contractConfig.icon}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h2 className="text-xl font-semibold text-gray-900 truncate">{analysis.fileName}</h2>
+                        <div className="flex flex-wrap gap-3 mt-3">
+                          <Badge className={`${contractConfig.color} text-sm px-3 py-1`} variant="outline">
+                            {contractConfig.label}
+                          </Badge>
+                          <Badge className={`${riskConfig.color} text-sm px-3 py-1`} variant="outline">
+                            <RiskIcon className="h-4 w-4 mr-1" />
+                            {riskConfig.label}
+                          </Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Estatísticas: Score, Problemas, Pontos + */}
+                    <div className="flex gap-4">
+                      <div className="text-center p-3 bg-gray-50 rounded-lg">
+                        <div className="text-3xl font-bold text-gray-900">{analysis.overallScore}</div>
+                        <div className="text-sm text-gray-500 mt-1">Score Geral</div>
+                      </div>
+                      <div className="text-center p-3 bg-red-50 rounded-lg">
+                        <div className="text-3xl font-bold text-red-600">{analysis.issuesFound}</div>
+                        <div className="text-sm text-gray-500 mt-1">Problemas</div>
+                      </div>
+                      <div className="text-center p-3 bg-green-50 rounded-lg">
+                        <div className="text-3xl font-bold text-green-600">{analysis.positivePoints}</div>
+                        <div className="text-sm text-gray-500 mt-1">Pontos +</div>
+                      </div>
+                    </div>
+
+                    {/* Data e Tamanho */}
+                    <div className="text-center p-3 bg-gray-50 rounded-lg">
+                      <div className="text-base font-medium text-gray-900">{formatDate(analysis.analysisDate)}</div>
+                      <div className="text-sm text-gray-500 mt-1">{analysis.fileSize}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -372,11 +426,13 @@ export default function ResultadoPage() {
         </Card>
 
         {/* Problemas Encontrados */}
-        <Card className="mb-8">
+        <Card className="mb-8" role="region" aria-labelledby="problems-title">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-700">
-              <AlertTriangle className="h-5 w-5" />
-              Problemas Encontrados ({analysis.issuesFound})
+            <CardTitle id="problems-title" className="flex items-center gap-2 text-red-700">
+              <AlertTriangle className="h-5 w-5" aria-hidden="true" />
+              Problemas Encontrados 
+              <span className="sr-only">({analysis.issuesFound} problemas identificados)</span>
+              <span aria-hidden="true">({analysis.issuesFound})</span>
             </CardTitle>
             <CardDescription>
               Cláusulas que podem ser prejudiciais ou necessitam atenção especial
@@ -389,32 +445,51 @@ export default function ResultadoPage() {
               const isExpanded = expandedProblems.has(problem.id)
 
               return (
-                <div key={problem.id} className={`border-2 rounded-lg ${config.color}`}>
+                <div 
+                  key={problem.id} 
+                  className={`border-2 rounded-lg ${config.color}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                  aria-controls={`problem-details-${problem.id}`}
+                  aria-label={`${problem.title}. Severidade: ${problem.severity}. ${isExpanded ? 'Pressione para recolher' : 'Pressione para expandir'} detalhes`}
+                >
                   <div 
-                    className="p-3 md:p-4 cursor-pointer"
+                    className="p-5 md:p-4 cursor-pointer"
                     onClick={() => toggleProblem(problem.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        toggleProblem(problem.id)
+                      }
+                    }}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
-                        <Icon className="h-4 w-4 md:h-5 md:w-5 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 md:gap-3 flex-1 min-w-0">
+                        <Icon className="h-5 w-5 md:h-5 md:w-5 mt-1 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-base md:text-lg mb-1 break-words">{problem.title}</h3>
-                          <p className="text-sm opacity-90 mb-2">{problem.description}</p>
-                          <Badge variant="outline" className="text-xs">
+                          <h3 className="font-semibold text-lg md:text-lg mb-2 break-words">{problem.title}</h3>
+                          <p className="text-base opacity-90 mb-3">{problem.description}</p>
+                          <Badge variant="outline" className="text-sm px-2 py-1">
                             {problem.category}
                           </Badge>
                         </div>
                       </div>
-                      {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                      {isExpanded ? <ChevronUp className="h-6 w-6" /> : <ChevronDown className="h-6 w-6" />}
                     </div>
                   </div>
                   
                   {isExpanded && (
-                    <div className="px-3 md:px-4 pb-3 md:pb-4 border-t border-current/20">
-                      <div className="mt-4 space-y-4">
+                    <div 
+                      id={`problem-details-${problem.id}`}
+                      className="px-5 md:px-4 pb-5 md:pb-4 border-t border-current/20"
+                      role="region"
+                      aria-label="Detalhes do problema"
+                    >
+                      <div className="mt-5 space-y-5">
                         <div>
-                          <h4 className="font-medium text-sm mb-2">📋 Cláusula Específica:</h4>
-                          <div className="bg-white/70 p-2 md:p-3 rounded text-xs md:text-sm italic break-words">
+                          <h4 className="font-medium text-base mb-3">📋 Cláusula Específica:</h4>
+                          <div className="bg-white/70 p-4 md:p-3 rounded text-sm md:text-sm italic break-words">
                             "{problem.clause}"
                           </div>
                         </div>
@@ -432,11 +507,13 @@ export default function ResultadoPage() {
         </Card>
 
         {/* Pontos Positivos */}
-        <Card className="mb-8">
+        <Card className="mb-8" role="region" aria-labelledby="positives-title">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-green-700">
-              <CheckCircle className="h-5 w-5" />
-              Pontos Positivos ({analysis.positivePoints})
+            <CardTitle id="positives-title" className="flex items-center gap-2 text-green-700">
+              <CheckCircle className="h-5 w-5" aria-hidden="true" />
+              Pontos Positivos
+              <span className="sr-only">({analysis.positivePoints} aspectos favoráveis identificados)</span>
+              <span aria-hidden="true">({analysis.positivePoints})</span>
             </CardTitle>
             <CardDescription>
               Aspectos favoráveis e bem estruturados do contrato
@@ -444,16 +521,16 @@ export default function ResultadoPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {analysis.positives.map((positive) => (
-              <div key={positive.id} className="bg-green-50 border-2 border-green-200 rounded-lg p-3 md:p-4">
-                <div className="flex items-start gap-2 md:gap-3">
-                  <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-green-600 mt-0.5 flex-shrink-0" />
+              <div key={positive.id} className="bg-green-50 border-2 border-green-200 rounded-lg p-5 md:p-4">
+                <div className="flex items-start gap-3 md:gap-3">
+                  <CheckCircle className="h-5 w-5 md:h-5 md:w-5 text-green-600 mt-1 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-base md:text-lg text-green-800 mb-1 break-words">{positive.title}</h3>
-                    <p className="text-sm text-green-700 mb-3">{positive.description}</p>
-                    <div className="bg-white/70 p-2 md:p-3 rounded text-xs md:text-sm italic text-green-800 mb-2 break-words">
+                    <h3 className="font-semibold text-lg md:text-lg text-green-800 mb-2 break-words">{positive.title}</h3>
+                    <p className="text-base text-green-700 mb-4">{positive.description}</p>
+                    <div className="bg-white/70 p-4 md:p-3 rounded text-sm md:text-sm italic text-green-800 mb-3 break-words">
                       "{positive.clause}"
                     </div>
-                    <Badge variant="outline" className="text-xs text-green-700 border-green-300">
+                    <Badge variant="outline" className="text-sm px-2 py-1 text-green-700 border-green-300">
                       {positive.category}
                     </Badge>
                   </div>
@@ -464,30 +541,39 @@ export default function ResultadoPage() {
         </Card>
 
         {/* Chat com Assistente IA */}
-        <Card className="mb-8">
-          <CardHeader>
+        <Card className="mb-8" role="region" aria-labelledby="chat-title">
+          <CardHeader className="p-6">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5 text-blue-600" />
-                <CardTitle className="text-blue-700">Assistente IA - Tire suas Dúvidas</CardTitle>
+              <div className="flex items-center gap-3">
+                <MessageCircle className="h-6 w-6 text-blue-600" aria-hidden="true" />
+                <CardTitle id="chat-title" className="text-blue-700 text-xl">Assistente IA - Tire suas Dúvidas</CardTitle>
               </div>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsChatExpanded(!isChatExpanded)}
-                className="md:hidden"
+                className="md:hidden h-14 w-14"
+                aria-label={isChatExpanded ? 'Recolher chat' : 'Expandir chat'}
+                aria-expanded={isChatExpanded}
+                aria-controls="chat-content"
               >
-                {isChatExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                {isChatExpanded ? <ChevronUp className="h-5 w-5" aria-hidden="true" /> : <ChevronDown className="h-5 w-5" aria-hidden="true" />}
               </Button>
             </div>
-            <CardDescription>
+            <CardDescription className="text-base mt-2">
               Faça perguntas sobre seu contrato ou questões jurídicas gerais
             </CardDescription>
           </CardHeader>
           
-          <CardContent className={`${isChatExpanded ? 'block' : 'hidden md:block'}`}>
+          <CardContent id="chat-content" className={`${isChatExpanded ? 'block' : 'hidden md:block'} p-6`}>
             {/* Área de Mensagens */}
-            <div className="h-64 md:h-80 overflow-y-auto bg-gray-50 rounded-lg p-3 md:p-4 mb-4 space-y-3 md:space-y-4 max-w-full">
+            <div 
+              className="h-80 md:h-80 overflow-y-auto bg-gray-50 rounded-lg p-5 md:p-4 mb-6 space-y-4 md:space-y-4 max-w-full"
+              role="log"
+              aria-live="polite"
+              aria-label="Histórico da conversa com o assistente de IA"
+              tabIndex={0}
+            >
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -496,20 +582,20 @@ export default function ResultadoPage() {
                   }`}
                 >
                   {message.type === 'assistant' && (
-                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <Bot className="h-4 w-4 text-white" />
+                    <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Bot className="h-5 w-5 text-white" />
                     </div>
                   )}
                   
                   <div
-                    className={`max-w-[80%] rounded-lg p-3 ${
+                    className={`max-w-[80%] rounded-lg p-4 ${
                       message.type === 'user'
                         ? 'bg-blue-600 text-white'
                         : 'bg-white border border-gray-200 text-gray-900'
                     }`}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
-                    <div className="text-xs opacity-70 mt-2">
+                    <p className="text-base leading-relaxed">{message.content}</p>
+                    <div className="text-sm opacity-70 mt-3">
                       {message.timestamp.toLocaleTimeString('pt-BR', { 
                         hour: '2-digit', 
                         minute: '2-digit' 
@@ -518,8 +604,8 @@ export default function ResultadoPage() {
                   </div>
                   
                   {message.type === 'user' && (
-                    <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                      <User className="h-4 w-4 text-white" />
+                    <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                      <User className="h-5 w-5 text-white" />
                     </div>
                   )}
                 </div>
@@ -528,13 +614,13 @@ export default function ResultadoPage() {
               {/* Indicador de digitação */}
               {isTyping && (
                 <div className="flex gap-3 justify-start">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Bot className="h-4 w-4 text-white" />
+                  <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Bot className="h-5 w-5 text-white" />
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                      <span className="text-sm text-gray-600">Assistente está digitando...</span>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center gap-3">
+                      <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                      <span className="text-base text-gray-600">Assistente está digitando...</span>
                     </div>
                   </div>
                 </div>
@@ -544,28 +630,39 @@ export default function ResultadoPage() {
             </div>
             
             {/* Input de Mensagem */}
-            <div className="flex gap-2">
+            <div className="flex gap-3">
+              <label htmlFor="chat-input" className="sr-only">
+                Digite sua pergunta sobre o contrato para o assistente de IA
+              </label>
               <Input
+                id="chat-input"
                 placeholder="Digite sua pergunta sobre o contrato..."
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                className="flex-1"
+                className="flex-1 h-14 text-base px-4"
                 disabled={isTyping}
+                aria-describedby="chat-help"
               />
               <Button
                 onClick={handleSendMessage}
                 disabled={!chatInput.trim() || isTyping}
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-blue-600 hover:bg-blue-700 h-14 w-14"
+                aria-label={isTyping ? 'Aguarde, mensagem sendo processada' : 'Enviar mensagem para o assistente'}
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" aria-hidden="true" />
               </Button>
+            </div>
+            <div id="chat-help" className="sr-only">
+              Faça perguntas sobre o contrato ou questões jurídicas. Pressione Enter para enviar.
             </div>
             
             {/* Sugestões de Perguntas */}
-            <div className="mt-4">
-              <p className="text-sm text-gray-600 mb-2">💡 Sugestões de perguntas:</p>
-              <div className="flex flex-wrap gap-1 md:gap-2 max-w-full">
+            <div className="mt-6">
+              <p className="text-base text-gray-600 mb-3">
+                <span aria-hidden="true">💡</span> Sugestões de perguntas:
+              </p>
+              <div className="flex flex-wrap gap-2 md:gap-2 max-w-full" role="group" aria-label="Perguntas de exemplo">
                 {[
                   'Como negociar a multa rescisória?',
                   'O reajuste está correto?',
@@ -577,7 +674,8 @@ export default function ResultadoPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setChatInput(suggestion)}
-                    className="text-xs"
+                    aria-label={`Pergunta de exemplo: ${suggestion}`}
+                    className="min-h-[44px] text-xs"
                     disabled={isTyping}
                   >
                     {suggestion}
@@ -616,7 +714,7 @@ export default function ResultadoPage() {
             </Button>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   )
 }

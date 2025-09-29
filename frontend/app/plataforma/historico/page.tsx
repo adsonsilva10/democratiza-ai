@@ -263,13 +263,21 @@ export default function HistoricoPage() {
           <div className="md:hidden space-y-4">
             {/* Busca Mobile */}
             <div className="relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <label htmlFor="search-mobile" className="sr-only">
+                Buscar contratos por nome do arquivo
+              </label>
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" aria-hidden="true" />
               <Input
+                id="search-mobile"
                 placeholder="Buscar contratos..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-12 bg-white border-gray-300 rounded-lg h-14 text-base"
+                aria-describedby="search-help"
               />
+              <div id="search-help" className="sr-only">
+                Digite o nome do arquivo para filtrar a lista de contratos
+              </div>
             </div>
             
             {/* Filtros Mobile: Grid responsível */}
@@ -277,30 +285,38 @@ export default function HistoricoPage() {
               <Button
                 variant={filterType === 'all' ? 'default' : 'outline'}
                 onClick={() => setFilterType('all')}
-                className="h-11 text-sm justify-center min-w-0 px-2"
+                className="h-12 text-sm justify-center min-w-0 px-2"
+                aria-label="Mostrar todos os contratos"
+                aria-pressed={filterType === 'all'}
               >
                 Todos
               </Button>
               <Button
                 variant={filterType === 'rental' ? 'default' : 'outline'}
                 onClick={() => setFilterType('rental')}
-                className="h-11 text-sm justify-center min-w-0 px-2"
+                className="h-12 text-sm justify-center min-w-0 px-2"
+                aria-label="Filtrar contratos de locação"
+                aria-pressed={filterType === 'rental'}
               >
-                🏠 Locação
+                <span aria-hidden="true">🏠</span> Locação
               </Button>
               <Button
                 variant={filterType === 'telecom' ? 'default' : 'outline'}
                 onClick={() => setFilterType('telecom')}
-                className="h-11 text-sm justify-center min-w-0 px-2"
+                className="h-12 text-sm justify-center min-w-0 px-2"
+                aria-label="Filtrar contratos de telecomunicações"
+                aria-pressed={filterType === 'telecom'}
               >
-                📱 Telecom
+                <span aria-hidden="true">📱</span> Telecom
               </Button>
               <Button
                 variant={filterType === 'financial' ? 'default' : 'outline'}
                 onClick={() => setFilterType('financial')}
-                className="h-11 text-sm justify-center min-w-0 px-2"
+                className="h-12 text-sm justify-center min-w-0 px-2"
+                aria-label="Filtrar contratos financeiros"
+                aria-pressed={filterType === 'financial'}
               >
-                💳 Financeiro
+                <span aria-hidden="true">💳</span> Financeiro
               </Button>
             </div>
           </div>
@@ -357,7 +373,17 @@ export default function HistoricoPage() {
         </div>
 
         {/* Lista de Contratos Redesenhada */}
-        <div className="space-y-3 max-w-full overflow-hidden">
+        <div 
+          className="space-y-3 max-w-full overflow-hidden"
+          role="region"
+          aria-label="Lista de contratos analisados"
+        >
+          <div className="sr-only" aria-live="polite">
+            {filteredContracts.length === 0 ? 
+              'Nenhum contrato encontrado com os filtros atuais' :
+              `${filteredContracts.length} contratos encontrados`
+            }
+          </div>
           {filteredContracts.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center">
@@ -384,7 +410,12 @@ export default function HistoricoPage() {
                 const RiskIcon = riskConfig?.icon
 
                 return (
-                  <Card key={contract.id} className="transition-all duration-200 hover:shadow-md">
+                  <Card 
+                    key={contract.id} 
+                    className="transition-all duration-200 hover:shadow-md"
+                    role="article"
+                    aria-label={`Contrato ${contract.fileName}, ${contractConfig.label}, ${riskConfig ? riskConfig.label : 'status processando'}`}
+                  >
                     <CardContent className="p-0">
                       {/* Desktop: Layout horizontal compacto */}
                       <div className="hidden md:flex items-center p-4">
@@ -491,10 +522,11 @@ export default function HistoricoPage() {
                         {contract.status === 'completed' && (
                           <div className="p-3 pt-0">
                             <Button
-                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 h-11 text-sm"
+                              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 h-12 text-base"
                               onClick={() => viewAnalysis(contract.id)}
+                              aria-label={`Ver análise detalhada do contrato ${contract.fileName}`}
                             >
-                              <Eye className="h-4 w-4 mr-2" />
+                              <Eye className="h-4 w-4 mr-2" aria-hidden="true" />
                               Ver Análise Completa
                             </Button>
                           </div>
