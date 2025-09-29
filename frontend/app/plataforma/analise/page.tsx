@@ -154,23 +154,29 @@ export default function AnalisePage() {
             </div>
 
             {/* Mobile: Compact horizontal layout */}
-            <div className="flex sm:hidden justify-between items-center mb-8 px-2">
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                  📤
+            <div className="flex sm:hidden justify-center items-center mb-8 px-2">
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                    📤
+                  </div>
+                  <p className="text-sm font-medium mt-2 text-blue-600">
+                    Upload
+                  </p>
                 </div>
-                <p className="text-sm font-medium mt-2 text-blue-600">
-                  Upload
-                </p>
+                <div className="flex-1 h-0.5 mx-3 bg-blue-600 min-w-[20px]" />
               </div>
 
-              <div className="flex flex-col items-center">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                  🤖
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                    🤖
+                  </div>
+                  <p className="text-sm font-medium mt-2 text-blue-600">
+                    IA Analisa
+                  </p>
                 </div>
-                <p className="text-sm font-medium mt-2 text-blue-600">
-                  IA Analisa
-                </p>
+                <div className="flex-1 h-0.5 mx-3 bg-blue-600 min-w-[20px]" />
               </div>
 
               <div className="flex flex-col items-center">
