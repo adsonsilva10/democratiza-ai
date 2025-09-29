@@ -1,8 +1,11 @@
 // Mock API client for development
-interface Contract {
+export interface Contract {
   id: string
   title: string
+  name?: string
+  type?: string
   status: 'uploaded' | 'processing' | 'completed' | 'error'
+  created_at?: string
   analysis?: any
 }
 

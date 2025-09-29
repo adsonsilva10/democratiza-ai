@@ -57,7 +57,7 @@ export default function ReportViewer({ contract }: ReportViewerProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="text-lg font-semibold text-gray-900 mb-2">Tipo de Contrato</h3>
-          <p className="font-semibold text-gray-900">{contract.type}</p>
+          <p className="font-semibold text-gray-900">{contract.type || 'Não identificado'}</p>
         </div>
         
         <div className="bg-gray-50 p-4 rounded-lg">
@@ -174,9 +174,9 @@ export default function ReportViewer({ contract }: ReportViewerProps) {
           <span>📄</span>
           <span>Relatório de Análise</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">{contract.name}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{contract.name || contract.title}</h1>
         <p className="text-gray-600 mt-2">
-          Criado em {new Date(contract.created_at).toLocaleDateString('pt-BR')}
+          Criado em {contract.created_at ? new Date(contract.created_at).toLocaleDateString('pt-BR') : 'Data não disponível'}
         </p>
       </div>
 

@@ -14,9 +14,12 @@ interface ChatMessage {
 interface ChatWithAgentProps {
   initialAgent?: string
   onContractSelect?: () => void
+  sessionId?: string
+  contractId?: string
+  onSessionCreated?: (session: { id: string; contract_id?: string }) => void
 }
 
-export default function ChatWithAgent({}: ChatWithAgentProps) {
+export default function ChatWithAgent({ sessionId, contractId, onSessionCreated }: ChatWithAgentProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [inputMessage, setInputMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
