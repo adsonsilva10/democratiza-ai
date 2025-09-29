@@ -16,6 +16,8 @@ export default function AnalisePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showMobileModal, setShowMobileModal] = useState(false)
+  const [showTermsModal, setShowTermsModal] = useState(false)
+  const [termsAccepted, setTermsAccepted] = useState(false)
   // Simulando tipo de usuário - em produção viria do contexto/API
   const [userType, setUserType] = useState<'free' | 'basic' | 'premium'>('free')
   const router = useRouter()
@@ -65,12 +67,28 @@ export default function AnalisePage() {
     document.getElementById('mobile-file-upload')?.click()
   }
 
-  const startAnalysis = async () => {
+  const handleStartAnalysis = () => {
     if (!selectedFile) return
+    setShowTermsModal(true)
+  }
+
+  const startAnalysis = async () => {
+    if (!selectedFile || !termsAccepted) return
+    setShowTermsModal(false)
     setIsAnalyzing(true)
     setTimeout(() => {
       router.push('/plataforma/analise/resultado')
     }, 3000)
+  }
+
+  const handleAcceptTerms = () => {
+    setTermsAccepted(true)
+    startAnalysis()
+  }
+
+  const handleRejectTerms = () => {
+    setShowTermsModal(false)
+    setTermsAccepted(false)
   }
 
   return (
@@ -274,7 +292,7 @@ export default function AnalisePage() {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <Button 
-                        onClick={startAnalysis}
+                        onClick={handleStartAnalysis}
                         disabled={isAnalyzing}
                         className="bg-gradient-to-r from-blue-600 to-purple-600 h-14 text-lg px-8 min-w-[180px]"
                       >
@@ -394,6 +412,90 @@ export default function AnalisePage() {
                   <div className="text-base text-gray-500">Escolher da galeria</div>
                 </div>
               </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Termos de Uso */}
+      {showTermsModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Termos de Uso e Política de Privacidade
+              </h2>
+              <p className="text-gray-600 mt-2">
+                Leia e aceite os termos para continuar com a análise
+              </p>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-96">
+              <div className="space-y-6 text-sm text-gray-700">
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">🔒 Confidencialidade e Privacidade</h3>
+                  <ul className="space-y-2 ml-4">
+                    <li>• Seus documentos são processados de forma segura e criptografada</li>
+                    <li>• Não armazenamos permanentemente o conteúdo dos seus contratos</li>
+                    <li>• Os dados são utilizados apenas para gerar a análise solicitada</li>
+                    <li>• Após a análise, os arquivos são automaticamente removidos dos nossos servidores</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">⚖️ Natureza Consultiva da Análise</h3>
+                  <ul className="space-y-2 ml-4">
+                    <li>• A análise tem caráter puramente informativo e educacional</li>
+                    <li>• Não constitui aconselhamento jurídico profissional</li>
+                    <li>• Para questões legais complexas, recomendamos consultar um advogado</li>
+                    <li>• Os resultados são baseados em IA e podem conter interpretações variáveis</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">📋 Responsabilidades do Usuário</h3>
+                  <ul className="space-y-2 ml-4">
+                    <li>• Você garante ter direito de analisar o documento enviado</li>
+                    <li>• É responsável pela veracidade e legalidade do conteúdo</li>
+                    <li>• Não deve enviar informações confidenciais de terceiros sem autorização</li>
+                    <li>• Aceita que a plataforma não se responsabiliza por decisões baseadas na análise</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">🛡️ Limitação de Responsabilidade</h3>
+                  <ul className="space-y-2 ml-4">
+                    <li>• A Democratiza AI não se responsabiliza por perdas ou danos</li>
+                    <li>• O serviço é oferecido "como está", sem garantias específicas</li>
+                    <li>• Recomendamos sempre validar informações com profissionais qualificados</li>
+                  </ul>
+                </div>
+
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-blue-800">
+                    <strong>Importante:</strong> Ao aceitar estes termos, você reconhece ter lido, 
+                    compreendido e concordado com todas as condições acima mencionadas.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Button
+                  variant="outline"
+                  onClick={handleRejectTerms}
+                  className="flex-1"
+                >
+                  Não Aceito
+                </Button>
+                <Button
+                  onClick={handleAcceptTerms}
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600"
+                >
+                  Li e Aceito os Termos
+                </Button>
+              </div>
             </div>
           </div>
         </div>
