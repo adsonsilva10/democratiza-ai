@@ -18,7 +18,7 @@ const sidebarItems: SidebarItem[] = [
   { id: 'analise', label: 'Nova Análise', icon: '📄', href: '/plataforma/analise', priority: 2 },
   { id: 'historico', label: 'Histórico', icon: '📋', href: '/plataforma/historico', priority: 3 },
   { id: 'assinatura', label: 'Assinatura Digital', icon: '✍️', href: '/plataforma/assinatura', priority: 4 },
-  { id: 'chat', label: 'Assistente IA', icon: '🤖', href: '/chat', priority: 5 },
+  { id: 'chat', label: 'Assistente IA', icon: '🤖', href: '/plataforma/chat', priority: 5 },
   { id: 'planos', label: 'Planos', icon: '💳', href: '/plataforma/planos', priority: 6 },
   { id: 'configuracoes', label: 'Configurações', icon: '⚙️', href: '/plataforma/configuracoes', priority: 7 },
   { id: 'suporte', label: 'Suporte', icon: '❓', href: '/plataforma/suporte', priority: 8 }

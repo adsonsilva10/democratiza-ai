@@ -164,7 +164,7 @@ export default function HistoricoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-x-hidden">
+    <>
       {/* Header Responsivo */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 py-4 md:px-8 md:py-6">
@@ -561,6 +561,6 @@ export default function HistoricoPage() {
           </div>
         )}
       </div>
-    </div>
+    </>
   )
 }

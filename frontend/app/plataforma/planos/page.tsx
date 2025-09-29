@@ -165,7 +165,7 @@ export default function PlanosPage() {
       console.error("Erro ao carregar planos:", error);
       // Usar dados de fallback em caso de erro
       setPlans(FALLBACK_PLANS);
-      setError("Dados carregados do cache local. Algumas funcionalidades podem estar limitadas.");
+      setError("");
     } finally {
       setLoadingPlans(false);
     }
@@ -723,7 +723,7 @@ export default function PlanosPage() {
               </p>
               {error && (
                 <p className="text-xs text-yellow-600 mt-1">
-                  ⚠️ Alguns dados podem estar desatualizados
+                  {error}
                 </p>
               )}
             </div>
