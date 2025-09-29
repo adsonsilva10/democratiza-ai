@@ -98,6 +98,91 @@ export default function AnalisePage() {
 
       <div className="container mx-auto px-6 md:px-6 py-8 md:py-8">
         <div className="max-w-2xl mx-auto space-y-8 md:space-y-6">
+          {/* Progress Steps - Como Funciona */}
+          <div className="relative flex justify-center">
+            {/* Desktop: Horizontal layout */}
+            <div className="hidden sm:flex justify-between items-center mb-8 w-full max-w-2xl">
+              <div className="flex items-center flex-1">
+                <div className="flex flex-col items-center relative">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+                    📤
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-sm font-medium text-blue-600">
+                      Upload
+                    </p>
+                    <p className="text-xs text-gray-400 hidden lg:block">
+                      Envie arquivo
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 h-0.5 mx-4 transition-colors duration-300 bg-blue-600" />
+              </div>
+
+              <div className="flex items-center flex-1">
+                <div className="flex flex-col items-center relative">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+                    🤖
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-sm font-medium text-blue-600">
+                      IA Analisa
+                    </p>
+                    <p className="text-xs text-gray-400 hidden lg:block">
+                      Claude processa
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 h-0.5 mx-4 transition-colors duration-300 bg-blue-600" />
+              </div>
+
+              <div className="flex items-center">
+                <div className="flex flex-col items-center relative">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+                    📊
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-sm font-medium text-blue-600">
+                      Relatório
+                    </p>
+                    <p className="text-xs text-gray-400 hidden lg:block">
+                      Receba alertas
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: Compact horizontal layout */}
+            <div className="flex sm:hidden justify-between items-center mb-8 px-2">
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                  📤
+                </div>
+                <p className="text-sm font-medium mt-2 text-blue-600">
+                  Upload
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                  🤖
+                </div>
+                <p className="text-sm font-medium mt-2 text-blue-600">
+                  IA Analisa
+                </p>
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                  📊
+                </div>
+                <p className="text-sm font-medium mt-2 text-blue-600">
+                  Relatório
+                </p>
+              </div>
+            </div>
+          </div>
             
             {/* Upload Area */}
             <Card className="border-2 border-dashed border-gray-300">
@@ -214,89 +299,6 @@ export default function AnalisePage() {
                 )}
               </CardContent>
             </Card>
-            {/* Como Funciona */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-xl md:text-lg text-center">Como Funciona</CardTitle>
-              </CardHeader>
-              <CardContent className="px-4 md:px-6">
-                {/* Mobile: Layout vertical compacto */}
-                <div className="md:hidden space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">
-                      📤
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm text-gray-900">Upload</h4>
-                      <p className="text-xs text-gray-500">Envie seu arquivo</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">
-                      🤖
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm text-gray-900">IA Analisa</h4>
-                      <p className="text-xs text-gray-500">Claude processa</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center text-xs flex-shrink-0">
-                      �
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm text-gray-900">Relatório</h4>
-                      <p className="text-xs text-gray-500">Receba alertas</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Desktop: Layout horizontal */}
-                <div className="hidden md:block">
-                  <div className="flex items-center justify-center">
-                    {/* Passo 1 */}
-                    <div className="flex-1 text-center">
-                      <div className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm mb-2">
-                        📤
-                      </div>
-                      <h4 className="font-semibold text-sm text-gray-900">Upload</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">Envie arquivo</p>
-                    </div>
-
-                    {/* Seta 1 */}
-                    <div className="flex-shrink-0 px-4">
-                      <div className="w-8 h-0.5 bg-gray-300"></div>
-                    </div>
-
-                    {/* Passo 2 */}
-                    <div className="flex-1 text-center">
-                      <div className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm mb-2">
-                        🤖
-                      </div>
-                      <h4 className="font-semibold text-sm text-gray-900">IA Analisa</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">Claude processa</p>
-                    </div>
-
-                    {/* Seta 2 */}
-                    <div className="flex-shrink-0 px-4">
-                      <div className="w-8 h-0.5 bg-gray-300"></div>
-                    </div>
-
-                    {/* Passo 3 */}
-                    <div className="flex-1 text-center">
-                      <div className="w-12 h-12 mx-auto bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-sm mb-2">
-                        📊
-                      </div>
-                      <h4 className="font-semibold text-sm text-gray-900">Relatório</h4>
-                      <p className="text-xs text-gray-500 mt-0.5">Receba alertas</p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             {/* Upgrade de Planos - Apenas para usuários free/basic */}
             {(userType === 'free' || userType === 'basic') && (
               <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
