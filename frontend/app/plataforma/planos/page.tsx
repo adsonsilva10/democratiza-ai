@@ -261,15 +261,28 @@ export default function PlanosPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-        <div className="container mx-auto px-4 py-6 sm:py-12">
-          <div className="text-center mb-8">
-            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
-              Escolha seu Plano
-            </h1>
-            <p className="text-sm md:text-base text-gray-600 mt-1">
-              Democratize a análise jurídica com nossos planos flexíveis
-            </p>
+        <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+                💳 Escolha seu Plano
+              </h1>
+              <p className="text-sm md:text-base text-gray-600 mt-1">
+                Democratize a análise jurídica com nossos planos flexíveis
+              </p>
+            </div>
+            <div className="hidden lg:flex items-center gap-4">
+              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                ⚡ Análise em 45s
+              </Badge>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                🛡️ 98.7% de precisão
+              </Badge>
+            </div>
           </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-6 sm:py-12">
         
           <div className="flex flex-col items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
@@ -291,18 +304,28 @@ export default function PlanosPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
-      <div className="container mx-auto px-4 py-6 sm:py-12">
-        {/* Header Mobile-First */}
-        <div className="text-center mb-8 sm:mb-12">
-          <div className="mb-6">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
             <h1 className="text-xl md:text-3xl font-bold text-gray-900">
-              Escolha seu Plano
+              💳 Escolha seu Plano
             </h1>
             <p className="text-sm md:text-base text-gray-600 mt-1">
               Democratize a análise jurídica com nossos planos flexíveis
             </p>
           </div>
+          <div className="hidden lg:flex items-center gap-4">
+            <Badge variant="secondary" className="bg-green-100 text-green-700">
+              ⚡ Análise em 45s
+            </Badge>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+              🛡️ 98.7% de precisão
+            </Badge>
+          </div>
         </div>
+      </div>
+
+      <div className="container mx-auto px-4 py-6 sm:py-12">
 
       {/* Aviso de erro se houver */}
       {error && (
@@ -678,7 +701,6 @@ export default function PlanosPage() {
             </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
