@@ -6,13 +6,27 @@ import { Badge } from '@/components/ui/badge'
 
 export default function PerfilPage() {
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Meu Perfil</h1>
-        <p className="text-gray-600">Gerencie suas informações pessoais e preferências da conta</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      {/* Header moderno com breadcrumb */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 md:py-6">
+        <div className="flex flex-col gap-2">
+          <nav className="text-sm text-gray-500">
+            <span>Plataforma</span> <span className="mx-2">›</span> <span className="text-gray-900">Perfil</span>
+          </nav>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <span className="text-xl text-green-600">👤</span>
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Meu Perfil</h1>
+              <p className="text-sm text-gray-600">Gerencie suas informações pessoais e preferências</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="p-6 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Perfil Principal */}
         <div className="lg:col-span-2 space-y-6">
           {/* Informações Pessoais */}
@@ -130,6 +144,7 @@ export default function PerfilPage() {
             </CardContent>
           </Card>
         </div>
+      </div>
       </div>
     </div>
   )

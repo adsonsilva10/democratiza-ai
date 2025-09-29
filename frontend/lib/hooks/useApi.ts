@@ -25,6 +25,60 @@ export const useApi = () => {
     setLoading(true);
     setError(null);
 
+    // Mock responses for development mode
+    if (process.env.NODE_ENV === 'development') {
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+      
+      // Mock subscription data
+      if (url.includes('/api/v1/payments/user/subscription')) {
+        setLoading(false);
+        return {
+          success: true,
+          data: {
+            subscription: {
+              id: 'sub_mock_123',
+              plan: 'premium',
+              status: 'active',
+              current_period_start: '2024-01-01T00:00:00Z',
+              current_period_end: '2024-12-31T23:59:59Z',
+              cancel_at_period_end: false
+            }
+          }
+        };
+      }
+
+      // Mock other payment endpoints
+      if (url.includes('/api/v1/payments/')) {
+        setLoading(false);
+        return {
+          success: true,
+          data: {
+            message: 'Mock payment response'
+          }
+        };
+      }
+
+      // Mock contract endpoints  
+      if (url.includes('/api/v1/contracts/')) {
+        setLoading(false);
+        return {
+          success: true,
+          data: {
+            id: 'contract_mock_123',
+            status: 'completed',
+            analysis: { riskLevel: 'medium', summary: 'Mock analysis' }
+          }
+        };
+      }
+
+      // Default mock response
+      setLoading(false);
+      return {
+        success: true,
+        data: { message: 'Mock response' }
+      };
+    }
+
     try {
       const headers = {
         'Content-Type': 'application/json',

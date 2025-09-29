@@ -17,15 +17,15 @@ const nextConfig = {
     domains: ['localhost'],
     formats: ['image/webp', 'image/avif'],
   },
-  // API proxy for development
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'http://localhost:8000/api/:path*',
-      },
-    ]
-  },
+  // API proxy for development - DISABLED FOR MOCK MODE
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: '/api/:path*',
+  //       destination: 'http://localhost:8000/api/:path*',
+  //     },
+  //   ]
+  // },
   // Security headers
   async headers() {
     return [

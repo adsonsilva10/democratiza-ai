@@ -555,15 +555,23 @@ export default function PlanosPage() {
 // Reusable UI fragments
 function Header() {
   return (
-    <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-3xl font-bold text-gray-900">💳 Escolha seu Plano</h1>
-          <p className="text-sm md:text-base text-gray-600 mt-1">Democratize a análise jurídica com nossos planos flexíveis</p>
-        </div>
-        <div className="hidden lg:flex items-center gap-4">
-          <Badge variant="secondary" className="bg-green-100 text-green-700">⚡ Análise em 45s</Badge>
-          <Badge variant="secondary" className="bg-blue-100 text-blue-700">🛡️ 98.7% de precisão</Badge>
+    <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 md:py-6">
+      <div className="flex flex-col gap-2">
+        <nav className="text-sm text-gray-500">
+          <span>Plataforma</span> <span className="mx-2">›</span> <span className="text-gray-900">Planos</span>
+        </nav>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-yellow-100 rounded-lg">
+            <span className="text-xl text-yellow-600">💳</span>
+          </div>
+          <div className="flex-1">
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Escolha seu Plano</h1>
+            <p className="text-sm text-gray-600">Democratize a análise jurídica com nossos planos flexíveis</p>
+          </div>
+          <div className="hidden lg:flex items-center gap-4">
+            <Badge variant="secondary" className="bg-green-100 text-green-700">⚡ Análise em 45s</Badge>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700">🛡️ 98.7% de precisão</Badge>
+          </div>
         </div>
       </div>
     </div>

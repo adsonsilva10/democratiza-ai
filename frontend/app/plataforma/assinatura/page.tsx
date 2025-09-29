@@ -55,23 +55,34 @@ export default function AssinaturaPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
-              ✍️ Assinatura Digital
-            </h1>
-            <p className="text-sm md:text-base text-gray-600 mt-1">
-              Envie documentos para assinatura eletrônica com validade jurídica
-            </p>
-          </div>
-          <div className="hidden lg:flex items-center gap-4">
-            <Badge variant="secondary" className="bg-green-100 text-green-700">
-              ⚡ Assinatura em 2min
-            </Badge>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-              🛡️ Validade jurídica
-            </Badge>
+      {/* Header moderno com breadcrumb */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 md:py-6">
+        <div className="flex flex-col gap-2">
+          <nav className="text-sm text-gray-500">
+            <span>Plataforma</span> <span className="mx-2">›</span> <span className="text-gray-900">Assinatura Digital</span>
+          </nav>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <span className="text-xl text-purple-600">✍️</span>
+              </div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+                  Assinatura Digital
+                </h1>
+                <p className="text-sm text-gray-600">
+                  Envie documentos para assinatura eletrônica com validade jurídica
+                </p>
+              </div>
+            </div>
+            <div className="hidden lg:flex items-center gap-4">
+              <Badge variant="secondary" className="bg-green-100 text-green-700">
+                ⚡ Assinatura em 2min
+              </Badge>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+                🛡️ Validade jurídica
+              </Badge>
+            </div>
           </div>
         </div>
       </div>

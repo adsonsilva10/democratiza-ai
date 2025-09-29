@@ -65,242 +65,435 @@ export default function SuportePage() {
   }
 
   return (
-    <div className="p-4 lg:p-6">
-      <h1 className="text-xl lg:text-2xl font-bold text-gray-900 mb-4 lg:mb-6">Ajuda e Suporte</h1>
-
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-8">
-        {/* Navegação lateral - Mobile como dropdown */}
-        <div className="lg:w-64">
-          <div className="lg:hidden mb-4">
-            <select 
-              value={activeSection}
-              onChange={(e) => setActiveSection(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="faq">❓ FAQ - Perguntas Frequentes</option>
-              <option value="contato">✉️ Fale Conosco</option>
-              <option value="recursos">📚 Recursos e Guias</option>
-            </select>
-          </div>
-          <nav className="hidden lg:block space-y-2">
-            <button
-              onClick={() => setActiveSection('faq')}
-              className={`w-full flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 text-left rounded-lg transition-colors text-sm lg:text-base ${
-                activeSection === 'faq'
-                  ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <span className="text-base lg:text-lg">❓</span>
-              FAQ - Perguntas Frequentes
-            </button>
-            
-            <button
-              onClick={() => setActiveSection('contato')}
-              className={`w-full flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 text-left rounded-lg transition-colors text-sm lg:text-base ${
-                activeSection === 'contato'
-                  ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <span className="text-base lg:text-lg">✉️</span>
-              Fale Conosco
-            </button>
-
-            <button
-              onClick={() => setActiveSection('recursos')}
-              className={`w-full flex items-center gap-3 px-3 lg:px-4 py-2 lg:py-3 text-left rounded-lg transition-colors text-sm lg:text-base ${
-                activeSection === 'recursos'
-                  ? 'bg-blue-100 text-blue-700 font-medium'
-                  : 'text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              <span className="text-base lg:text-lg">📚</span>
-              Recursos e Guias
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      {/* Header moderno com breadcrumb */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 md:py-6">
+        <div className="flex flex-col gap-2">
+          <nav className="text-sm text-gray-500">
+            <span>Plataforma</span> <span className="mx-2">›</span> <span className="text-gray-900">Ajuda e Suporte</span>
           </nav>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <span className="text-xl text-purple-600">🆘</span>
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Ajuda e Suporte</h1>
+              <p className="text-sm text-gray-600">Encontre respostas rápidas ou entre em contato conosco</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 md:p-6">
+
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 max-w-7xl mx-auto">
+          {/* Navegação aprimorada */}
+          <div className="lg:w-72">
+            {/* Mobile: Cards horizontais com scroll */}
+            <div className="lg:hidden mb-6">
+              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <button
+                  onClick={() => setActiveSection('faq')}
+                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
+                    activeSection === 'faq'
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-200'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="text-lg">❓</span>
+                  <span>FAQ</span>
+                </button>
+                <button
+                  onClick={() => setActiveSection('contato')}
+                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
+                    activeSection === 'contato'
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-200'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="text-lg">✉️</span>
+                  <span>Contato</span>
+                </button>
+                <button
+                  onClick={() => setActiveSection('recursos')}
+                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-xl transition-all font-medium text-sm ${
+                    activeSection === 'recursos'
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-200'
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  }`}
+                >
+                  <span className="text-lg">📚</span>
+                  <span>Recursos</span>
+                </button>
+              </div>
+            </div>
+            {/* Desktop: Navegação sidebar aprimorada */}
+            <nav className="hidden lg:block">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <button
+                  onClick={() => setActiveSection('faq')}
+                  className={`w-full flex items-center gap-4 px-6 py-4 text-left transition-all border-b border-gray-50 ${
+                    activeSection === 'faq'
+                      ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border-l-4 border-l-purple-500'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg ${
+                    activeSection === 'faq' 
+                      ? 'bg-purple-100 text-purple-600' 
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    <span className="text-lg">❓</span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium">FAQ</span>
+                    <div className={`text-xs mt-0.5 ${
+                      activeSection === 'faq' ? 'text-purple-600' : 'text-gray-500'
+                    }`}>
+                      Perguntas frequentes
+                    </div>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => setActiveSection('contato')}
+                  className={`w-full flex items-center gap-4 px-6 py-4 text-left transition-all border-b border-gray-50 ${
+                    activeSection === 'contato'
+                      ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border-l-4 border-l-purple-500'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg ${
+                    activeSection === 'contato' 
+                      ? 'bg-purple-100 text-purple-600' 
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    <span className="text-lg">✉️</span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium">Fale Conosco</span>
+                    <div className={`text-xs mt-0.5 ${
+                      activeSection === 'contato' ? 'text-purple-600' : 'text-gray-500'
+                    }`}>
+                      Entre em contato
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setActiveSection('recursos')}
+                  className={`w-full flex items-center gap-4 px-6 py-4 text-left transition-all ${
+                    activeSection === 'recursos'
+                      ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 border-l-4 border-l-purple-500'
+                      : 'text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <div className={`p-2 rounded-lg ${
+                    activeSection === 'recursos' 
+                      ? 'bg-purple-100 text-purple-600' 
+                      : 'bg-gray-100 text-gray-600'
+                  }`}>
+                    <span className="text-lg">📚</span>
+                  </div>
+                  <div className="flex-1">
+                    <span className="font-medium">Recursos e Guias</span>
+                    <div className={`text-xs mt-0.5 ${
+                      activeSection === 'recursos' ? 'text-purple-600' : 'text-gray-500'
+                    }`}>
+                      Materiais de apoio
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </nav>
         </div>
 
-        {/* Conteúdo principal */}
-        <div className="flex-1">
-          
-          {/* FAQ */}
-          {activeSection === 'faq' && (
-            <div className="space-y-4 lg:space-y-8">
-              {faqs.map((categoria, index) => (
-                <div key={index} className="bg-white rounded-lg shadow">
-                  <div className="p-4 lg:p-6 border-b">
-                    <h2 className="text-lg lg:text-xl font-semibold text-gray-900">{categoria.categoria}</h2>
-                  </div>
-                  <div className="divide-y divide-gray-200">
-                    {categoria.perguntas.map((faq, faqIndex) => (
-                      <details key={faqIndex} className="p-4 lg:p-6">
-                        <summary className="cursor-pointer font-medium text-gray-900 hover:text-blue-600 text-sm lg:text-base">
-                          {faq.pergunta}
-                        </summary>
-                        <div className="mt-2 lg:mt-3 text-gray-600 leading-relaxed text-sm lg:text-base">
-                          {faq.resposta}
+          {/* Conteúdo principal */}
+          <div className="flex-1">
+            
+            {/* FAQ */}
+            {activeSection === 'faq' && (
+              <div className="space-y-6 lg:space-y-8">
+                {faqs.map((categoria, index) => (
+                  <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-6 border-b border-gray-100">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-purple-100 rounded-lg">
+                          <span className="text-xl text-purple-600">{
+                            categoria.categoria === 'Geral' ? '🌟' :
+                            categoria.categoria === 'Análise' ? '🔍' : '👤'
+                          }</span>
                         </div>
-                      </details>
-                    ))}
+                        <div>
+                          <h2 className="text-xl font-semibold text-gray-900">{categoria.categoria}</h2>
+                          <p className="text-sm text-gray-600">
+                            {categoria.categoria === 'Geral' && 'Informações básicas sobre a plataforma'}
+                            {categoria.categoria === 'Análise' && 'Como funciona nossa análise de contratos'}
+                            {categoria.categoria === 'Conta' && 'Gerenciamento da sua conta'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="divide-y divide-gray-100">
+                      {categoria.perguntas.map((faq, faqIndex) => (
+                        <details key={faqIndex} className="p-6 hover:bg-gray-50 transition-colors">
+                          <summary className="cursor-pointer font-semibold text-gray-900 hover:text-purple-600 transition-colors flex items-center gap-2">
+                            <span className="text-purple-500">💬</span>
+                            {faq.pergunta}
+                          </summary>
+                          <div className="mt-4 pl-7 text-gray-700 leading-relaxed bg-gradient-to-r from-gray-50 to-white p-4 rounded-xl border-l-4 border-purple-200">
+                            {faq.resposta}
+                          </div>
+                        </details>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Formulário de Contato */}
-          {activeSection === 'contato' && (
-            <div className="bg-white rounded-lg shadow">
-              <div className="p-4 lg:p-6 border-b">
-                <h2 className="text-lg lg:text-xl font-semibold text-gray-900">Entre em Contato</h2>
-                <p className="text-gray-600 mt-2 text-sm lg:text-base">
-                  Não encontrou a resposta que procurava? Envie-nos uma mensagem e nossa equipe responderá em breve.
-                </p>
+                ))}
               </div>
-              
-              <form onSubmit={handleContactSubmit} className="p-4 lg:p-6 space-y-4 lg:space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                  <div>
-                    <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-                      Nome Completo
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={contactForm.nome}
-                      onChange={(e) => setContactForm(prev => ({...prev, nome: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base"
-                    />
+            )}
+
+            {/* Formulário de Contato */}
+            {activeSection === 'contato' && (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                <div className="bg-gradient-to-r from-blue-50 to-cyan-50 p-6 md:p-8 border-b border-gray-100">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <span className="text-xl text-blue-600">✉️</span>
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">Entre em Contato</h2>
+                      <p className="text-sm text-gray-600">Nossa equipe responde em até 24 horas</p>
+                    </div>
+                  </div>
+                  <p className="text-gray-700 bg-white/50 p-4 rounded-xl border border-blue-100">
+                    💡 <strong>Dica:</strong> Antes de enviar, verifique se sua dúvida não está na seção FAQ. 
+                    Isso pode economizar seu tempo!
+                  </p>
+                </div>
+                
+                <form onSubmit={handleContactSubmit} className="p-6 md:p-8 space-y-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <span>👨‍💼</span> Nome Completo
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={contactForm.nome}
+                        onChange={(e) => setContactForm(prev => ({...prev, nome: e.target.value}))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-white shadow-sm"
+                        placeholder="Digite seu nome completo"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                        <span>📧</span> Email
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={contactForm.email}
+                        onChange={(e) => setContactForm(prev => ({...prev, email: e.target.value}))}
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-white shadow-sm"
+                        placeholder="seu@email.com"
+                      />
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-                      Email
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <span>📂</span> Assunto
                     </label>
-                    <input
-                      type="email"
+                    <select
                       required
-                      value={contactForm.email}
-                      onChange={(e) => setContactForm(prev => ({...prev, email: e.target.value}))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base"
-                    />
+                      value={contactForm.assunto}
+                      onChange={(e) => setContactForm(prev => ({...prev, assunto: e.target.value}))}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-white shadow-sm"
+                    >
+                      <option value="">Selecione um assunto</option>
+                      <option value="duvida-tecnica">🛠️ Dúvida Técnica</option>
+                      <option value="problema-analise">🔍 Problema na Análise</option>
+                      <option value="sugestao">💡 Sugestão</option>
+                      <option value="bug">🐛 Relatar Bug</option>
+                      <option value="outro">❓ Outro</option>
+                    </select>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-                    Assunto
-                  </label>
-                  <select
-                    required
-                    value={contactForm.assunto}
-                    onChange={(e) => setContactForm(prev => ({...prev, assunto: e.target.value}))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base"
-                  >
-                    <option value="">Selecione um assunto</option>
-                    <option value="duvida-tecnica">Dúvida Técnica</option>
-                    <option value="problema-analise">Problema na Análise</option>
-                    <option value="sugestao">Sugestão</option>
-                    <option value="bug">Relatar Bug</option>
-                    <option value="outro">Outro</option>
-                  </select>
-                </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                      <span>💬</span> Mensagem
+                    </label>
+                    <textarea
+                      required
+                      rows={6}
+                      value={contactForm.mensagem}
+                      onChange={(e) => setContactForm(prev => ({...prev, mensagem: e.target.value}))}
+                      placeholder="Descreva sua dúvida ou problema em detalhes. Quanto mais informações você fornecer, melhor poderemos ajudar!"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm bg-white shadow-sm resize-none"
+                    />
+                    <p className="text-xs text-gray-500">Mínimo 20 caracteres</p>
+                  </div>
 
-                <div>
-                  <label className="block text-xs lg:text-sm font-medium text-gray-700 mb-2">
-                    Mensagem
-                  </label>
-                  <textarea
-                    required
-                    rows={5}
-                    value={contactForm.mensagem}
-                    onChange={(e) => setContactForm(prev => ({...prev, mensagem: e.target.value}))}
-                    placeholder="Descreva sua dúvida ou problema em detalhes..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm lg:text-base"
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 lg:px-6 lg:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm lg:text-base"
-                  >
-                    Enviar Mensagem
-                  </button>
-                </div>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-end pt-6 border-t border-gray-100">
+                    <button
+                      type="button"
+                      onClick={() => setContactForm({ nome: '', email: '', assunto: '', mensagem: '' })}
+                      className="px-6 py-3 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-xl transition-all text-sm font-medium"
+                    >
+                      🗑️ Limpar Formulário
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl text-sm font-medium"
+                    >
+                      ✉️ Enviar Mensagem
+                    </button>
+                  </div>
               </form>
             </div>
           )}
 
-          {/* Recursos e Guias */}
-          {activeSection === 'recursos' && (
-            <div className="space-y-4 lg:space-y-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-6">
-                <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
-                  <div className="text-blue-600 mb-4">
-                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C20.832 18.477 19.246 18 17.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                    </svg>
+            {/* Recursos e Guias */}
+            {activeSection === 'recursos' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-2xl border border-green-100">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <span className="text-xl text-green-600">📚</span>
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-semibold text-gray-900">Recursos e Materiais</h2>
+                      <p className="text-sm text-gray-600">Tudo que você precisa para se informar</p>
+                    </div>
                   </div>
-                  <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">
-                    Guia do Consumidor
-                  </h3>
-                  <p className="text-gray-600 mb-3 lg:mb-4 text-sm lg:text-base">
-                    Aprenda sobre seus direitos e como identificar cláusulas abusivas
-                  </p>
-                  <button className="text-blue-600 hover:text-blue-700 font-medium text-sm lg:text-base">
-                    Acessar Guia →
-                  </button>
                 </div>
 
-                <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
-                  <div className="text-green-600 mb-4 text-4xl lg:text-5xl">
-                    📋
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-2xl text-blue-600">📖</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
+                          Guia do Consumidor
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Aprenda sobre seus direitos e como identificar cláusulas abusivas
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium px-3 py-1 bg-blue-100 text-blue-700 rounded-full">
+                        📚 Educativo
+                      </span>
+                      <span className="text-blue-600 hover:text-blue-700 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                        Acessar Guia →
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">
-                    Modelos de Contrato
-                  </h3>
-                  <p className="text-gray-600 mb-3 lg:mb-4 text-sm lg:text-base">
-                    Baixe modelos seguros e bem estruturados
-                  </p>
-                  <button className="text-blue-600 hover:text-blue-700 font-medium text-sm lg:text-base">
-                    Ver Modelos →
-                  </button>
-                </div>
 
-                <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
-                  <div className="text-purple-600 mb-4 text-4xl lg:text-5xl">
-                    🎥
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-2xl text-green-600">📋</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
+                          Modelos de Contrato
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Baixe modelos seguros e bem estruturados
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium px-3 py-1 bg-green-100 text-green-700 rounded-full">
+                        📄 Templates
+                      </span>
+                      <span className="text-blue-600 hover:text-blue-700 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                        Ver Modelos →
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">
-                    Vídeo Tutoriais
-                  </h3>
-                  <p className="text-gray-600 mb-3 lg:mb-4 text-sm lg:text-base">
-                    Aprenda a usar a plataforma com nossos tutoriais
-                  </p>
-                  <button className="text-blue-600 hover:text-blue-700 font-medium text-sm lg:text-base">
-                    Assistir Vídeos →
-                  </button>
-                </div>
 
-                <div className="bg-white p-4 lg:p-6 rounded-lg shadow">
-                  <div className="text-red-600 mb-4 text-4xl lg:text-5xl">
-                    ⚠️
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-2xl text-purple-600">🎥</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-purple-600 transition-colors">
+                          Vídeo Tutoriais
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Aprenda a usar a plataforma com nossos tutoriais
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium px-3 py-1 bg-purple-100 text-purple-700 rounded-full">
+                        🎬 Vídeos
+                      </span>
+                      <span className="text-blue-600 hover:text-blue-700 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                        Assistir Vídeos →
+                      </span>
+                    </div>
                   </div>
-                  <h3 className="text-base lg:text-lg font-semibold text-gray-900 mb-2">
-                    Alertas Legais
-                  </h3>
-                  <p className="text-gray-600 mb-3 lg:mb-4 text-sm lg:text-base">
-                    Fique por dentro das mudanças na legislação
-                  </p>
-                  <button className="text-blue-600 hover:text-blue-700 font-medium text-sm lg:text-base">
-                    Ver Alertas →
-                  </button>
+
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-2xl text-red-600">⚠️</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-red-600 transition-colors">
+                          Alertas Legais
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Fique por dentro das mudanças na legislação
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium px-3 py-1 bg-red-100 text-red-700 rounded-full">
+                        🚨 Alertas
+                      </span>
+                      <span className="text-blue-600 hover:text-blue-700 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                        Ver Alertas →
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all cursor-pointer group">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <span className="text-2xl text-orange-600">📞</span>
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                          Suporte Direto
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          Chat ou chamada para casos urgentes
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium px-3 py-1 bg-orange-100 text-orange-700 rounded-full">
+                        ⚡ Urgente
+                      </span>
+                      <span className="text-blue-600 hover:text-blue-700 font-medium text-sm group-hover:translate-x-1 transition-transform">
+                        Contatar →
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

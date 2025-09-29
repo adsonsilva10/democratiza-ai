@@ -164,21 +164,33 @@ export default function HistoricoPage() {
   }
 
   return (
-    <>
-      {/* Header Responsivo */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="px-4 py-4 md:px-8 md:py-6">
-          {/* Mobile: Layout em coluna */}
-          <div className="flex flex-col gap-4 md:hidden">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Histórico de Análises
-              </h1>
-              <p className="text-base text-gray-600 mt-2">
-                Acompanhe todas as suas análises de contratos
-              </p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
+      {/* Header moderno com breadcrumb */}
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4 md:py-6">
+        <div className="flex flex-col gap-2">
+          <nav className="text-sm text-gray-500">
+            <span>Plataforma</span> <span className="mx-2">›</span> <span className="text-gray-900">Histórico</span>
+          </nav>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-100 rounded-lg">
+              <span className="text-xl text-orange-600">📋</span>
             </div>
-            
+            <div className="flex-1">
+              <h1 className="text-xl md:text-2xl font-bold text-gray-900">Histórico de Análises</h1>
+              <p className="text-sm text-gray-600">Visualize todas as suas análises anteriores</p>
+            </div>
+            <div className="hidden md:block">
+              <Button 
+                onClick={() => router.push('/plataforma/analise')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                📄 Nova Análise
+              </Button>
+            </div>
+          </div>
+          
+          {/* Mobile: Nova Análise Button */}
+          <div className="md:hidden">
             <Button 
               onClick={() => router.push('/plataforma/analise')}
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 text-base"
@@ -186,27 +198,10 @@ export default function HistoricoPage() {
               📄 Nova Análise
             </Button>
           </div>
-          
-          {/* Desktop: Layout em linha */}
-          <div className="hidden md:flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Histórico de Análises
-              </h1>
-              <p className="text-base text-gray-600 mt-1">
-                Acompanhe todas as suas análises de contratos
-              </p>
-            </div>
-            
-            <Button 
-              onClick={() => router.push('/plataforma/analise')}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 h-12 px-6 text-base"
-            >
-              📄 Nova Análise
-            </Button>
-          </div>
         </div>
       </div>
+
+
 
       <div className="container mx-auto px-4 md:px-8 py-6 md:py-8 max-w-full overflow-x-hidden">
         
@@ -561,6 +556,6 @@ export default function HistoricoPage() {
           </div>
         )}
       </div>
-    </>
+    </div>
   )
 }
