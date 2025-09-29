@@ -289,7 +289,7 @@ export default function ResultadoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-x-hidden">
       {/* Header Responsivo */}
       <div className="bg-white border-b border-gray-200">
         <div className="px-4 md:px-8 py-4 md:py-6">
@@ -325,18 +325,18 @@ export default function ResultadoPage() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 md:px-8 py-6 md:py-8 max-w-4xl">
+      <div className="container mx-auto px-3 md:px-8 py-4 md:py-8 max-w-4xl overflow-x-hidden">
         
         {/* Visão Geral do Contrato */}
         <Card className="mb-8">
-          <CardContent className="p-6 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
-              <div className="flex items-center gap-4">
-                <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
+          <CardContent className="p-4 md:p-8">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-xl flex items-center justify-center text-xl md:text-2xl flex-shrink-0">
                   {contractConfig.icon}
                 </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">{analysis.fileName}</h2>
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-lg md:text-xl font-semibold text-gray-900 truncate">{analysis.fileName}</h2>
                   <div className="flex flex-wrap gap-2 mt-2">
                     <Badge className={contractConfig.color} variant="outline">
                       {contractConfig.label}
@@ -349,7 +349,7 @@ export default function ResultadoPage() {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:ml-auto">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 md:ml-auto max-w-full">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-gray-900">{analysis.overallScore}</div>
                   <div className="text-xs text-gray-500">Score Geral</div>
@@ -391,14 +391,14 @@ export default function ResultadoPage() {
               return (
                 <div key={problem.id} className={`border-2 rounded-lg ${config.color}`}>
                   <div 
-                    className="p-4 cursor-pointer"
+                    className="p-3 md:p-4 cursor-pointer"
                     onClick={() => toggleProblem(problem.id)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start gap-3 flex-1">
-                        <Icon className="h-5 w-5 mt-0.5 flex-shrink-0" />
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-lg mb-1">{problem.title}</h3>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-start gap-2 md:gap-3 flex-1 min-w-0">
+                        <Icon className="h-4 w-4 md:h-5 md:w-5 mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-base md:text-lg mb-1 break-words">{problem.title}</h3>
                           <p className="text-sm opacity-90 mb-2">{problem.description}</p>
                           <Badge variant="outline" className="text-xs">
                             {problem.category}
@@ -410,11 +410,11 @@ export default function ResultadoPage() {
                   </div>
                   
                   {isExpanded && (
-                    <div className="px-4 pb-4 border-t border-current/20">
+                    <div className="px-3 md:px-4 pb-3 md:pb-4 border-t border-current/20">
                       <div className="mt-4 space-y-4">
                         <div>
                           <h4 className="font-medium text-sm mb-2">📋 Cláusula Específica:</h4>
-                          <div className="bg-white/70 p-3 rounded text-sm italic">
+                          <div className="bg-white/70 p-2 md:p-3 rounded text-xs md:text-sm italic break-words">
                             "{problem.clause}"
                           </div>
                         </div>
@@ -444,13 +444,13 @@ export default function ResultadoPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {analysis.positives.map((positive) => (
-              <div key={positive.id} className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-lg text-green-800 mb-1">{positive.title}</h3>
+              <div key={positive.id} className="bg-green-50 border-2 border-green-200 rounded-lg p-3 md:p-4">
+                <div className="flex items-start gap-2 md:gap-3">
+                  <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-base md:text-lg text-green-800 mb-1 break-words">{positive.title}</h3>
                     <p className="text-sm text-green-700 mb-3">{positive.description}</p>
-                    <div className="bg-white/70 p-3 rounded text-sm italic text-green-800 mb-2">
+                    <div className="bg-white/70 p-2 md:p-3 rounded text-xs md:text-sm italic text-green-800 mb-2 break-words">
                       "{positive.clause}"
                     </div>
                     <Badge variant="outline" className="text-xs text-green-700 border-green-300">
@@ -487,7 +487,7 @@ export default function ResultadoPage() {
           
           <CardContent className={`${isChatExpanded ? 'block' : 'hidden md:block'}`}>
             {/* Área de Mensagens */}
-            <div className="h-80 overflow-y-auto bg-gray-50 rounded-lg p-4 mb-4 space-y-4">
+            <div className="h-64 md:h-80 overflow-y-auto bg-gray-50 rounded-lg p-3 md:p-4 mb-4 space-y-3 md:space-y-4 max-w-full">
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -565,7 +565,7 @@ export default function ResultadoPage() {
             {/* Sugestões de Perguntas */}
             <div className="mt-4">
               <p className="text-sm text-gray-600 mb-2">💡 Sugestões de perguntas:</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1 md:gap-2 max-w-full">
                 {[
                   'Como negociar a multa rescisória?',
                   'O reajuste está correto?',
@@ -589,7 +589,7 @@ export default function ResultadoPage() {
         </Card>
 
         {/* Botões de Ação Mobile */}
-        <div className="md:hidden flex gap-3 mb-6">
+        <div className="md:hidden flex gap-2 mb-6 max-w-full">
           <Button variant="outline" className="flex-1">
             <Download className="h-4 w-4 mr-2" />
             Download
@@ -602,7 +602,7 @@ export default function ResultadoPage() {
 
         {/* CTA Nova Análise */}
         <Card className="bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <CardContent className="p-6 text-center">
+          <CardContent className="p-4 md:p-6 text-center">
             <h3 className="text-xl font-bold mb-2">Precisa analisar outro contrato?</h3>
             <p className="mb-4 opacity-90">
               Continue protegendo seus direitos com nossas análises detalhadas
