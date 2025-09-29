@@ -172,6 +172,9 @@ export default function ResultadoPage() {
     // Simular carregamento
     const timer = setTimeout(() => {
       setAnalysis(mockAnalysis)
+      // Expandir todos os problemas por padrão
+      const allProblemIds = new Set(mockAnalysis.problems.map(p => p.id))
+      setExpandedProblems(allProblemIds)
       setLoading(false)
     }, 1500)
 
