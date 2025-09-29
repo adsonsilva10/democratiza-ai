@@ -101,9 +101,9 @@ export default function AnalisePage() {
           {/* Progress Steps - Como Funciona */}
           <div className="relative flex justify-center">
             {/* Desktop: Horizontal layout */}
-            <div className="hidden sm:flex justify-between items-center mb-8 w-full max-w-2xl">
-              <div className="flex items-center flex-1">
-                <div className="flex flex-col items-center relative">
+            <div className="hidden sm:flex justify-center items-center mb-8 px-2">
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
                     📤
                   </div>
@@ -116,11 +116,11 @@ export default function AnalisePage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex-1 h-0.5 mx-4 transition-colors duration-300 bg-blue-600" />
+                <div className="flex-1 h-0.5 mx-4 bg-blue-600 min-w-[40px]" />
               </div>
 
-              <div className="flex items-center flex-1">
-                <div className="flex flex-col items-center relative">
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
                   <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
                     🤖
                   </div>
@@ -133,22 +133,20 @@ export default function AnalisePage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex-1 h-0.5 mx-4 transition-colors duration-300 bg-blue-600" />
+                <div className="flex-1 h-0.5 mx-4 bg-blue-600 min-w-[40px]" />
               </div>
 
-              <div className="flex items-center">
-                <div className="flex flex-col items-center relative">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
-                    📊
-                  </div>
-                  <div className="mt-2 text-center">
-                    <p className="text-sm font-medium text-blue-600">
-                      Relatório
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Receba alertas
-                    </p>
-                  </div>
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+                  📊
+                </div>
+                <div className="mt-2 text-center">
+                  <p className="text-sm font-medium text-blue-600">
+                    Relatório
+                  </p>
+                  <p className="text-xs text-gray-400 hidden lg:block">
+                    Receba alertas
+                  </p>
                 </div>
               </div>
             </div>
