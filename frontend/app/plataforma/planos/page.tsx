@@ -40,23 +40,7 @@ interface UserSubscription {
 // Dados de fallback/mock para quando a API não responder
 const FALLBACK_PLANS: Plan[] = [
   {
-    id: "pay_per_use_basic",
-    name: "Análise Simples",
-    description: "Apenas análise do contrato",
-    price: 15.90,
-    duration_months: 0,
-    max_analyses: 1,
-    features: [
-      "Análise completa do contrato",
-      "Identificação de cláusulas abusivas",
-      "Relatório detalhado em PDF",
-      "Suporte por email"
-    ],
-    is_active: true,
-    type: "pay_per_use"
-  },
-  {
-    id: "pay_per_use_signature",
+    id: "pay_per_use",
     name: "Análise + Assinatura",
     description: "Análise completa com assinatura eletrônica",
     price: 24.90,
@@ -279,24 +263,12 @@ export default function PlanosPage() {
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-white">
         <div className="container mx-auto px-4 py-6 sm:py-12">
           <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white text-xl">💳</span>
-              </div>
-              <div className="text-left">
-                <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Escolha seu Plano
-                </h1>
-                <p className="text-sm sm:text-base text-gray-500 font-medium">
-                  Democratiza AI
-                </p>
-              </div>
-            </div>
-            <div className="max-w-3xl mx-auto">
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed">
-                Carregando planos disponíveis...
-              </p>
-            </div>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              Escolha seu Plano
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Democratize a análise jurídica com nossos planos flexíveis
+            </p>
           </div>
         
           <div className="flex flex-col items-center justify-center h-64">
@@ -323,27 +295,12 @@ export default function PlanosPage() {
         {/* Header Mobile-First */}
         <div className="text-center mb-8 sm:mb-12">
           <div className="mb-6">
-            <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center shadow-lg">
-                <span className="text-white text-xl">💳</span>
-              </div>
-              <div className="text-left">
-                <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                  Escolha seu Plano
-                </h1>
-                <p className="text-sm sm:text-base text-gray-500 font-medium">
-                  Democratiza AI
-                </p>
-              </div>
-            </div>
-            <div className="max-w-3xl mx-auto">
-              <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-4">
-                Democratize a análise jurídica com nossos <span className="font-semibold text-blue-600">planos flexíveis</span>.
-              </p>
-              <p className="text-gray-500 text-sm sm:text-base">
-                Pague apenas pelo que usar ou assine um plano mensal com benefícios exclusivos.
-              </p>
-            </div>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              Escolha seu Plano
+            </h1>
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Democratize a análise jurídica com nossos planos flexíveis
+            </p>
           </div>
         </div>
 
@@ -395,7 +352,7 @@ export default function PlanosPage() {
         </Card>
       )}
 
-      {/* Opção de Pagamento Avulso - Lado a Lado */}
+      {/* Opção de Pagamento Avulso */}
       {payPerUsePlans.length > 0 && (
         <div className="mb-12">
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 sm:p-6">
@@ -407,18 +364,14 @@ export default function PlanosPage() {
               <p className="text-gray-600 text-sm sm:text-base">Pague somente pelo que usar, sem compromisso mensal</p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
+            <div className="max-w-md mx-auto">
               {payPerUsePlans.map((plan) => (
-                <div key={plan.id} className={`bg-white rounded-lg p-4 sm:p-6 shadow-md border-2 transition-all hover:shadow-lg ${
-                  plan.id === 'pay_per_use_signature' ? 'border-amber-300 relative' : 'border-gray-200'
-                }`}>
-                  {plan.id === 'pay_per_use_signature' && (
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium">
-                        🔥 Mais Completo
-                      </span>
-                    </div>
-                  )}
+                <div key={plan.id} className="bg-white rounded-lg p-4 sm:p-6 shadow-md border-2 border-amber-300 relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-medium">
+                      🔥 Mais Completo
+                    </span>
+                  </div>
                   
                   <div className="text-center mb-4">
                     <h4 className="text-lg font-semibold text-gray-900 mb-2">{plan.name}</h4>
@@ -440,11 +393,7 @@ export default function PlanosPage() {
                   <Button
                     onClick={() => handlePayPerUse(plan.id)}
                     disabled={processingPayment === "pay_per_use"}
-                    className={`w-full ${
-                      plan.id === 'pay_per_use_signature'
-                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600'
-                        : 'bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800'
-                    }`}
+                    className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
                   >
                     {processingPayment === "pay_per_use" ? (
                       <div className="flex items-center gap-2">
@@ -453,8 +402,8 @@ export default function PlanosPage() {
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2">
-                        <span>{plan.id === 'pay_per_use_signature' ? '✍️' : '📊'}</span>
-                        <span>{plan.id === 'pay_per_use_signature' ? 'Analisar + Assinar' : 'Apenas Analisar'}</span>
+                        <span>✍️</span>
+                        <span>Analisar + Assinar</span>
                       </div>
                     )}
                   </Button>
