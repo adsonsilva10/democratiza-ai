@@ -20,7 +20,8 @@ import {
   User,
   Loader2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  PenTool
 } from 'lucide-react'
 
 // Interface para mensagens do chat
@@ -153,6 +154,7 @@ export default function ResultadoPage() {
   const [loading, setLoading] = useState(true)
   const [analysis, setAnalysis] = useState<ContractAnalysis | null>(null)
   const [expandedProblems, setExpandedProblems] = useState<Set<string>>(new Set())
+  const [showSignModal, setShowSignModal] = useState(false)
   
   // Estados do Chat
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -209,6 +211,12 @@ export default function ResultadoPage() {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' })
     }
   }, [chatMessages])
+
+  const handleSignDocument = () => {
+    setShowSignModal(false)
+    // Redirecionar para a tela de assinatura eletrônica
+    router.push('/plataforma/assinatura')
+  }
 
   if (loading) {
     return (
@@ -334,9 +342,14 @@ export default function ResultadoPage() {
             </Button>
             
             <div className="flex-1">
-              <h1 className="text-2xl md:text-2xl font-bold text-gray-900">
-                Resultado da Análise
-              </h1>
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl md:text-2xl font-bold text-gray-900">
+                  Resultado da Análise
+                </h1>
+                <Badge className={`${riskConfig.color} text-xs px-2 py-1`} variant="outline">
+                  {riskConfig.label}
+                </Badge>
+              </div>
               <p className="text-base md:text-base text-gray-600 mt-1">
                 {analysis.fileName}
               </p>
@@ -344,11 +357,17 @@ export default function ResultadoPage() {
             
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="hidden md:flex">
-                <Download className="h-4 w-4 mr-2" />
                 Download
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden md:flex"
+                onClick={() => setShowSignModal(true)}
+              >
+                Assinar
+              </Button>
               <Button variant="outline" size="sm" className="hidden md:flex">
-                <Share2 className="h-4 w-4 mr-2" /> 
                 Compartilhar
               </Button>
             </div>
@@ -361,59 +380,62 @@ export default function ResultadoPage() {
         {/* Visão Geral do Contrato */}
         <Card className="mb-8">
           <CardContent className="p-6 md:p-8">
-            <div className="flex flex-col md:flex-row gap-6">
-              {/* Desktop: Ícone + Flag de risco lado a lado */}
-              <div className="hidden md:flex items-center gap-4 flex-shrink-0">
-                <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">
-                  {contractConfig.icon}
+            <div className="flex flex-col gap-6">
+              {/* Desktop: Estatísticas lado a lado */}
+              <div className="hidden md:flex md:gap-4">
+                <div className="text-center p-4 bg-gray-50 rounded-lg flex-1">
+                  <div className="text-3xl font-bold text-gray-900">{analysis.overallScore}</div>
+                  <div className="text-sm text-gray-500 mt-1">Score Geral</div>
                 </div>
-                <Badge className={`${riskConfig.color} text-sm px-4 py-2 text-base inline-flex items-center gap-2`} variant="outline">
-                  <RiskIcon className="h-5 w-5 flex-shrink-0" />
-                  <span>{riskConfig.label}</span>
-                </Badge>
+                <div className="text-center p-4 bg-red-50 rounded-lg flex-1">
+                  <div className="text-3xl font-bold text-red-600">{analysis.issuesFound}</div>
+                  <div className="text-sm text-gray-500 mt-1">Problemas</div>
+                </div>
+                <div className="text-center p-4 bg-green-50 rounded-lg flex-1">
+                  <div className="text-3xl font-bold text-green-600">{analysis.positivePoints}</div>
+                  <div className="text-sm text-gray-500 mt-1">Pontos +</div>
+                </div>
+                <div className="text-center p-4 bg-gray-50 rounded-lg flex-1">
+                  <div className="text-base font-medium text-gray-900">{formatDate(analysis.analysisDate)}</div>
+                  <div className="text-sm text-gray-500 mt-1">{analysis.fileSize}</div>
+                </div>
               </div>
 
-              {/* Mobile: Layout original + Desktop: Apenas estatísticas */}
-              <div className="flex-1">
-                <div className="flex flex-col gap-4">
-                  {/* Primeira linha: Score/Problemas/Pontos + + Data/Tamanho */}
-                  <div className="flex flex-col gap-4">
-                    {/* Mobile: Apenas Ícone + Flag de risco lado a lado */}
-                    <div className="flex items-center gap-4 md:hidden justify-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-                        {contractConfig.icon}
-                      </div>
-                      <Badge className={`${riskConfig.color} text-sm px-4 py-2 text-base inline-flex items-center gap-2`} variant="outline">
-                        <RiskIcon className="h-5 w-5 flex-shrink-0" />
-                        <span>{riskConfig.label}</span>
-                      </Badge>
-                    </div>
+                {/* Mobile: Layout reorganizado */}
+                <div className="flex flex-col gap-6 md:hidden">
+                  {/* Mobile: Tag de risco */}
+                  <div className="flex justify-center">
+                    <Badge className={`${riskConfig.color} text-sm px-3 py-2 text-sm`} variant="outline">
+                      <span>{riskConfig.label}</span>
+                    </Badge>
+                  </div>
 
-                    {/* Estatísticas: Score, Problemas, Pontos + */}
-                    <div className="flex gap-4">
-                      <div className="text-center p-3 bg-gray-50 rounded-lg">
-                        <div className="text-3xl font-bold text-gray-900">{analysis.overallScore}</div>
-                        <div className="text-sm text-gray-500 mt-1">Score Geral</div>
-                      </div>
-                      <div className="text-center p-3 bg-red-50 rounded-lg">
-                        <div className="text-3xl font-bold text-red-600">{analysis.issuesFound}</div>
-                        <div className="text-sm text-gray-500 mt-1">Problemas</div>
-                      </div>
-                      <div className="text-center p-3 bg-green-50 rounded-lg">
-                        <div className="text-3xl font-bold text-green-600">{analysis.positivePoints}</div>
-                        <div className="text-sm text-gray-500 mt-1">Pontos +</div>
-                      </div>
-                    </div>
+                  {/* Mobile: Score Geral */}
+                  <div className="text-center p-4 bg-gray-50 rounded-lg h-20 flex flex-col justify-center">
+                    <div className="text-3xl font-bold text-gray-900">{analysis.overallScore}</div>
+                    <div className="text-sm text-gray-500 mt-1">Score Geral</div>
+                  </div>
 
-                    {/* Data e Tamanho */}
-                    <div className="text-center p-3 bg-gray-50 rounded-lg">
-                      <div className="text-base font-medium text-gray-900">{formatDate(analysis.analysisDate)}</div>
-                      <div className="text-sm text-gray-500 mt-1">{analysis.fileSize}</div>
+                  {/* Mobile: Problemas e Pontos + lado a lado */}
+                  <div className="flex gap-4">
+                    <div className="text-center p-4 bg-red-50 rounded-lg flex-1 h-20 flex flex-col justify-center">
+                      <div className="text-3xl font-bold text-red-600">{analysis.issuesFound}</div>
+                      <div className="text-sm text-gray-500 mt-1">Problemas</div>
+                    </div>
+                    <div className="text-center p-4 bg-green-50 rounded-lg flex-1 h-20 flex flex-col justify-center">
+                      <div className="text-3xl font-bold text-green-600">{analysis.positivePoints}</div>
+                      <div className="text-sm text-gray-500 mt-1">Pontos +</div>
+                    </div>
+                  </div>
+
+                  {/* Mobile: Data e Tamanho juntos em bloco discreto */}
+                  <div className="text-center py-2 px-4 bg-gray-25 rounded-lg">
+                    <div className="text-sm text-gray-600">
+                      {formatDate(analysis.analysisDate)} • {analysis.fileSize}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
           </CardContent>
         </Card>
 
@@ -679,13 +701,18 @@ export default function ResultadoPage() {
         </Card>
 
         {/* Botões de Ação Mobile */}
-        <div className="md:hidden flex gap-2 mb-6 max-w-full">
-          <Button variant="outline" className="flex-1">
-            <Download className="h-4 w-4 mr-2" />
+        <div className="md:hidden flex gap-2 mb-6">
+          <Button variant="outline" className="flex-1 py-3">
             Download
           </Button>
-          <Button variant="outline" className="flex-1">
-            <Share2 className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            className="flex-1 py-3"
+            onClick={() => setShowSignModal(true)}
+          >
+            Assinar
+          </Button>
+          <Button variant="outline" className="flex-1 py-3">
             Compartilhar
           </Button>
         </div>
@@ -707,6 +734,38 @@ export default function ResultadoPage() {
           </CardContent>
         </Card>
       </main>
+
+      {/* Modal de Confirmação de Assinatura */}
+      {showSignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full">
+            <div className="text-center">
+              <PenTool className="h-12 w-12 text-blue-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Assinar Documento
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Você gostaria de prosseguir para a assinatura eletrônica deste documento?
+              </p>
+              <div className="flex gap-3">
+                <Button 
+                  variant="outline" 
+                  className="flex-1"
+                  onClick={() => setShowSignModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  className="flex-1"
+                  onClick={handleSignDocument}
+                >
+                  Sim, Assinar
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
