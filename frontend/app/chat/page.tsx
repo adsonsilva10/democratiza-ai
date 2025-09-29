@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import ChatWithAgent from '@/components/features/ChatWithAgent'
 import SimpleChat from '@/components/features/SimpleChat'
 import ChatHistory from '@/components/features/ChatHistory'
@@ -38,83 +39,162 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="container mx-auto px-4 py-6">
-        <div className="flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold text-gray-900">
-            ← Contrato Seguro
-          </Link>
-          <div className="flex gap-4">
-            <Link 
-              href="/login"
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Entrar
-            </Link>
-            <Link 
-              href="/register"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-            >
-              Criar conta
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-7xl mx-auto">
-          
-          {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Chat Jurídico IA
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl md:text-3xl font-bold text-gray-900">
+              🤖 Assistente IA
             </h1>
-            <p className="text-gray-600">
-              Converse com nossos assistentes especializados sobre seus contratos
+            <p className="text-sm md:text-base text-gray-600 mt-1">
+              Converse com agentes especializados sobre seus contratos
             </p>
           </div>
+          <div className="hidden lg:flex items-center gap-4">
+            <Badge variant="secondary" className="bg-green-100 text-green-700">
+              ⚡ Respostas instantâneas
+            </Badge>
+            <Badge variant="secondary" className="bg-blue-100 text-blue-700">
+              🎯 Agentes especializados
+            </Badge>
+          </div>
+        </div>
+      </div>
 
-          {/* Tabs */}
-          <div className="flex justify-center mb-6">
-            <div className="bg-gray-100 p-1 rounded-lg">
-              <button
-                onClick={() => setActiveTab('advanced')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'advanced'
-                    ? 'bg-white text-gray-900 shadow'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                💬 Chat Avançado
-              </button>
-              <button
-                onClick={() => setActiveTab('simple')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  activeTab === 'simple'
-                    ? 'bg-white text-gray-900 shadow'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                🎯 Agentes Especializados
-              </button>
+      <div className="container mx-auto px-6 md:px-6 py-8 md:py-8">
+        <div className="max-w-6xl mx-auto space-y-8 md:space-y-6">
+          {/* Progress Steps - Como Funciona */}
+          <div className="relative flex justify-center">
+            {/* Desktop: Horizontal layout */}
+            <div className="hidden sm:flex justify-center items-center mb-8 px-2">
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+                    💬
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-sm font-medium text-blue-600">
+                      Pergunte
+                    </p>
+                    <p className="text-xs text-gray-400 hidden lg:block">
+                      Faça sua pergunta
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 h-0.5 mx-4 bg-blue-600 min-w-[40px]" />
+              </div>
+
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+                    🤖
+                  </div>
+                  <div className="mt-2 text-center">
+                    <p className="text-sm font-medium text-blue-600">
+                      IA Responde
+                    </p>
+                    <p className="text-xs text-gray-400 hidden lg:block">
+                      Agente especializado
+                    </p>
+                  </div>
+                </div>
+                <div className="flex-1 h-0.5 mx-4 bg-blue-600 min-w-[40px]" />
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+                  📋
+                </div>
+                <div className="mt-2 text-center">
+                  <p className="text-sm font-medium text-blue-600">
+                    Orientação
+                  </p>
+                  <p className="text-xs text-gray-400 hidden lg:block">
+                    Receba orientação
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Mobile: Compact horizontal layout */}
+            <div className="flex sm:hidden justify-center items-center mb-8 px-2">
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                    💬
+                  </div>
+                  <p className="text-sm font-medium mt-2 text-blue-600">
+                    Pergunte
+                  </p>
+                </div>
+                <div className="flex-1 h-0.5 mx-3 bg-blue-600 min-w-[20px]" />
+              </div>
+
+              <div className="flex items-center">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                    🤖
+                  </div>
+                  <p className="text-sm font-medium mt-2 text-blue-600">
+                    IA Responde
+                  </p>
+                </div>
+                <div className="flex-1 h-0.5 mx-3 bg-blue-600 min-w-[20px]" />
+              </div>
+
+              <div className="flex flex-col items-center">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+                  📋
+                </div>
+                <p className="text-sm font-medium mt-2 text-blue-600">
+                  Orientação
+                </p>
+              </div>
             </div>
           </div>
 
           {/* Chat Interface */}
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden" style={{height: '600px'}}>
-            <div className="flex h-full">
-              
-              {/* Sidebar - Histórico */}
-              <div className="w-80 bg-gray-50 border-r border-gray-200">
-                <ChatHistory
-                  onSessionLoad={handleSessionLoad}
-                  currentSessionId={currentSession?.id}
-                  onNewSession={handleNewSession}
-                  className="h-full"
-                />
+          <div className="bg-white rounded-xl border-2 border-dashed border-gray-300 shadow-lg overflow-hidden min-h-[600px] flex flex-col">
+            {/* Tabs Mobile/Desktop */}
+            <div className="p-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex justify-center">
+                <div className="bg-gray-100 p-1 rounded-lg">
+                  <button
+                    onClick={() => setActiveTab('advanced')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'advanced'
+                        ? 'bg-white text-gray-900 shadow'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    💬 Chat com Histórico
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('simple')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      activeTab === 'simple'
+                        ? 'bg-white text-gray-900 shadow'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    🎯 Chat Rápido
+                  </button>
+                </div>
               </div>
+            </div>
+
+            <div className="flex-1 flex">
+              {/* Sidebar - Apenas no chat avançado e desktop */}
+              {activeTab === 'advanced' && (
+                <div className="hidden lg:block w-80 bg-gray-50 border-r border-gray-200">
+                  <ChatHistory
+                    onSessionLoad={handleSessionLoad}
+                    currentSessionId={currentSession?.id}
+                    onNewSession={handleNewSession}
+                    className="h-full"
+                  />
+                </div>
+              )}
 
               {/* Chat Area */}
               <div className="flex-1">
@@ -132,34 +212,42 @@ export default function ChatPage() {
                   <SimpleChat key={sessionKey} />
                 )}
               </div>
-              
             </div>
           </div>
 
-          {/* Info Cards */}
-          <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-2xl mb-2">🏠</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Contratos de Locação</h3>
-              <p className="text-sm text-gray-600">
-                Especialista em aluguel, reformas, rescisão e direitos locatários
-              </p>
+          {/* Assistant Guidelines */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-6">
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <h4 className="font-medium text-blue-900 mb-2 text-sm flex items-center gap-2">
+                🏠 Contratos de Locação
+              </h4>
+              <ul className="text-xs text-blue-800 space-y-1">
+                <li>• Aluguel e reformas</li>
+                <li>• Rescisão e depósito</li>
+                <li>• Direitos do inquilino</li>
+              </ul>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-2xl mb-2">💰</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Contratos Financeiros</h3>
-              <p className="text-sm text-gray-600">
-                Expert em empréstimos, cartões, CDC e direitos do consumidor
-              </p>
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <h4 className="font-medium text-green-900 mb-2 text-sm flex items-center gap-2">
+                💰 Contratos Financeiros
+              </h4>
+              <ul className="text-xs text-green-800 space-y-1">
+                <li>• Empréstimos e cartões</li>
+                <li>• CDC e financiamentos</li>
+                <li>• Direitos do consumidor</li>
+              </ul>
             </div>
             
-            <div className="bg-white p-6 rounded-lg shadow-sm">
-              <div className="text-2xl mb-2">📱</div>
-              <h3 className="font-semibold text-gray-900 mb-2">Telecomunicações</h3>
-              <p className="text-sm text-gray-600">
-                Especialista em telefonia, internet e regulamentação Anatel
-              </p>
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <h4 className="font-medium text-yellow-900 mb-2 text-sm flex items-center gap-2">
+                📱 Telecomunicações
+              </h4>
+              <ul className="text-xs text-yellow-800 space-y-1">
+                <li>• Telefonia e internet</li>
+                <li>• Regulamentação Anatel</li>
+                <li>• Cancelamentos e multas</li>
+              </ul>
             </div>
           </div>
           
