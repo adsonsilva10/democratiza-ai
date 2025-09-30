@@ -5,11 +5,27 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { ArrowRight, CheckCircle, Shield, Zap, Users, FileText, MessageSquare, PenTool, Star, Menu, X, Play, AlertTriangle, Heart, Brain } from 'lucide-react'
+import { ArrowRight, CheckCircle, Shield, Zap, Users, FileText, MessageSquare, PenTool, Star, Menu, X, Play, AlertTriangle, Heart, Brain, ChevronDown, ChevronUp } from 'lucide-react'
+import ContractSimulation from '@/components/features/ContractSimulation'
 
 export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [activeTestimonial, setActiveTestimonial] = useState(0)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
+
+  // Smooth scroll to section
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+      setMobileMenuOpen(false) // Close mobile menu after click
+    }
+  }
+
+  // Toggle FAQ
+  const toggleFaq = (index: number) => {
+    setOpenFaq(openFaq === index ? null : index)
+  }
 
   // Auto-rotate testimonials
   useEffect(() => {
@@ -102,40 +118,53 @@ export default function HomePage() {
 
   const testimonials = [
     {
-      name: "Carla Santos",
-      role: "Empreendedora", 
-      company: "Salão de Beleza",
-      content: "Descobri que meu contrato de aluguel tinha uma cláusula que me permitia reduzir o valor em 40% durante a pandemia. Economizei R$ 18.000! Nunca mais vou assinar algo sem analisar aqui primeiro.",
-      rating: 5,
-      avatar: "💇‍♀️",
-      savings: "R$ 18.000 economizados"
+      name: "Ailton Silva",
+      role: "Aposentado", 
+      company: "Pensionista",
+      content: "Fui enganado pelo meu advogado. Contratei ele para conseguir minha aposentadoria especial, porém no meio do processo eu consegui me aposentar por idade. Mesmo não sendo algo acordado com antecedência, ele me cobrou os honorários da mesma forma.",
+      rating: 3,
+      avatar: "�‍💼",
+      pain: "Falta de transparência nos contratos"
     },
     {
-      name: "Roberto Lima",
-      role: "Aposentado",
-      company: "Construção Civil",
-      content: "Quase assinei um contrato de empréstimo com juros abusivos. A plataforma me alertou e me ajudou a negociar condições 60% melhores. Me sinto protegido agora.",
-      rating: 5,
-      avatar: "👷‍♂️", 
-      savings: "60% menos juros"
-    },
-    {
-      name: "Ana Beatriz",
-      role: "Mãe e Freelancer",
-      company: "Designer Gráfica",
-      content: "Sempre tive medo de contratos porque já fui enganada. Agora entendo exatamente o que estou assinando e posso negociar de igual para igual. Mudou minha vida!",
-      rating: 5,
-      avatar: "👩‍💻",
-      savings: "Confiança recuperada"
+      name: "Adson Patrique",
+      role: "Inquilino",
+      company: "Locatário",
+      content: "Aluguei um apartamento e 3 meses depois acabou o gás da geladeira. O proprietário se recusou a dar assistência pois afirmou que o contrato sinalizava que tudo era responsabilidade do inquilino. Nessa eu tive prejuízo pois não consegui identificar os perigos subliminares no contrato.",
+      rating: 3,
+      avatar: "🏠", 
+      pain: "Cláusulas abusivas escondidas"
     }
   ]
 
-  const stats = [
-    { value: "R$ 2.3M+", label: "Economizados pelos usuários", icon: "💰" },
-    { value: "94%", label: "Identificam cláusulas abusivas", icon: "🎯" },
-    { value: "45s", label: "Para entender seu contrato", icon: "⚡" },
-    { value: "Zero", label: "Surpresas desagradáveis", icon: "✅" }
+  const faqs = [
+    {
+      question: "Como funciona a análise de contratos?",
+      answer: "Nossa IA lê e analisa seu contrato completo, identificando cláusulas abusivas, termos ambíguos e pontos de atenção. Você recebe um relatório detalhado em segundos, não em dias como com advogados tradicionais."
+    },
+    {
+      question: "Meus dados estão seguros?",
+      answer: "Sim! Utilizamos criptografia end-to-end, seguimos rigorosamente a LGPD e excluímos todos os dados após a análise. Seus contratos nunca são armazenados permanentemente em nossos servidores."
+    },
+    {
+      question: "Quais tipos de contrato posso analisar?",
+      answer: "Analisamos contratos de locação, prestação de serviços, empréstimos, telecomunicações, seguros e praticamente qualquer documento jurídico em português. Suportamos PDF, DOC e DOCX."
+    },
+    {
+      question: "A análise substitui um advogado?",
+      answer: "Não substituímos advogados, mas te capacitamos a tomar decisões informadas. Nossa IA identifica riscos e pontos de atenção, mas recomendamos consultar um profissional para casos complexos ou dúvidas específicas."
+    },
+    {
+      question: "Quanto custa o serviço?",
+      answer: "Oferecemos 30 dias grátis para testar. Depois, planos acessíveis a partir de R$ 29,90/mês, com análise ilimitada de contratos. Cancele quando quiser, sem fidelidade."
+    },
+    {
+      question: "Como funciona o assistente jurídico?",
+      answer: "Nosso chatbot especializado responde dúvidas sobre legislação brasileira, explica termos jurídicos em linguagem simples e ajuda na interpretação de contratos. Está disponível 24/7."
+    }
   ]
+
+  // Removed fake stats - keeping it honest
 
   const transformationSteps = [
     {
@@ -189,9 +218,10 @@ export default function HomePage() {
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-8">
-              <a href="#como-funciona" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Como Funciona</a>
-              <a href="#protecao" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Proteção</a>
-              <a href="#historias-reais" className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Histórias Reais</a>
+              <button onClick={() => scrollToSection('como-funciona')} className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Como Funciona</button>
+              <button onClick={() => scrollToSection('protecao')} className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Proteção</button>
+              <button onClick={() => scrollToSection('historias-reais')} className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Histórias Reais</button>
+              <button onClick={() => scrollToSection('faq')} className="text-gray-600 hover:text-gray-900 transition-colors font-medium">FAQ</button>
               <div className="flex items-center gap-3">
                 <Link href="/plataforma">
                   <Button variant="ghost" className="font-medium">Entrar</Button>
@@ -217,9 +247,10 @@ export default function HomePage() {
           {mobileMenuOpen && (
             <div className="lg:hidden absolute top-16 left-0 right-0 bg-white border-b border-gray-100 shadow-lg">
               <nav className="px-4 py-6 space-y-4">
-                <a href="#como-funciona" className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2">Como Funciona</a>
-                <a href="#protecao" className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2">Proteção</a>
-                <a href="#historias-reais" className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2">Histórias Reais</a>
+                <button onClick={() => scrollToSection('como-funciona')} className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2 text-left w-full">Como Funciona</button>
+                <button onClick={() => scrollToSection('protecao')} className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2 text-left w-full">Proteção</button>
+                <button onClick={() => scrollToSection('historias-reais')} className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2 text-left w-full">Histórias Reais</button>
+                <button onClick={() => scrollToSection('faq')} className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2 text-left w-full">FAQ</button>
                 <div className="pt-4 border-t border-gray-100 space-y-3">
                   <Link href="/plataforma" className="block">
                     <Button variant="ghost" className="w-full justify-center font-medium">Entrar</Button>
@@ -239,12 +270,6 @@ export default function HomePage() {
       {/* Hero Section - Mobile First Design */}
       <div className="container mx-auto px-4 py-8 sm:py-16">
         <div className="text-center mb-12 sm:mb-16">
-          {/* Trust Badge */}
-          <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium mb-6">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            Confiado por 10.000+ brasileiros
-          </div>
-          
           <h1 className="text-4xl sm:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Nunca Assine um<br />
             <span className="bg-gradient-to-r from-red-500 to-orange-500 bg-clip-text text-transparent">
@@ -258,32 +283,28 @@ export default function HomePage() {
           </p>
           
           {/* Key Benefits */}
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <div className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
-              <span className="text-blue-500">⚡</span>
-              <span className="text-sm font-medium text-gray-700">3 segundos</span>
+          <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8">
+            <div className="flex items-center gap-1.5 bg-white/70 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-sm">
+              <span className="text-blue-500 text-sm">⚡</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">3 segundos</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
-              <span className="text-green-500">🔒</span>
-              <span className="text-sm font-medium text-gray-700">100% seguro</span>
+            <div className="flex items-center gap-1.5 bg-white/70 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-sm">
+              <span className="text-green-500 text-sm">🔒</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">100% seguro</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm">
-              <span className="text-purple-500">🎯</span>
-              <span className="text-sm font-medium text-gray-700">97% precisão</span>
+            <div className="flex items-center gap-1.5 bg-white/70 backdrop-blur-sm px-3 py-1.5 sm:px-4 sm:py-2 rounded-full shadow-sm">
+              <span className="text-purple-500 text-sm">🎯</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-700">97% precisão</span>
             </div>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
-            <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
-              <span className="text-xl">📄</span>
-              Analisar Grátis
-            </button>
-            <Link 
-              href="/chat"
-              className="border-2 border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 px-8 py-4 rounded-xl font-semibold transition-all text-center flex items-center justify-center gap-2"
+            <Link
+              href="/plataforma/chat"
+              className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             >
-              <span className="text-xl">💬</span>
-              Conversar com IA
+              <FileText className="w-6 h-6" />
+              Analise seu contrato agora
             </Link>
           </div>
         </div>
@@ -368,6 +389,37 @@ export default function HomePage() {
           </div>
         </div>
 
+        {/* Demo Section - Enhanced */}
+        <div id="como-funciona" className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-12 max-w-4xl mx-auto border border-white/20 mb-16">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+              🎯 Veja Como Funciona
+            </h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Demonstração interativa com um caso real de contrato que tinha cláusulas abusivas. 
+              Veja exatamente como nossa IA protege você.
+            </p>
+          </div>
+          
+          <ContractSimulation />
+          
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap justify-center gap-6 mt-8 pt-8 border-t border-gray-200">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="text-green-500">🔒</span>
+              <span>Criptografia end-to-end</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="text-blue-500">📋</span>
+              <span>Conforme LGPD</span>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <span className="text-purple-500">🗑️</span>
+              <span>Dados excluídos após análise</span>
+            </div>
+          </div>
+        </div>
+
         {/* Features Grid - Enhanced */}
         <div className="grid md:grid-cols-3 gap-8 mb-16">
           <div className="bg-white/80 backdrop-blur-sm p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2 border border-white/20">
@@ -413,147 +465,98 @@ export default function HomePage() {
           </div>
         </div>
 
-        {/* Upload Section - Enhanced */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-12 max-w-4xl mx-auto border border-white/20">
-          <div className="text-center mb-8">
-            <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-              🚀 Comece agora - Análise gratuita
-            </h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Faça upload do seu contrato e receba um relatório detalhado em segundos. 
-              Sem cadastro necessário para o primeiro teste.
-            </p>
-          </div>
-          
-          <SimpleUploadManager 
-            onFileSelect={handleFileSelect}
-            onUploadComplete={handleUploadComplete}
-          />
-          
-          {/* Trust Indicators */}
-          <div className="flex flex-wrap justify-center gap-6 mt-8 pt-8 border-t border-gray-200">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span className="text-green-500">🔒</span>
-              <span>Criptografia end-to-end</span>
+          <div id="historias-reais" className="space-y-8">
+            <div className="text-center mb-12">
+              <h3 className="text-2xl font-bold mb-4">Histórias Reais de Quem Já Foi Prejudicado</h3>
+              <p className="text-gray-600">Estes casos reais mostram por que precisamos de proteção jurídica</p>
             </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span className="text-blue-500">📋</span>
-              <span>Conforme LGPD</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <span className="text-purple-500">🗑️</span>
-              <span>Dados excluídos após análise</span>
+            
+            <div className="grid md:grid-cols-2 gap-8">
+              <div className="bg-gradient-to-br from-red-50 to-orange-50 border-l-4 border-red-400 p-6 rounded-2xl shadow-lg">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-2xl">
+                    👨‍💼
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg">Ailton Silva</h4>
+                    <p className="text-sm text-gray-600">Aposentado</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-red-500 text-sm">⚠️</span>
+                      <span className="text-red-600 text-sm font-medium">Falta de transparência nos contratos</span>
+                    </div>
+                  </div>
+                </div>
+                <blockquote className="text-gray-700 italic mb-4">
+                  "Fui enganado pelo meu advogado. Contratei ele para conseguir minha aposentadoria especial, porém no meio do processo eu consegui me aposentar por idade. Mesmo não sendo algo acordado com antecedência, ele me cobrou os honorários da mesma forma."
+                </blockquote>
+                <div className="bg-red-100 p-3 rounded-lg">
+                  <p className="text-red-800 text-sm font-medium">🚨 Como nossa plataforma teria ajudado:</p>
+                  <p className="text-red-700 text-sm">Análise do contrato teria identificado a falta de especificação sobre cenários de aposentadoria alternativa e alertado sobre cláusulas ambíguas de pagamento.</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-l-4 border-blue-400 p-6 rounded-2xl shadow-lg">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+                    🏠
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg">Adson Patrique</h4>
+                    <p className="text-sm text-gray-600">Inquilino</p>
+                    <div className="flex items-center gap-1 mt-1">
+                      <span className="text-blue-500 text-sm">⚠️</span>
+                      <span className="text-blue-600 text-sm font-medium">Cláusulas abusivas escondidas</span>
+                    </div>
+                  </div>
+                </div>
+                <blockquote className="text-gray-700 italic mb-4">
+                  "Aluguei um apartamento e 3 meses depois acabou o gás da geladeira. O proprietário se recusou a dar assistência pois afirmou que o contrato sinalizava que tudo era responsabilidade do inquilino. Nessa eu tive prejuízo pois não consegui identificar os perigos subliminares no contrato."
+                </blockquote>
+                <div className="bg-blue-100 p-3 rounded-lg">
+                  <p className="text-blue-800 text-sm font-medium">🛡️ Como nossa plataforma teria ajudado:</p>
+                  <p className="text-blue-700 text-sm">Identificação automática de cláusulas abusivas sobre manutenção de equipamentos, baseada na Lei 8.245/91 que define responsabilidades do proprietário.</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Social Proof Section */}
-        <div className="mt-20">
+        {/* FAQ Section */}
+        <div id="faq" className="mt-20">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-              Confiado por profissionais em todo o Brasil
+              Dúvidas Frequentes
             </h2>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Junte-se a milhares de empresas e freelancers que protegem seus interesses 
-              com cada contrato assinado.
+              Tire suas dúvidas sobre como funciona nossa plataforma de análise jurídica
             </p>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
-            <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                10.000+
+          <div className="max-w-4xl mx-auto space-y-4">
+            {faqs.map((faq, index) => (
+              <div key={index} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+                <button
+                  onClick={() => toggleFaq(index)}
+                  className="w-full p-6 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                  <h3 className="text-lg font-semibold text-gray-900 pr-4">
+                    {faq.question}
+                  </h3>
+                  {openFaq === index ? (
+                    <ChevronUp className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  ) : (
+                    <ChevronDown className="h-5 w-5 text-gray-500 flex-shrink-0" />
+                  )}
+                </button>
+                {openFaq === index && (
+                  <div className="px-6 pb-6 border-t border-gray-100">
+                    <p className="text-gray-600 leading-relaxed">
+                      {faq.answer}
+                    </p>
+                  </div>
+                )}
               </div>
-              <div className="text-gray-600 font-medium">Contratos Analisados</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-                97%
-              </div>
-              <div className="text-gray-600 font-medium">Precisão da IA</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent mb-2">
-                3s
-              </div>
-              <div className="text-gray-600 font-medium">Tempo Médio</div>
-            </div>
-            <div className="text-center">
-              <div className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
-                R$ 2.4M
-              </div>
-              <div className="text-gray-600 font-medium">Riscos Evitados</div>
-            </div>
-          </div>
-
-          {/* Testimonials */}
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-yellow-400">⭐</span>
-                ))}
-                <span className="text-sm text-gray-600 ml-2">5.0</span>
-              </div>
-              <p className="text-gray-700 mb-4 italic">
-                "Contrato Seguro salvou nossa startup R$ 50.000 ao identificar uma cláusula 
-                de responsabilidade em nosso contrato com fornecedor que nossa equipe jurídica não viu."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
-                  YP
-                </div>
-                <div>
-                  <div className="font-medium">Yogesh Patel</div>
-                  <div className="text-sm text-gray-600">Gerente de Marketing Digital</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-yellow-400">⭐</span>
-                ))}
-                <span className="text-sm text-gray-600 ml-2">5.0</span>
-              </div>
-              <p className="text-gray-700 mb-4 italic">
-                "Como desenvolvedor freelancer, estava perdendo dinheiro com contratos ruins. 
-                Agora tenho confiança para negociar melhores termos e proteger minha propriedade intelectual."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold">
-                  MR
-                </div>
-                <div>
-                  <div className="font-medium">Marcus Rodriguez</div>
-                  <div className="text-sm text-gray-600">Desenvolvedor Senior</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-white/20">
-              <div className="flex items-center gap-1 mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="text-yellow-400">⭐</span>
-                ))}
-                <span className="text-sm text-gray-600 ml-2">5.0</span>
-              </div>
-              <p className="text-gray-700 mb-4 italic">
-                "A velocidade é incrível. O que costumava levar dias para nossa equipe jurídica 
-                agora acontece em segundos. Transformou completamente nosso processo de revisão."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold">
-                  ZK
-                </div>
-                <div>
-                  <div className="font-medium">Zara Khan</div>
-                  <div className="text-sm text-gray-600">Consultora Jurídica</div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -564,21 +567,17 @@ export default function HomePage() {
               Pronto para proteger seu negócio?
             </h2>
             <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
-              Junte-se a milhares de profissionais que nunca mais assinam um contrato arriscado. 
-              Comece com uma análise gratuita.
+              Não seja a próxima vítima de contratos abusivos. 
+              Proteja-se antes de assinar qualquer documento.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto mb-8">
-              <button className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2">
-                <span className="text-xl">🚀</span>
-                Começar Grátis
-              </button>
-              <Link 
-                href="/chat"
-                className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-4 rounded-xl font-semibold transition-all text-center flex items-center justify-center gap-2"
+              <Link
+                href="/plataforma/chat"
+                className="inline-flex items-center gap-3 bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
-                <span className="text-xl">💬</span>
-                Falar com IA
+                <FileText className="w-6 h-6" />
+                Analise seu contrato agora
               </Link>
             </div>
             
@@ -595,10 +594,18 @@ export default function HomePage() {
                 <span>✓</span>
                 <span>Suporte 24/7</span>
               </div>
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Footer Copyright */}
+      <footer className="bg-gray-900 text-white py-6">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-400 text-sm">
+            © 2025 Democratiza AI. Todos os direitos reservados.
+          </p>
+        </div>
+      </footer>
     </div>
   )
 }
