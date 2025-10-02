@@ -223,10 +223,10 @@ export default function HomePage() {
               <button onClick={() => scrollToSection('historias-reais')} className="text-gray-600 hover:text-gray-900 transition-colors font-medium">Histórias Reais</button>
               <button onClick={() => scrollToSection('faq')} className="text-gray-600 hover:text-gray-900 transition-colors font-medium">FAQ</button>
               <div className="flex items-center gap-3">
-                <Link href="/plataforma">
+                <Link href="/login">
                   <Button variant="ghost" className="font-medium">Entrar</Button>
                 </Link>
-                <Link href="/plataforma/analise">
+                <Link href="/register">
                   <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
                     Proteger Agora
                   </Button>
@@ -252,10 +252,10 @@ export default function HomePage() {
                 <button onClick={() => scrollToSection('historias-reais')} className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2 text-left w-full">Histórias Reais</button>
                 <button onClick={() => scrollToSection('faq')} className="block text-gray-600 hover:text-gray-900 transition-colors font-medium py-2 text-left w-full">FAQ</button>
                 <div className="pt-4 border-t border-gray-100 space-y-3">
-                  <Link href="/plataforma" className="block">
+                  <Link href="/login" className="block">
                     <Button variant="ghost" className="w-full justify-center font-medium">Entrar</Button>
                   </Link>
-                  <Link href="/plataforma/analise" className="block">
+                  <Link href="/register" className="block">
                     <Button className="w-full justify-center bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
                       Proteger Agora
                     </Button>
@@ -300,7 +300,7 @@ export default function HomePage() {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
             <Link
-              href="/plataforma/chat"
+              href="/register"
               className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
             >
               <FileText className="w-6 h-6" />
@@ -561,37 +561,37 @@ export default function HomePage() {
         </div>
 
         {/* CTA Section */}
-        <div className="mt-20 text-center">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 sm:p-12 text-white">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">
+        <div className="mt-20 mb-16">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8 sm:p-12 max-w-4xl mx-auto border border-white/20 text-center">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-gray-900">
               Pronto para proteger seu negócio?
             </h2>
-            <p className="text-xl mb-8 opacity-90 max-w-2xl mx-auto">
+            <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto leading-relaxed">
               Não seja a próxima vítima de contratos abusivos. 
               Proteja-se antes de assinar qualquer documento.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto mb-8">
               <Link
-                href="/plataforma/chat"
-                className="inline-flex items-center gap-3 bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
+                href="/register"
+                className="inline-flex items-center gap-3 bg-gradient-to-r from-red-500 to-orange-500 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 <FileText className="w-6 h-6" />
                 Analise seu contrato agora
               </Link>
             </div>
             
-            <div className="flex flex-wrap justify-center gap-6 text-sm opacity-80">
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
               <div className="flex items-center gap-2">
-                <span>✓</span>
+                <span className="text-green-500">✓</span>
                 <span>30 dias grátis</span>
               </div>
               <div className="flex items-center gap-2">
-                <span>✓</span>
+                <span className="text-green-500">✓</span>
                 <span>Cancele quando quiser</span>
               </div>
               <div className="flex items-center gap-2">
-                <span>✓</span>
+                <span className="text-green-500">✓</span>
                 <span>Suporte 24/7</span>
               </div>
           </div>
@@ -599,9 +599,9 @@ export default function HomePage() {
       </div>
 
       {/* Footer Copyright */}
-      <footer className="bg-gray-900 text-white py-6">
+      <footer className="bg-gray-50 border-t border-gray-200 py-8">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-500 text-sm">
             © 2025 Democratiza AI. Todos os direitos reservados.
           </p>
         </div>

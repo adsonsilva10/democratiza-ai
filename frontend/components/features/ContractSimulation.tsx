@@ -176,16 +176,16 @@ export default function ContractSimulation() {
                   </ul>
                 </div>
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button 
                     onClick={startSimulation}
                     variant="outline"
-                    className="flex-1"
+                    className="w-full sm:flex-1 h-12 font-semibold"
                   >
                     🔄 Ver Novamente
                   </Button>
                   <Button 
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    className="w-full sm:flex-1 h-12 font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                     onClick={() => window.open('/plataforma/analise', '_blank')}
                   >
                     🚀 Analisar Meu Contrato
