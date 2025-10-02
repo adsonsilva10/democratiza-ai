@@ -1,0 +1,15 @@
+{
+  "total_documents": 20,
+  "categories": [
+    "consumer_protection",
+    "rental_law",
+    "civil_contracts",
+    "telecommunications",
+    "financial_regulation",
+    "labor_law",
+    "general_principles",
+    "retirement_pension"
+  ],
+  "status": "populated",
+  "populated_at": "2025-10-02"
+}
