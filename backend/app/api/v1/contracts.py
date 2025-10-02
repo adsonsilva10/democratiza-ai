@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 import uuid
+import json
 
 from app.db.database import get_db
 from app.db.models import Contract, User, RiskFactor
@@ -12,6 +13,8 @@ from app.api.v1.auth import get_current_user
 from app.agents.factory import AgentFactory
 from app.core.config import settings
 from app.legal.privacy_service import ProcessingPurpose
+from app.services.contract_analysis_service import contract_analysis_service
+from app.services.llm_router import LLMProvider
 
 router = APIRouter()
 
@@ -811,4 +814,300 @@ async def get_required_consent_text(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Erro ao obter informações de consentimento: {str(e)}"
+        )
+
+# Novos endpoints com roteamento inteligente de LLM
+
+@router.post("/analyze-smart")
+async def analyze_contract_smart(
+    contract_text: str = Form(...),
+    contract_metadata: Optional[str] = Form(None),
+    analysis_depth: str = Form("standard"),
+    force_model: Optional[str] = Form(None),
+    include_rag: bool = Form(True),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Análise inteligente de contrato com roteamento automático de LLM
+    
+    - **contract_text**: Texto completo do contrato
+    - **contract_metadata**: Metadados em JSON (valor, tipo, duração, etc.)
+    - **analysis_depth**: quick, standard, detailed, comprehensive  
+    - **force_model**: groq_llama, anthropic_haiku, anthropic_sonnet, anthropic_opus
+    - **include_rag**: Incluir consulta à base de conhecimento jurídico
+    """
+    
+    try:
+        # Parse dos metadados se fornecidos
+        metadata = {}
+        if contract_metadata:
+            try:
+                metadata = json.loads(contract_metadata)
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Metadados devem estar em formato JSON válido"
+                )
+        
+        # Validação do modelo forçado
+        force_provider = None
+        if force_model:
+            try:
+                force_provider = LLMProvider(force_model)
+            except ValueError:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Modelo '{force_model}' não suportado. Use: groq_llama, anthropic_haiku, anthropic_sonnet, anthropic_opus"
+                )
+        
+        # Validação da profundidade de análise
+        valid_depths = ["quick", "standard", "detailed", "comprehensive"]
+        if analysis_depth not in valid_depths:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Profundidade '{analysis_depth}' inválida. Use: {', '.join(valid_depths)}"
+            )
+        
+        # Adicionar informações do usuário aos metadados
+        metadata.update({
+            'user_id': str(current_user.id),
+            'analysis_requested_at': datetime.now().isoformat()
+        })
+        
+        # Executar análise
+        analysis_result = await contract_analysis_service.analyze_contract(
+            contract_text=contract_text,
+            contract_metadata=metadata,
+            analysis_depth=analysis_depth,
+            force_model=force_provider,
+            include_rag=include_rag
+        )
+        
+        # Converter dataclass para dict
+        result_dict = {
+            'contract_id': analysis_result.contract_id,
+            'analysis_summary': analysis_result.analysis_summary,
+            'risk_assessment': analysis_result.risk_assessment,
+            'legal_insights': analysis_result.legal_insights,
+            'recommendations': analysis_result.recommendations,
+            'cost_breakdown': analysis_result.cost_breakdown,
+            'processing_metadata': analysis_result.processing_metadata,
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return {
+            'success': True,
+            'data': result_dict,
+            'message': 'Análise de contrato realizada com sucesso'
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro na análise do contrato: {str(e)}"
+        )
+
+@router.post("/upload-analyze-smart")
+async def upload_and_analyze_contract_smart(
+    file: UploadFile = File(...),
+    contract_metadata: Optional[str] = Form(None),
+    analysis_depth: str = Form("standard"),
+    force_model: Optional[str] = Form(None),
+    include_rag: bool = Form(True),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Upload de arquivo PDF/DOC e análise automática com roteamento inteligente
+    
+    - **file**: Arquivo do contrato (PDF, DOC, DOCX, TXT)
+    - **contract_metadata**: Metadados em JSON (valor, tipo, duração, etc.)
+    - **analysis_depth**: quick, standard, detailed, comprehensive
+    - **force_model**: groq_llama, anthropic_haiku, anthropic_sonnet, anthropic_opus  
+    - **include_rag**: Incluir consulta à base de conhecimento jurídico
+    """
+    
+    try:
+        # Validar tipo de arquivo
+        allowed_types = ['application/pdf', 'text/plain', 'application/msword', 
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+        
+        if file.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail="Tipo de arquivo não suportado. Use PDF, DOC, DOCX ou TXT"
+            )
+        
+        # Ler conteúdo do arquivo
+        file_content = await file.read()
+        
+        # Extrair texto baseado no tipo de arquivo
+        if file.content_type == 'text/plain':
+            contract_text = file_content.decode('utf-8')
+        elif file.content_type == 'application/pdf':
+            # TODO: Implementar extração de PDF com OCR
+            contract_text = "Extração de PDF ainda não implementada. Use texto plano."
+            raise HTTPException(
+                status_code=501,
+                detail="Extração de PDF será implementada em breve. Use análise por texto."
+            )
+        else:
+            # TODO: Implementar extração de DOC/DOCX
+            raise HTTPException(
+                status_code=501,
+                detail="Extração de DOC/DOCX será implementada em breve. Use análise por texto."
+            )
+        
+        # Parse dos metadados
+        metadata = {}
+        if contract_metadata:
+            try:
+                metadata = json.loads(contract_metadata)
+            except json.JSONDecodeError:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Metadados devem estar em formato JSON válido"
+                )
+        
+        # Adicionar informações do arquivo e usuário aos metadados
+        metadata.update({
+            'filename': file.filename,
+            'file_size': len(file_content),
+            'content_type': file.content_type,
+            'upload_timestamp': datetime.now().isoformat(),
+            'user_id': str(current_user.id)
+        })
+        
+        # Executar análise
+        analysis_result = await contract_analysis_service.analyze_contract(
+            contract_text=contract_text,
+            contract_metadata=metadata,
+            analysis_depth=analysis_depth,
+            force_model=LLMProvider(force_model) if force_model else None,
+            include_rag=include_rag
+        )
+        
+        # Converter resultado para dict
+        result_dict = {
+            'contract_id': analysis_result.contract_id,
+            'analysis_summary': analysis_result.analysis_summary,
+            'risk_assessment': analysis_result.risk_assessment,
+            'legal_insights': analysis_result.legal_insights,
+            'recommendations': analysis_result.recommendations,
+            'cost_breakdown': analysis_result.cost_breakdown,
+            'processing_metadata': analysis_result.processing_metadata,
+            'file_info': {
+                'filename': file.filename,
+                'size': len(file_content),
+                'type': file.content_type
+            },
+            'timestamp': datetime.now().isoformat()
+        }
+        
+        return {
+            'success': True,
+            'data': result_dict,
+            'message': 'Upload e análise realizados com sucesso'
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro no upload e análise: {str(e)}"
+        )
+
+@router.get("/routing-stats")
+async def get_routing_statistics(
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Estatísticas do roteamento inteligente de LLMs
+    
+    Retorna métricas de uso, custos e eficiência do sistema de roteamento
+    """
+    
+    try:
+        # Obter estatísticas do roteador
+        routing_stats = contract_analysis_service.llm_router.get_usage_statistics()
+        
+        # Obter estatísticas dos clientes LLM
+        client_stats = contract_analysis_service.llm_service.get_all_stats()
+        
+        # Obter provedores disponíveis
+        available_providers = contract_analysis_service.llm_service.get_available_providers()
+        
+        return {
+            'success': True,
+            'data': {
+                'routing_statistics': routing_stats,
+                'client_statistics': client_stats,
+                'available_providers': [p.value for p in available_providers],
+                'system_info': {
+                    'total_models_configured': len(contract_analysis_service.llm_router.llm_configs),
+                    'models_available': len(available_providers),
+                    'rag_enabled': True,
+                    'last_updated': datetime.now().isoformat()
+                }
+            },
+            'message': 'Estatísticas obtidas com sucesso'
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro ao obter estatísticas: {str(e)}"
+        )
+
+@router.post("/complexity-preview")
+async def analyze_contract_complexity_preview(
+    contract_text: str = Form(...),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Análise prévia de complexidade do contrato (sem usar LLM)
+    
+    Retorna apenas a análise de complexidade para preview do roteamento
+    """
+    
+    try:
+        # Usar apenas o analisador de complexidade
+        complexity_analysis = contract_analysis_service.llm_router.complexity_analyzer.analyze_complexity(
+            contract_text
+        )
+        
+        # Simular roteamento para mostrar qual modelo seria usado
+        routing_preview = await contract_analysis_service.llm_router.route_contract_analysis(
+            contract_text=contract_text,
+            analysis_type="standard"
+        )
+        
+        return {
+            'success': True,
+            'data': {
+                'complexity_analysis': {
+                    'complexity_level': complexity_analysis['complexity_level'].value,
+                    'total_score': complexity_analysis['total_score'],
+                    'breakdown': complexity_analysis['breakdown'],
+                    'reasoning': complexity_analysis['reasoning'],
+                    'document_stats': complexity_analysis['document_stats']
+                },
+                'routing_preview': {
+                    'recommended_model': routing_preview['selected_model'].value,
+                    'estimated_cost': routing_preview['cost_analysis']['estimated_cost_usd'],
+                    'cost_vs_premium': routing_preview['cost_analysis']['cost_vs_opus'],
+                    'savings_percentage': routing_preview['cost_analysis']['savings_percentage']
+                }
+            },
+            'message': 'Análise de complexidade realizada'
+        }
+    
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erro na análise de complexidade: {str(e)}"
         )
