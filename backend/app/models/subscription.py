@@ -1,7 +1,7 @@
 """
 Subscription and Payment Models for Democratiza AI
 """
-from sqlalchemy import Column, Integer, String, Decimal, Boolean, DateTime, Text, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, ForeignKey, Numeric
 from sqlalchemy.dialects.postgresql import UUID, JSON
 from sqlalchemy.orm import relationship
 from app.db.models import Base
@@ -15,7 +15,7 @@ class Plan(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False)  # "Avulso", "Básico", "Premium", "Empresarial"
     type = Column(String(20), nullable=False)   # "pay_per_use", "monthly", "annual"
-    price = Column(Decimal(10, 2), nullable=False)
+    price = Column(Numeric(10, 2), nullable=False)
     analyses_included = Column(Integer, nullable=True)  # null = unlimited
     features = Column(JSON, nullable=True)  # JSON with feature list
     is_active = Column(Boolean, default=True)
@@ -84,7 +84,7 @@ class Transaction(Base):
     plan_id = Column(UUID(as_uuid=True), ForeignKey("plans.id"), nullable=True)
     
     # Transaction details
-    amount = Column(Decimal(10, 2), nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
     type = Column(String(20), nullable=False)  # "subscription", "pay_per_use"
     status = Column(String(20), nullable=False, default="pending")  # "pending", "approved", "cancelled", "refunded"
     description = Column(String(255), nullable=True)

@@ -1111,3 +1111,142 @@ async def analyze_contract_complexity_preview(
             status_code=500,
             detail=f"Erro na análise de complexidade: {str(e)}"
         )
+
+
+# ========================================
+# 🚀 NOVOS ENDPOINTS COM OCR
+# ========================================
+
+@router.post("/upload-with-ocr", response_model=Dict[str, Any])
+async def upload_and_analyze_contract_ocr(
+    file: UploadFile = File(..., description="Arquivo PDF, PNG, JPG ou JPEG"),
+    user_id: Optional[str] = Form(None, description="ID do usuário (opcional)"),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    🔥 **NOVO**: Upload com OCR + Análise Jurídica Completa
+    
+    Pipeline inteligente:
+    1. 📄 OCR via Google Cloud Vision  
+    2. 🔍 Classificação automática
+    3. 📊 Roteamento por complexidade  
+    4. ⚖️ Análise jurídica especializada
+    5. 🎯 Detecção de riscos e cláusulas
+    
+    **Melhorias**: Suporte a PDFs escaneados, imagens, análise híbrida
+    """
+    
+    from ...workers.document_processor import DocumentProcessor
+    
+    # Validar tipo de arquivo
+    allowed_extensions = {'.pdf', '.png', '.jpg', '.jpeg', '.gif'}
+    file_extension = '.' + file.filename.split('.')[-1].lower() if '.' in file.filename else ''
+    
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400, 
+            detail={
+                "error": "Tipo de arquivo não suportado",
+                "supported": list(allowed_extensions),
+                "received": file_extension
+            }
+        )
+    
+    # Validar tamanho (25MB)
+    if file.size and file.size > 25 * 1024 * 1024:
+        raise HTTPException(
+            status_code=413,
+            detail="Arquivo muito grande. Máximo: 25MB"
+        )
+    
+    try:
+        # Processar arquivo
+        file_content = await file.read()
+        processor = DocumentProcessor()
+        
+        result = await processor.process_contract_file(
+            file_content=file_content,
+            filename=file.filename,
+            user_id=str(current_user.id)
+        )
+        
+        if result["success"]:
+            return {
+                "success": True,
+                "message": "📄 Contrato analisado com OCR! 🎉",
+                "data": {
+                    "filename": result["filename"],
+                    "contract_type": result["contract_type"], 
+                    "risk_level": result["analysis"].get("risk_level", "medium"),
+                    "key_findings": result["analysis"].get("key_findings", [])[:5],
+                    "summary": result["analysis"].get("summary", "Análise concluída"),
+                    "ocr_info": {
+                        "method": result["ocr_result"]["method"],
+                        "confidence": f"{result['ocr_result']['confidence']*100:.1f}%",
+                        "pages": result["ocr_result"]["pages"]
+                    },
+                    "ai_routing": {
+                        "complexity": result["complexity"]["level"],
+                        "model_used": result["complexity"]["model_used"]
+                    }
+                },
+                "full_analysis": result["analysis"]
+            }
+        else:
+            raise HTTPException(
+                status_code=422,
+                detail=result.get("error", "Erro no processamento")
+            )
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/ocr-status")
+async def check_ocr_status() -> Dict[str, Any]:
+    """
+    🔍 Verificar status do sistema OCR
+    """
+    from ...services.ocr_service import ocr_service
+    
+    status = ocr_service.get_status()
+    
+    return {
+        "ocr_available": status["available"],
+        "google_vision": status["google_vision_installed"],
+        "credentials_ok": status["credentials_found"],
+        "project_id": status.get("project_id"),
+        "capabilities": {
+            "pdf_native": status["pymupdf_available"],
+            "image_ocr": status["available"],
+            "hybrid_mode": status["available"] and status["pymupdf_available"]
+        },
+        "status_message": "✅ OCR funcionando" if status["available"] else "❌ OCR não disponível"
+    }
+
+
+@router.post("/test-ocr")
+async def test_ocr_only(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+) -> Dict[str, Any]:
+    """
+    🧪 Testar apenas OCR (sem análise jurídica)
+    """
+    from ...services.ocr_service import ocr_service
+    
+    try:
+        file_content = await file.read()
+        result = await ocr_service.extract_text_from_file(file_content, file.filename)
+        
+        return {
+            "filename": file.filename,
+            "text_length": len(result["text"]),
+            "text_preview": result["text"][:300] + "..." if len(result["text"]) > 300 else result["text"],
+            "method": result["method"],
+            "confidence": f"{result['confidence']*100:.1f}%",
+            "pages": result.get("pages", 1)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

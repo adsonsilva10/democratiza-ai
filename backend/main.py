@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.v1 import auth, contracts, chat, payments, signatures, image_processing, async_jobs
+from app.api.v1 import auth, contracts, chat, payments, signatures, image_processing, async_jobs, storage
 from app.core.config import settings
 
 app = FastAPI(
@@ -14,7 +14,7 @@ app = FastAPI(
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,6 +28,7 @@ app.include_router(payments.router, prefix="/api/v1/payments", tags=["payments"]
 app.include_router(signatures.router, prefix="/api/v1/signatures", tags=["signatures"])
 app.include_router(image_processing.router, prefix="/api/v1", tags=["image-processing"])
 app.include_router(async_jobs.router, prefix="/api/v1/async", tags=["async-processing"])
+app.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
 
 @app.get("/")
 async def root():

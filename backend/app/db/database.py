@@ -4,16 +4,33 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from app.core.config import settings
 
+# Get database URL with fallback
+database_url = settings.DATABASE_URL or "sqlite:///./app.db"
+
 # Create sync engine for migrations and admin tasks
-engine = create_engine(settings.DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://"))
+if database_url.startswith("postgresql://"):
+    sync_url = database_url.replace("postgresql://", "postgresql+psycopg2://")
+else:
+    sync_url = database_url
+
+engine = create_engine(sync_url)
 
 # Create async engine for application use
-async_engine = create_async_engine(
-    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
-    echo=settings.DEBUG,
-    pool_pre_ping=True,
-    pool_recycle=300,
-)
+if database_url.startswith("postgresql://"):
+    async_url = database_url.replace("postgresql://", "postgresql+asyncpg://")
+    async_engine = create_async_engine(
+        async_url,
+        echo=settings.DEBUG,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
+else:
+    # For SQLite, use aiosqlite
+    async_url = database_url.replace("sqlite://", "sqlite+aiosqlite://")
+    async_engine = create_async_engine(
+        async_url,
+        echo=settings.DEBUG,
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 AsyncSessionLocal = sessionmaker(

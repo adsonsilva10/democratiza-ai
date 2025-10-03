@@ -54,11 +54,11 @@ class Settings(BaseSettings):
     # EXTERNAL SERVICES
     # ========================================
     # Cloudflare R2
-    CLOUDFLARE_R2_ACCOUNT_ID: Optional[str] = None
-    CLOUDFLARE_R2_ACCESS_KEY_ID: Optional[str] = None
-    CLOUDFLARE_R2_SECRET_ACCESS_KEY: Optional[str] = None
-    CLOUDFLARE_R2_BUCKET_NAME: Optional[str] = None
-    CLOUDFLARE_R2_PUBLIC_URL: Optional[str] = None
+    CLOUDFLARE_ACCOUNT_ID: Optional[str] = None
+    CLOUDFLARE_R2_ACCESS_KEY: Optional[str] = None
+    CLOUDFLARE_R2_SECRET_KEY: Optional[str] = None
+    CLOUDFLARE_R2_BUCKET: Optional[str] = None
+    CLOUDFLARE_R2_ENDPOINT: Optional[str] = None
     
     # AWS SQS
     AWS_ACCESS_KEY_ID: Optional[str] = None
@@ -92,15 +92,18 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "Democratiza AI"
     
     # CORS Configuration
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    BACKEND_CORS_ORIGINS: str = "http://localhost:3000,http://127.0.0.1:3000"
     
     @validator("BACKEND_CORS_ORIGINS", pre=True)
     def assemble_cors_origins(cls, v):
-        if isinstance(v, str):
-            return [i.strip() for i in v.split(",") if i.strip()]
-        elif isinstance(v, list):
-            return v
-        return []
+        if v is None or v == "":
+            return "http://localhost:3000,http://127.0.0.1:3000"
+        return v
+    
+    @property
+    def cors_origins_list(self) -> List[str]:
+        """Converte string CORS em lista"""
+        return [url.strip() for url in self.BACKEND_CORS_ORIGINS.split(",") if url.strip()]
     
     # Rate Limiting
     RATE_LIMIT_REQUESTS: int = 100
@@ -158,7 +161,9 @@ class Settings(BaseSettings):
     API_BASE_URL: str = "http://localhost:8000"
     
     class Config:
-        env_file = ".env.dev"
+        env_file = [".env", ".env.dev", ".env.local", ".env.private"]
+        env_file_encoding = 'utf-8'
         case_sensitive = True
+        extra = "ignore"  # Ignora campos extras em vez de dar erro
 
 settings = Settings()

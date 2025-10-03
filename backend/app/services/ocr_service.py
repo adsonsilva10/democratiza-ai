@@ -1,334 +1,408 @@
 """
-OCR Service - Extração de texto de documentos
-Usa Google Cloud Vision API para extrair texto de PDFs e imagens
+Democratiza AI - Serviço de OCR com Google Cloud Vision API
+Processa PDFs e imagens para extração de texto inteligente
 """
 
-import io
-import base64
-from typing import Optional, List, Dict, Any
+import os
+import json
+import logging
+from typing import Optional, Dict, Any, List
 from pathlib import Path
+import io
 import asyncio
-import httpx
-from PIL import Image
-import fitz  # PyMuPDF para PDFs
 
-from app.core.config import settings
+try:
+    from google.cloud import vision
+    from google.oauth2 import service_account
+    GOOGLE_VISION_AVAILABLE = True
+except ImportError:
+    GOOGLE_VISION_AVAILABLE = False
+    logging.warning("Google Cloud Vision não instalado. Use: pip install google-cloud-vision")
+
+try:
+    import fitz  # PyMuPDF
+    PYMUPDF_AVAILABLE = True
+except ImportError:
+    PYMUPDF_AVAILABLE = False
+    logging.warning("PyMuPDF não instalado. Use: pip install PyMuPDF")
+
+try:
+    from PIL import Image
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+    logging.warning("Pillow não instalado. Use: pip install Pillow")
+
+from ..core.config import settings
+
+logger = logging.getLogger(__name__)
 
 class OCRService:
     """
-    Serviço de OCR usando Google Cloud Vision API
-    Extrai texto de PDFs, imagens e documentos escaneados
+    Serviço de OCR inteligente com múltiplas estratégias:
+    1. Extração direta de texto (PDFs nativos)
+    2. Google Cloud Vision OCR (PDFs escaneados/imagens)
+    3. Fallback simples (quando OCR não disponível)
     """
     
     def __init__(self):
-        self.api_key = settings.GOOGLE_API_KEY
-        self.base_url = "https://vision.googleapis.com/v1/images:annotate"
+        self.client = None
+        self.available = False
+        self._initialize_client()
+    
+    def _initialize_client(self):
+        """Inicializa cliente Google Cloud Vision de forma segura"""
         
-    async def extract_text_from_pdf(self, pdf_content: bytes, max_pages: int = 10) -> Dict[str, Any]:
-        """
-        Extrai texto de PDF convertendo páginas em imagens
-        
-        Args:
-            pdf_content: Conteúdo binário do PDF
-            max_pages: Máximo de páginas para processar
-            
-        Returns:
-            Dict com texto extraído, número de páginas e metadados
-        """
+        if not GOOGLE_VISION_AVAILABLE:
+            logger.warning("⚠️ Google Cloud Vision não disponível - instale as dependências")
+            return
         
         try:
-            # Abrir PDF com PyMuPDF
-            pdf_document = fitz.open(stream=pdf_content, filetype="pdf")
-            total_pages = len(pdf_document)
+            # Tentar carregar credenciais do arquivo JSON
+            credentials_path = Path(__file__).parent.parent.parent / "credentials" / "google-cloud-credentials.json"
             
-            # Limitar páginas processadas
-            pages_to_process = min(total_pages, max_pages)
-            
-            extracted_texts = []
-            page_metadata = []
-            
-            print(f"📄 Processando PDF: {pages_to_process} páginas de {total_pages}")
-            
-            for page_num in range(pages_to_process):
-                page = pdf_document[page_num]
+            if credentials_path.exists():
+                logger.info(f"📁 Carregando credenciais: {credentials_path}")
                 
-                # Tentar extrair texto diretamente (se for PDF com texto)
-                direct_text = page.get_text()
+                # Verificar se arquivo JSON está válido
+                with open(credentials_path, 'r') as f:
+                    credentials_data = json.load(f)
                 
-                if direct_text.strip() and len(direct_text.strip()) > 50:
-                    # PDF tem texto extraível
-                    print(f"✅ Página {page_num + 1}: Texto direto extraído")
-                    extracted_texts.append(direct_text)
-                    page_metadata.append({
-                        'page': page_num + 1,
-                        'method': 'direct_text',
-                        'char_count': len(direct_text)
-                    })
-                    
-                else:
-                    # PDF escaneado, usar OCR
-                    print(f"🔍 Página {page_num + 1}: Usando OCR...")
-                    
-                    # Converter página para imagem
-                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # 2x zoom para melhor qualidade
-                    img_data = pix.tobytes("png")
-                    
-                    # Extrair texto via OCR
-                    ocr_text = await self.extract_text_from_image(img_data)
-                    
-                    extracted_texts.append(ocr_text)
-                    page_metadata.append({
-                        'page': page_num + 1,
-                        'method': 'ocr',
-                        'char_count': len(ocr_text)
-                    })
-            
-            pdf_document.close()
-            
-            # Combinar todo o texto
-            full_text = "\n\n".join(extracted_texts)
-            
-            return {
-                'text': full_text,
-                'total_pages': total_pages,
-                'processed_pages': pages_to_process,
-                'page_metadata': page_metadata,
-                'total_chars': len(full_text),
-                'success': True
-            }
-            
+                if credentials_data.get('type') != 'service_account':
+                    raise ValueError("Arquivo de credenciais inválido - não é service_account")
+                
+                credentials = service_account.Credentials.from_service_account_file(
+                    str(credentials_path),
+                    scopes=['https://www.googleapis.com/auth/cloud-platform']
+                )
+                
+                self.client = vision.ImageAnnotatorClient(credentials=credentials)
+                self.available = True
+                logger.info("✅ Google Cloud Vision inicializado com sucesso")
+                
+            elif os.getenv('GOOGLE_APPLICATION_CREDENTIALS'):
+                # Fallback para variável de ambiente
+                logger.info("🔄 Tentando credenciais via variável de ambiente")
+                self.client = vision.ImageAnnotatorClient()
+                self.available = True
+                logger.info("✅ Google Cloud Vision inicializado via env var")
+                
+            else:
+                logger.warning("⚠️ Credenciais Google Cloud Vision não encontradas")
+                
         except Exception as e:
-            print(f"❌ Erro processando PDF: {e}")
+            logger.error(f"❌ Erro ao inicializar Google Cloud Vision: {e}")
+            self.client = None
+            self.available = False
+    
+    async def extract_text_from_file(self, file_content: bytes, filename: str = "documento") -> Dict[str, Any]:
+        """
+        Extrai texto de arquivo (PDF ou imagem) usando estratégia inteligente
+        """
+        
+        file_ext = Path(filename).suffix.lower()
+        
+        if file_ext == '.pdf':
+            return await self.extract_text_from_pdf(file_content)
+        elif file_ext in ['.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff']:
+            return await self.extract_text_from_image(file_content)
+        else:
             return {
-                'text': '',
-                'error': str(e),
-                'success': False
+                "text": f"Tipo de arquivo não suportado: {file_ext}",
+                "method": "unsupported",
+                "confidence": 0.0,
+                "error": f"Extensão {file_ext} não suportada"
             }
     
-    async def extract_text_from_image(self, image_content: bytes) -> str:
+    async def extract_text_from_pdf(self, file_content: bytes) -> Dict[str, Any]:
         """
-        Extrai texto de imagem usando Google Cloud Vision
-        
-        Args:
-            image_content: Conteúdo binário da imagem
-            
-        Returns:
-            Texto extraído da imagem
+        Extrai texto de PDF usando estratégia híbrida:
+        1. PyMuPDF para PDFs com texto nativo (rápido)
+        2. Google Vision OCR para PDFs escaneados (preciso)
         """
-        
-        if not self.api_key:
-            raise ValueError("Google API Key não configurada")
         
         try:
-            # Converter imagem para base64
-            image_base64 = base64.b64encode(image_content).decode('utf-8')
+            # Estratégia 1: Tentativa de extração direta
+            if PYMUPDF_AVAILABLE:
+                direct_result = self._extract_text_directly_pdf(file_content)
+                
+                if direct_result and len(direct_result.strip()) > 100:
+                    logger.info("✅ Texto extraído diretamente do PDF (nativo)")
+                    return {
+                        "text": direct_result,
+                        "method": "direct_extraction",
+                        "confidence": 0.98,
+                        "pages": self._count_pdf_pages(file_content),
+                        "processing_time": "< 1s"
+                    }
             
-            # Preparar payload para Vision API
-            payload = {
-                "requests": [{
-                    "image": {
-                        "content": image_base64
-                    },
-                    "features": [{
-                        "type": "TEXT_DETECTION",
-                        "maxResults": 1
-                    }]
-                }]
+            # Estratégia 2: OCR via Google Vision
+            if self.available:
+                logger.info("🔄 PDF parece escaneado, usando OCR...")
+                ocr_result = await self._extract_pdf_via_ocr(file_content)
+                return ocr_result
+            
+            # Estratégia 3: Fallback limitado
+            logger.warning("⚠️ OCR não disponível, usando extração limitada")
+            fallback_text = direct_result if 'direct_result' in locals() else "Texto não disponível para extração automática."
+            
+            return {
+                "text": fallback_text,
+                "method": "limited_fallback",
+                "confidence": 0.3,
+                "pages": 1,
+                "warning": "OCR não configurado - apenas texto nativo extraído"
             }
             
-            # Fazer requisição para Vision API
-            url = f"{self.base_url}?key={self.api_key}"
-            
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.post(url, json=payload)
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    
-                    if 'responses' in result and result['responses']:
-                        text_annotations = result['responses'][0].get('textAnnotations', [])
-                        
-                        if text_annotations:
-                            # Primeiro resultado contém todo o texto
-                            extracted_text = text_annotations[0]['description']
-                            return extracted_text.strip()
-                        else:
-                            print("⚠️ Nenhum texto encontrado na imagem")
-                            return ""
-                    else:
-                        print(f"❌ Resposta inválida da Vision API: {result}")
-                        return ""
-                else:
-                    print(f"❌ Erro Vision API: {response.status_code} - {response.text}")
-                    return ""
-                    
         except Exception as e:
-            print(f"❌ Erro extraindo texto de imagem: {e}")
+            logger.error(f"❌ Erro na extração de PDF: {e}")
+            return {
+                "text": f"Erro na extração: {str(e)}",
+                "method": "error",
+                "confidence": 0.0,
+                "error": str(e)
+            }
+    
+    def _extract_text_directly_pdf(self, file_content: bytes) -> str:
+        """Extração direta usando PyMuPDF"""
+        if not PYMUPDF_AVAILABLE:
+            return ""
+        
+        try:
+            doc = fitz.open(stream=file_content, filetype="pdf")
+            text_parts = []
+            
+            for page_num in range(doc.page_count):
+                page = doc[page_num]
+                text = page.get_text()
+                if text.strip():
+                    text_parts.append(f"=== Página {page_num + 1} ===\n{text.strip()}")
+            
+            doc.close()
+            return "\n\n".join(text_parts)
+            
+        except Exception as e:
+            logger.warning(f"Extração direta PyMuPDF falhou: {e}")
             return ""
     
-    async def extract_text_from_file(self, file_path: str) -> Dict[str, Any]:
-        """
-        Extrai texto de arquivo (PDF ou imagem)
+    def _count_pdf_pages(self, file_content: bytes) -> int:
+        """Conta páginas do PDF"""
+        if not PYMUPDF_AVAILABLE:
+            return 1
         
-        Args:
-            file_path: Caminho para o arquivo
+        try:
+            doc = fitz.open(stream=file_content, filetype="pdf")
+            page_count = doc.page_count
+            doc.close()
+            return page_count
+        except:
+            return 1
+    
+    async def _extract_pdf_via_ocr(self, file_content: bytes) -> Dict[str, Any]:
+        """Extração via Google Cloud Vision OCR"""
+        
+        if not self.available:
+            raise Exception("Google Cloud Vision não está disponível")
+        
+        try:
+            # Converter PDF para imagens
+            images = await self._pdf_to_images(file_content)
             
-        Returns:
-            Dict com resultado da extração
-        """
-        
-        file_path = Path(file_path)
-        
-        if not file_path.exists():
+            if not images:
+                raise Exception("Não foi possível converter PDF para imagens")
+            
+            all_text = []
+            confidences = []
+            
+            for i, image_bytes in enumerate(images):
+                logger.info(f"📄 Processando página {i + 1}/{len(images)}...")
+                
+                # OCR da imagem
+                vision_image = vision.Image(content=image_bytes)
+                response = self.client.text_detection(image=vision_image)
+                
+                if response.error.message:
+                    logger.error(f"Erro OCR página {i+1}: {response.error.message}")
+                    continue
+                
+                if response.full_text_annotation:
+                    page_text = response.full_text_annotation.text
+                    confidence = self._calculate_confidence(response.full_text_annotation)
+                    
+                    all_text.append(f"=== Página {i + 1} ===\n{page_text.strip()}")
+                    confidences.append(confidence)
+                else:
+                    all_text.append(f"=== Página {i + 1} ===\n[Nenhum texto detectado]")
+                    confidences.append(0.0)
+            
+            final_text = "\n\n".join(all_text)
+            avg_confidence = sum(confidences) / len(confidences) if confidences else 0.0
+            
             return {
-                'text': '',
-                'error': 'Arquivo não encontrado',
-                'success': False
+                "text": final_text,
+                "method": "google_vision_ocr",
+                "confidence": avg_confidence,
+                "pages": len(images),
+                "processing_time": f"~{len(images) * 2}s"
+            }
+            
+        except Exception as e:
+            logger.error(f"OCR via Google Vision falhou: {e}")
+            raise Exception(f"Erro no OCR: {str(e)}")
+    
+    async def _pdf_to_images(self, file_content: bytes) -> List[bytes]:
+        """Converte PDF para lista de imagens"""
+        
+        try:
+            # Usar pdf2image se disponível
+            try:
+                import pdf2image
+                images = pdf2image.convert_from_bytes(file_content, dpi=200)
+                
+                image_bytes_list = []
+                for image in images:
+                    img_byte_arr = io.BytesIO()
+                    image.save(img_byte_arr, format='PNG', quality=95)
+                    image_bytes_list.append(img_byte_arr.getvalue())
+                
+                return image_bytes_list
+                
+            except ImportError:
+                # Fallback usando PyMuPDF para renderizar páginas
+                if not PYMUPDF_AVAILABLE:
+                    raise Exception("pdf2image e PyMuPDF não disponíveis para conversão PDF->imagem")
+                
+                doc = fitz.open(stream=file_content, filetype="pdf")
+                image_bytes_list = []
+                
+                for page_num in range(doc.page_count):
+                    page = doc[page_num]
+                    # Renderizar página como imagem
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2.0, 2.0))  # 2x zoom para melhor qualidade
+                    img_data = pix.tobytes("png")
+                    image_bytes_list.append(img_data)
+                
+                doc.close()
+                return image_bytes_list
+                
+        except Exception as e:
+            logger.error(f"Erro na conversão PDF->imagem: {e}")
+            return []
+    
+    async def extract_text_from_image(self, image_content: bytes) -> Dict[str, Any]:
+        """Extrai texto de imagem usando Google Cloud Vision"""
+        
+        if not self.available:
+            return {
+                "text": "OCR não disponível - configure Google Cloud Vision",
+                "method": "unavailable",
+                "confidence": 0.0,
+                "error": "Google Cloud Vision não configurado"
             }
         
-        # Ler conteúdo do arquivo
-        with open(file_path, 'rb') as f:
-            file_content = f.read()
-        
-        # Determinar tipo do arquivo pela extensão
-        file_extension = file_path.suffix.lower()
-        
-        if file_extension == '.pdf':
-            return await self.extract_text_from_pdf(file_content)
+        try:
+            # Validar se é uma imagem válida
+            if PIL_AVAILABLE:
+                try:
+                    img = Image.open(io.BytesIO(image_content))
+                    img.verify()  # Verificar se imagem é válida
+                except Exception:
+                    return {
+                        "text": "Arquivo de imagem inválido ou corrompido",
+                        "method": "error",
+                        "confidence": 0.0,
+                        "error": "Imagem inválida"
+                    }
             
-        elif file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
-            text = await self.extract_text_from_image(file_content)
-            return {
-                'text': text,
-                'file_type': 'image',
-                'total_chars': len(text),
-                'success': True
-            }
+            # Fazer OCR
+            image = vision.Image(content=image_content)
+            response = self.client.text_detection(image=image)
             
-        else:
+            if response.error.message:
+                raise Exception(f"Erro OCR: {response.error.message}")
+            
+            if response.full_text_annotation:
+                text = response.full_text_annotation.text
+                confidence = self._calculate_confidence(response.full_text_annotation)
+                
+                return {
+                    "text": text.strip(),
+                    "method": "google_vision_ocr",
+                    "confidence": confidence,
+                    "pages": 1,
+                    "processing_time": "~2s"
+                }
+            else:
+                return {
+                    "text": "Nenhum texto foi encontrado na imagem",
+                    "method": "google_vision_ocr",
+                    "confidence": 0.0,
+                    "pages": 1,
+                    "warning": "Imagem sem texto detectável"
+                }
+                
+        except Exception as e:
+            logger.error(f"Erro no OCR de imagem: {e}")
             return {
-                'text': '',
-                'error': f'Tipo de arquivo não suportado: {file_extension}',
-                'success': False
+                "text": f"Erro na análise da imagem: {str(e)}",
+                "method": "error",
+                "confidence": 0.0,
+                "error": str(e)
             }
     
-    async def process_contract_document(self, file_content: bytes, filename: str) -> Dict[str, Any]:
-        """
-        Processa documento de contrato especificamente
-        Otimizado para extração de texto jurídico
+    def _calculate_confidence(self, annotation) -> float:
+        """Calcula confiança média da detecção de texto"""
+        if not annotation.pages:
+            return 0.0
         
-        Args:
-            file_content: Conteúdo binário do arquivo
-            filename: Nome do arquivo original
-            
-        Returns:
-            Dict com texto processado e metadados
-        """
+        confidences = []
+        for page in annotation.pages:
+            for block in page.blocks:
+                if hasattr(block, 'confidence') and block.confidence > 0:
+                    confidences.append(block.confidence)
         
-        print(f"📋 Processando contrato: {filename}")
+        return sum(confidences) / len(confidences) if confidences else 0.0
+    
+    def is_available(self) -> bool:
+        """Verifica se o serviço OCR está disponível"""
+        return self.available and self.client is not None
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Retorna status detalhado do serviço OCR"""
+        credentials_path = Path(__file__).parent.parent.parent / "credentials" / "google-cloud-credentials.json"
         
-        # Determinar tipo do arquivo
-        file_extension = Path(filename).suffix.lower()
-        
-        start_time = asyncio.get_event_loop().time()
-        
-        if file_extension == '.pdf':
-            result = await self.extract_text_from_pdf(file_content, max_pages=20)  # Máximo 20 páginas para contratos
-        elif file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp']:
-            text = await self.extract_text_from_image(file_content)
-            result = {
-                'text': text,
-                'file_type': 'image',
-                'total_chars': len(text),
-                'success': True
-            }
-        else:
-            result = {
-                'text': '',
-                'error': f'Tipo de arquivo não suportado para contratos: {file_extension}',
-                'success': False
-            }
-        
-        processing_time = asyncio.get_event_loop().time() - start_time
-        
-        if result.get('success'):
-            # Adicionar metadados específicos para contratos
-            result.update({
-                'filename': filename,
-                'file_type': file_extension[1:],  # Remove o ponto
-                'processing_time_seconds': round(processing_time, 2),
-                'estimated_tokens': len(result['text']) // 4,  # Estimativa rough de tokens
-                'suitable_for_analysis': len(result['text']) > 100,  # Mínimo de texto para análise
-            })
-            
-            print(f"✅ Processamento concluído: {result['total_chars']} caracteres em {processing_time:.2f}s")
-        else:
-            print(f"❌ Falha no processamento: {result.get('error')}")
-        
-        return result
+        return {
+            "available": self.available,
+            "google_vision_installed": GOOGLE_VISION_AVAILABLE,
+            "pymupdf_available": PYMUPDF_AVAILABLE,
+            "pil_available": PIL_AVAILABLE,
+            "credentials_found": credentials_path.exists(),
+            "service_account": getattr(settings, 'GOOGLE_CLOUD_SERVICE_ACCOUNT_EMAIL', None),
+            "project_id": getattr(settings, 'GOOGLE_CLOUD_PROJECT_ID', None)
+        }
 
-# Função utilitária para teste
-async def test_ocr_service():
-    """Testa o serviço de OCR com um exemplo"""
+# Instância global do serviço
+ocr_service = OCRService()
+
+
+# Função de teste segura
+async def test_ocr_basic():
+    """Teste básico do OCR sem expor credenciais"""
     
     service = OCRService()
+    status = service.get_status()
     
-    # Criar uma imagem de teste simples com texto
-    from PIL import Image, ImageDraw, ImageFont
+    print("🔍 STATUS OCR SERVICE")
+    print("=" * 40)
+    for key, value in status.items():
+        print(f"{key}: {value}")
     
-    # Criar imagem com texto de contrato
-    img = Image.new('RGB', (800, 600), color='white')
-    draw = ImageDraw.Draw(img)
+    print(f"\n✅ OCR Disponível: {service.is_available()}")
     
-    contract_text = """
-    CONTRATO DE PRESTAÇÃO DE SERVIÇOS
-    
-    Entre as partes:
-    
-    CONTRATANTE: João Silva, CPF 123.456.789-00
-    CONTRATADO: Empresa XYZ LTDA, CNPJ 12.345.678/0001-90
-    
-    CLÁUSULA 1ª - DO OBJETO
-    O presente contrato tem por objeto a prestação de serviços
-    de consultoria empresarial pelo período de 12 meses.
-    
-    CLÁUSULA 2ª - DO VALOR
-    O valor total do contrato é de R$ 120.000,00 (cento e
-    vinte mil reais), a ser pago em 12 parcelas mensais.
-    """
-    
-    # Tentar usar uma fonte
-    try:
-        font = ImageFont.truetype("arial.ttf", 16)
-    except:
-        font = ImageFont.load_default()
-    
-    # Desenhar texto na imagem
-    y_offset = 50
-    for line in contract_text.strip().split('\n'):
-        draw.text((50, y_offset), line.strip(), fill='black', font=font)
-        y_offset += 25
-    
-    # Salvar como bytes
-    img_buffer = io.BytesIO()
-    img.save(img_buffer, format='PNG')
-    img_bytes = img_buffer.getvalue()
-    
-    # Testar OCR
-    print("🧪 Testando OCR Service...")
-    
-    try:
-        result = await service.process_contract_document(img_bytes, "contrato_teste.png")
-        
-        print(f"✅ Resultado: {result['success']}")
-        if result['success']:
-            print(f"📝 Texto extraído ({result['total_chars']} chars):")
-            print(result['text'][:200] + "..." if len(result['text']) > 200 else result['text'])
-        else:
-            print(f"❌ Erro: {result['error']}")
-            
-    except Exception as e:
-        print(f"❌ Erro no teste: {e}")
+    if service.is_available():
+        print("🎉 Google Cloud Vision configurado com sucesso!")
+    else:
+        print("⚠️ OCR não disponível - verifique configurações")
 
 if __name__ == "__main__":
-    asyncio.run(test_ocr_service())
+    asyncio.run(test_ocr_basic())

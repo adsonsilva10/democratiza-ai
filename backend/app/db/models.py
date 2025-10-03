@@ -119,7 +119,7 @@ class ChatMessage(Base):
     message_type = Column(String, default="text")  # text, image, file
     
     # Additional metadata
-    metadata = Column(JSON)  # For storing additional context
+    message_metadata = Column(JSON)  # For storing additional context
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
@@ -276,7 +276,36 @@ class AuditLog(Base):
     # Request details
     ip_address = Column(String)
     user_agent = Column(String)
-    metadata = Column(JSON)
+    audit_metadata = Column(JSON)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Relationships
+    user = relationship("User")
+
+
+class StorageAuditLog(Base):
+    __tablename__ = "storage_audit_logs"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    
+    # Operation details
+    operation = Column(String, nullable=False)  # upload, download, delete, presigned_url
+    file_id = Column(String, nullable=False)
+    file_name = Column(String)
+    file_size = Column(Integer)
+    
+    # Request details
+    ip_address = Column(String)
+    user_agent = Column(String)
+    
+    # Result
+    success = Column(Boolean, nullable=False)
+    error_message = Column(Text)
+    
+    # Metadata (using different name to avoid SQLAlchemy conflicts)
+    operation_metadata = Column(JSON)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
