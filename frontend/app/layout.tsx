@@ -1,7 +1,8 @@
 import './globals.css'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 export const metadata = {
-  title: 'Contrato Seguro - Análise Inteligente de Contratos',
+  title: 'Democratiza AI - Análise Inteligente de Contratos',
   description: 'Democratizando a compreensão jurídica no Brasil. Analise seus contratos com IA especializada e tome decisões mais seguras.',
 }
 
@@ -13,7 +14,9 @@ export default function RootLayout({
   return (
     <html lang="pt-BR">
       <body className="overflow-x-hidden">
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

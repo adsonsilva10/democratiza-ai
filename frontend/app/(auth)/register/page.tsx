@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
+import { signUpWithEmail } from '@/lib/supabase'
 
 interface FormData {
   name: string
@@ -12,6 +14,7 @@ interface FormData {
 }
 
 export default function Register() {
+  const router = useRouter()
   const [formData, setFormData] = useState<FormData>({
     name: '',
     email: '',
@@ -22,6 +25,7 @@ export default function Register() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+  const [successMessage, setSuccessMessage] = useState('')
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { id, value } = e.target
@@ -61,14 +65,51 @@ export default function Register() {
     }
     
     setIsLoading(true)
+    setErrors([])
+    setSuccessMessage('')
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      alert('Conta criada com sucesso! Redirecionando para login...')
-      window.location.href = '/login'
-    } catch (err) {
-      setErrors(['Erro ao criar conta. Tente novamente.'])
+      console.log('🔄 Tentando criar conta no Supabase...')
+      
+      const result = await signUpWithEmail(
+        formData.email.trim(),
+        formData.password,
+        formData.name.trim()
+      )
+
+      if (result.user) {
+        console.log('✅ Conta criada com sucesso:', result.user)
+        
+        // Verificar se precisa de confirmação de email
+        if (result.user.email_confirmed_at || process.env.NODE_ENV === 'development') {
+          setSuccessMessage('Conta criada com sucesso! Você já pode fazer login.')
+          setTimeout(() => {
+            router.push('/login?message=Conta criada com sucesso! Faça seu login')
+          }, 2000)
+        } else {
+          setSuccessMessage('Conta criada com sucesso! Verifique seu email para confirmar.')
+          setTimeout(() => {
+            router.push('/login?message=Verifique seu email para ativar a conta')
+          }, 2000)
+        }
+      } else {
+        console.warn('⚠️ Usuário não retornado, mas sem erro')
+        setErrors(['Erro inesperado ao criar conta. Tente novamente.'])
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao criar conta:', error)
+      
+      // Tratamento de erros específicos do Supabase
+      if (error.message?.includes('User already registered')) {
+        setErrors(['Este email já está registrado. Tente fazer login ou use outro email.'])
+      } else if (error.message?.includes('Password')) {
+        setErrors(['Senha deve ter pelo menos 6 caracteres.'])
+      } else if (error.message?.includes('Email')) {
+        setErrors(['Email inválido. Verifique o formato.'])
+      } else {
+        setErrors([error.message || 'Erro ao criar conta. Verifique sua conexão e tente novamente.'])
+      }
     } finally {
       setIsLoading(false)
     }
@@ -236,6 +277,21 @@ export default function Register() {
             </Link>
           </label>
         </div>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-xl">
+            <div className="flex items-start">
+              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                <span className="text-green-600 text-sm">✅</span>
+              </div>
+              <div>
+                <h4 className="text-green-800 font-medium text-sm mb-1">Sucesso!</h4>
+                <p className="text-green-700 text-sm">{successMessage}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Error Messages */}
         {errors.length > 0 && (

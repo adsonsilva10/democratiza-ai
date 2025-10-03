@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
+import { signInWithGoogle, signInWithEmail } from '@/lib/supabase'
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({
@@ -19,34 +20,58 @@ export default function LoginPage() {
     setError(null)
 
     try {
-      // Simular delay de autenticação
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      // Tentar login real com Supabase primeiro
+      await signInWithEmail(formData.email, formData.password)
       
-      // Credenciais de demonstração
-      const validCredentials = [
-        { email: 'demo@democratiza.ai', password: 'demo123' },
-        { email: 'admin@democratiza.ai', password: 'admin123' },
-        { email: 'user@test.com', password: '123456' }
-      ]
+      // Se chegou até aqui, login foi bem-sucedido
+      window.location.href = '/dashboard'
+      
+    } catch (supabaseError) {
+      console.log('Login Supabase falhou, tentando credenciais demo...', supabaseError)
+      
+      try {
+        // Fallback para credenciais de demonstração
+        const validCredentials = [
+          { email: 'demo@democratiza.ai', password: 'demo123' },
+          { email: 'admin@democratiza.ai', password: 'admin123' },
+          { email: 'user@test.com', password: '123456' }
+        ]
 
-      const isValid = validCredentials.some(
-        cred => cred.email === formData.email && cred.password === formData.password
-      )
+        const isValid = validCredentials.some(
+          cred => cred.email === formData.email && cred.password === formData.password
+        )
 
-      if (isValid) {
-        // Salvar token fictício no localStorage
-        localStorage.setItem('auth-token', 'demo-token-' + Date.now())
-        localStorage.setItem('user-email', formData.email)
-        
-        alert('Login realizado com sucesso!')
-        window.location.href = '/dashboard'
-      } else {
-        setError('Email ou senha incorretos. Tente: demo@democratiza.ai / demo123')
+        if (isValid) {
+          // Salvar token fictício no localStorage
+          localStorage.setItem('auth-token', 'demo-token-' + Date.now())
+          localStorage.setItem('user-email', formData.email)
+          
+          console.log('✅ Login demo realizado com sucesso!')
+          window.location.href = '/dashboard'
+        } else {
+          setError('Email ou senha incorretos.')
+        }
+      } catch (err) {
+        setError('Erro ao fazer login. Tente novamente.')
       }
-      
-    } catch (err) {
-      setError('Erro ao fazer login. Tente novamente.')
     } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+      
+      console.log('🚀 Iniciando login com Google...')
+      await signInWithGoogle()
+      
+      // O redirecionamento será automático via Supabase
+      
+    } catch (error: any) {
+      console.error('❌ Erro no login com Google:', error)
+      setError(error.message || 'Erro ao fazer login com Google. Tente novamente.')
       setIsLoading(false)
     }
   }
@@ -187,14 +212,19 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <button className="w-full inline-flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            <div className="w-5 h-5 bg-red-500 rounded text-white text-xs flex items-center justify-center font-bold">G</div>
-            <span>Google</span>
-          </button>
-          <button className="w-full inline-flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-            <div className="w-5 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">f</div>
-            <span>Facebook</span>
+        <div className="mt-6">
+          <button 
+            type="button"
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="w-full inline-flex items-center justify-center gap-3 py-3 px-4 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <div className="w-5 h-5 bg-red-500 rounded text-white text-xs flex items-center justify-center font-bold">G</div>
+            )}
+            <span>Continuar com Google</span>
           </button>
         </div>
       </div>
