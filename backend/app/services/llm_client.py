@@ -364,9 +364,39 @@ class GoogleGeminiClient(BaseLLMClient):
 class LLMClientFactory:
     """Factory para criar clientes LLM apropriados"""
     
+    def __init__(self):
+        from ..core.config import settings
+        self.api_keys = {
+            'GOOGLE_API_KEY': getattr(settings, 'GOOGLE_API_KEY', None),
+            'ANTHROPIC_API_KEY': getattr(settings, 'ANTHROPIC_API_KEY', None),
+            'GROQ_API_KEY': getattr(settings, 'GROQ_API_KEY', None)
+        }
+    
+    def create_client(self, provider_name: str) -> BaseLLMClient:
+        """Cria cliente baseado no nome do provedor (para testes)"""
+        from .llm_router import LLMRouter
+        router = LLMRouter()
+        
+        # Mapear nome para provider enum
+        provider_map = {
+            'GEMINI_FLASH': LLMProvider.GEMINI_FLASH,
+            'GEMINI_PRO': LLMProvider.GEMINI_PRO,
+            'CLAUDE_SONNET': LLMProvider.ANTHROPIC_SONNET,
+            'CLAUDE_OPUS': LLMProvider.ANTHROPIC_OPUS,
+            'GROQ_LLAMA': LLMProvider.GROQ_LLAMA,
+            'ANTHROPIC_HAIKU': LLMProvider.ANTHROPIC_HAIKU
+        }
+        
+        provider = provider_map.get(provider_name)
+        if not provider:
+            raise ValueError(f"Provider {provider_name} não encontrado")
+        
+        config = router.llm_configs[provider]
+        return self.create_client_from_config(config, self.api_keys)
+    
     @staticmethod
-    def create_client(config: LLMConfig, api_keys: Dict[str, str]) -> BaseLLMClient:
-        """Cria cliente apropriado baseado no provedor"""
+    def create_client_from_config(config: LLMConfig, api_keys: Dict[str, str]) -> BaseLLMClient:
+        """Cria cliente apropriado baseado na configuração"""
         
         if config.provider == LLMProvider.GROQ_LLAMA:
             api_key = api_keys.get('GROQ_API_KEY')

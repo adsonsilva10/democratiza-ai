@@ -13,10 +13,10 @@ class Settings(BaseSettings):
     # ========================================
     # DATABASE CONFIGURATION
     # ========================================
-    DATABASE_URL: str
-    SUPABASE_URL: str
-    SUPABASE_ANON_KEY: str
-    SUPABASE_SERVICE_KEY: str
+    DATABASE_URL: Optional[str] = None
+    SUPABASE_URL: Optional[str] = None
+    SUPABASE_ANON_KEY: Optional[str] = None
+    SUPABASE_SERVICE_KEY: Optional[str] = None
     
     # ========================================
     # JWT CONFIGURATION
@@ -34,40 +34,49 @@ class Settings(BaseSettings):
     # ========================================
     # AI SERVICES
     # ========================================
-    ANTHROPIC_API_KEY: str
+    ANTHROPIC_API_KEY: Optional[str] = None
     CLAUDE_MODEL: str = "claude-3-sonnet-20240229"
-    MAX_TOKENS: int = 4000
     
-    GOOGLE_CLOUD_PROJECT_ID: str
-    GOOGLE_APPLICATION_CREDENTIALS: str
+    # Google Gemini API
+    GOOGLE_API_KEY: Optional[str] = None
+    GEMINI_FLASH_MODEL: str = "gemini-1.5-flash"
+    GEMINI_PRO_MODEL: str = "gemini-1.5-pro"
+    
+    # Google Cloud (for OCR)
+    GOOGLE_CLOUD_PROJECT_ID: Optional[str] = None
+    GOOGLE_APPLICATION_CREDENTIALS: Optional[str] = None
+    
+    # AI Configuration
+    MAX_TOKENS: int = 4000
+    TEMPERATURE: float = 0.1
     
     # ========================================
     # EXTERNAL SERVICES
     # ========================================
     # Cloudflare R2
-    CLOUDFLARE_R2_ACCOUNT_ID: str
-    CLOUDFLARE_R2_ACCESS_KEY_ID: str
-    CLOUDFLARE_R2_SECRET_ACCESS_KEY: str
-    CLOUDFLARE_R2_BUCKET_NAME: str
-    CLOUDFLARE_R2_PUBLIC_URL: str
+    CLOUDFLARE_R2_ACCOUNT_ID: Optional[str] = None
+    CLOUDFLARE_R2_ACCESS_KEY_ID: Optional[str] = None
+    CLOUDFLARE_R2_SECRET_ACCESS_KEY: Optional[str] = None
+    CLOUDFLARE_R2_BUCKET_NAME: Optional[str] = None
+    CLOUDFLARE_R2_PUBLIC_URL: Optional[str] = None
     
     # AWS SQS
-    AWS_ACCESS_KEY_ID: str
-    AWS_SECRET_ACCESS_KEY: str
+    AWS_ACCESS_KEY_ID: Optional[str] = None
+    AWS_SECRET_ACCESS_KEY: Optional[str] = None
     AWS_REGION: str = "sa-east-1"
-    AWS_SQS_QUEUE_URL: str
+    AWS_SQS_QUEUE_URL: Optional[str] = None
     
     # SendGrid
-    SENDGRID_API_KEY: str
-    SENDGRID_FROM_EMAIL: str
+    SENDGRID_API_KEY: Optional[str] = None
+    SENDGRID_FROM_EMAIL: Optional[str] = None
     SENDGRID_FROM_NAME: str = "Democratiza AI"
     
     # ========================================
     # PAYMENT PROCESSING
     # ========================================
-    MERCADO_PAGO_ACCESS_TOKEN: str
-    MERCADO_PAGO_PUBLIC_KEY: str
-    MERCADO_PAGO_WEBHOOK_SECRET: str
+    MERCADO_PAGO_ACCESS_TOKEN: Optional[str] = None
+    MERCADO_PAGO_PUBLIC_KEY: Optional[str] = None
+    MERCADO_PAGO_WEBHOOK_SECRET: Optional[str] = None
     
     # D4Sign
     D4SIGN_API_KEY: Optional[str] = None
@@ -82,15 +91,16 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Democratiza AI"
     
-    @validator("BACKEND_CORS_ORIGINS", pre=True)
-    def assemble_cors_origins(cls, v: str) -> List[str]:
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
-            return v
-        raise ValueError(v)
+    # CORS Configuration
+    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
     
-    BACKEND_CORS_ORIGINS: List[str] = []
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v):
+        if isinstance(v, str):
+            return [i.strip() for i in v.split(",") if i.strip()]
+        elif isinstance(v, list):
+            return v
+        return []
     
     # Rate Limiting
     RATE_LIMIT_REQUESTS: int = 100
@@ -126,37 +136,29 @@ class Settings(BaseSettings):
         return self.ENVIRONMENT.lower() == "production"
     
     @property
-    def database_url_sync(self) -> str:
-        """Versão síncrona da URL do banco para SQLAlchemy"""
-        return self.DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
-    
-    @property
     def database_url_async(self) -> str:
         """Versão assíncrona da URL do banco para AsyncSQLAlchemy"""
-        return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-    
-    class Config:
-        env_file = ".env.local"
-        case_sensitive = True
-    
-    # File Upload
-    MAX_FILE_SIZE: int = 50 * 1024 * 1024  # 50MB
-    ALLOWED_FILE_TYPES: List[str] = ["application/pdf", "image/jpeg", "image/png", "image/webp"]
-    
-    # AI Configuration
-    MAX_TOKENS: int = 4000
-    TEMPERATURE: float = 0.1
-    
-    # Application Base URL (for webhooks)
-    API_BASE_URL: str = "https://yourdomain.com"  # Update in production
+        if self.DATABASE_URL:
+            return self.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+        return None
+
+    @property
+    def database_url_sync(self) -> str:
+        """Versão síncrona da URL do banco para SQLAlchemy"""
+        if self.DATABASE_URL:
+            return self.DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://")
+        return None
     
     # RAG Configuration
     EMBEDDING_DIMENSION: int = 1536
     CHUNK_SIZE: int = 1000
     CHUNK_OVERLAP: int = 200
     
+    # Application Base URL (for webhooks)
+    API_BASE_URL: str = "http://localhost:8000"
+    
     class Config:
-        env_file = ".env"
+        env_file = ".env.dev"
         case_sensitive = True
 
 settings = Settings()

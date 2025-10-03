@@ -313,6 +313,27 @@ class LLMRouter:
             'cost_by_model': {provider: 0.0 for provider in LLMProvider}
         }
 
+    async def analyze_complexity(self, contract_text: str, contract_metadata: Dict[str, Any] = None) -> ComplexityLevel:
+        """Analisa a complexidade de um contrato"""
+        analysis = self.complexity_analyzer.analyze_complexity(contract_text, contract_metadata)
+        return analysis['complexity_level']
+
+    async def route_to_best_model(self, contract_text: str, contract_metadata: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Roteia para o melhor modelo baseado na complexidade"""
+        complexity_analysis = self.complexity_analyzer.analyze_complexity(contract_text, contract_metadata)
+        complexity_level = complexity_analysis['complexity_level']
+        
+        selected_model = self._select_optimal_model(complexity_level, contract_metadata or {})
+        config = self.llm_configs[selected_model]
+        
+        return {
+            'provider': selected_model,
+            'model': config.model_name,
+            'complexity': complexity_level.value,
+            'cost_per_1k': config.cost_per_1k_tokens,
+            'reasoning': complexity_analysis.get('reasoning', '')
+        }
+
     async def route_contract_analysis(
         self, 
         contract_text: str, 
