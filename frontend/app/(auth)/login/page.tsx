@@ -1,11 +1,16 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react'
 import { signInWithGoogle, signInWithEmail } from '@/lib/supabase'
+import { toast } from 'sonner'
+import { getCallbackUrl, saveCallbackUrl } from '@/lib/auth-utils'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -14,6 +19,19 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
 
+  // Mostrar mensagem de sucesso se vier da página de registro
+  useEffect(() => {
+    const message = searchParams.get('message')
+    if (message) {
+      toast.success('Cadastro realizado!', {
+        description: message
+      })
+    }
+  }, [searchParams])
+
+  // Obter URL de redirecionamento usando utilitário
+  const callbackUrl = getCallbackUrl(searchParams)
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
@@ -21,10 +39,14 @@ export default function LoginPage() {
 
     try {
       // Tentar login real com Supabase primeiro
+      toast.loading('Fazendo login...', { id: 'login' })
+      
       await signInWithEmail(formData.email, formData.password)
       
       // Se chegou até aqui, login foi bem-sucedido
-      window.location.href = '/dashboard'
+      toast.success('Login realizado com sucesso!', { id: 'login' })
+      console.log('✅ Redirecionando para:', callbackUrl)
+      router.push(callbackUrl)
       
     } catch (supabaseError) {
       console.log('Login Supabase falhou, tentando credenciais demo...', supabaseError)
@@ -42,16 +64,29 @@ export default function LoginPage() {
         )
 
         if (isValid) {
-          // Salvar token fictício no localStorage
-          localStorage.setItem('auth-token', 'demo-token-' + Date.now())
+          // Salvar token fictício no localStorage E como cookie para o middleware detectar
+          const demoToken = 'demo-token-' + Date.now()
+          localStorage.setItem('auth-token', demoToken)
           localStorage.setItem('user-email', formData.email)
           
-          console.log('✅ Login demo realizado com sucesso!')
-          window.location.href = '/dashboard'
+          // Salvar como cookie também para o middleware detectar
+          document.cookie = `auth-token=${demoToken}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 dias
+          
+          toast.success('Login demo realizado com sucesso!', { id: 'login' })
+          console.log('✅ Redirecionando para:', callbackUrl)
+          router.push(callbackUrl)
         } else {
+          toast.error('Credenciais inválidas', {
+            description: 'Email ou senha incorretos.',
+            id: 'login'
+          })
           setError('Email ou senha incorretos.')
         }
       } catch (err) {
+        toast.error('Erro no login', {
+          description: 'Erro ao fazer login. Tente novamente.',
+          id: 'login'
+        })
         setError('Erro ao fazer login. Tente novamente.')
       }
     } finally {
@@ -64,13 +99,26 @@ export default function LoginPage() {
       setIsLoading(true)
       setError(null)
       
+      // Salvar callback URL no sessionStorage para uso após OAuth
+      saveCallbackUrl(callbackUrl)
+      
+      toast.loading('Conectando com Google...', { id: 'google-login' })
+      
       console.log('🚀 Iniciando login com Google...')
+      console.log('📍 Callback URL salvo:', callbackUrl)
       await signInWithGoogle()
       
       // O redirecionamento será automático via Supabase
+      toast.success('Redirecionando para Google...', { id: 'google-login' })
       
     } catch (error: any) {
       console.error('❌ Erro no login com Google:', error)
+      
+      toast.error('Erro no login com Google', {
+        description: error.message || 'Tente novamente.',
+        id: 'google-login'
+      })
+      
       setError(error.message || 'Erro ao fazer login com Google. Tente novamente.')
       setIsLoading(false)
     }

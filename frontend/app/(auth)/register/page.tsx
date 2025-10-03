@@ -5,6 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, Check } from 'lucide-react'
 import { signUpWithEmail } from '@/lib/supabase'
+import { RegisterSuccessModal } from '@/components/ui/success-modal'
+import { toast } from 'sonner'
 
 interface FormData {
   name: string
@@ -26,11 +28,26 @@ export default function Register() {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [successMessage, setSuccessMessage] = useState('')
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [registeredEmail, setRegisteredEmail] = useState('')
+  const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const { id, value } = e.target
     setFormData(prev => ({ ...prev, [id]: value }))
     setErrors([]) // Clear errors when user types
+  }
+
+  function handleModalClose() {
+    setShowSuccessModal(false)
+  }
+
+  function handleGoToLogin() {
+    setShowSuccessModal(false)
+    const message = needsEmailConfirmation 
+      ? 'Verifique seu email para ativar a conta' 
+      : 'Conta criada com sucesso! Faça seu login'
+    router.push(`/login?message=${encodeURIComponent(message)}`)
   }
 
   function validateForm(): string[] {
@@ -80,18 +97,30 @@ export default function Register() {
       if (result.user) {
         console.log('✅ Conta criada com sucesso:', result.user)
         
+        // Configurar dados para modal
+        setRegisteredEmail(result.user.email || formData.email)
+        
         // Verificar se precisa de confirmação de email
-        if (result.user.email_confirmed_at || process.env.NODE_ENV === 'development') {
-          setSuccessMessage('Conta criada com sucesso! Você já pode fazer login.')
-          setTimeout(() => {
-            router.push('/login?message=Conta criada com sucesso! Faça seu login')
-          }, 2000)
-        } else {
-          setSuccessMessage('Conta criada com sucesso! Verifique seu email para confirmar.')
-          setTimeout(() => {
-            router.push('/login?message=Verifique seu email para ativar a conta')
-          }, 2000)
-        }
+        const needsConfirmation = !result.user.email_confirmed_at && process.env.NODE_ENV !== 'development'
+        setNeedsEmailConfirmation(needsConfirmation)
+        
+        // Toast de sucesso imediato
+        toast.success('Conta criada com sucesso!', {
+          description: needsConfirmation 
+            ? 'Verifique seu email para ativar a conta' 
+            : 'Você já pode fazer login'
+        })
+        
+        // Mostrar modal de sucesso
+        setShowSuccessModal(true)
+        
+        // Limpar formulário
+        setFormData({
+          name: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+        })
       } else {
         console.warn('⚠️ Usuário não retornado, mas sem erro')
         setErrors(['Erro inesperado ao criar conta. Tente novamente.'])
@@ -100,16 +129,26 @@ export default function Register() {
     } catch (error: any) {
       console.error('❌ Erro ao criar conta:', error)
       
+      let errorMessage = 'Erro ao criar conta. Tente novamente.'
+      
       // Tratamento de erros específicos do Supabase
       if (error.message?.includes('User already registered')) {
-        setErrors(['Este email já está registrado. Tente fazer login ou use outro email.'])
+        errorMessage = 'Este email já está registrado. Tente fazer login ou use outro email.'
       } else if (error.message?.includes('Password')) {
-        setErrors(['Senha deve ter pelo menos 6 caracteres.'])
+        errorMessage = 'Senha deve ter pelo menos 6 caracteres.'
       } else if (error.message?.includes('Email')) {
-        setErrors(['Email inválido. Verifique o formato.'])
-      } else {
-        setErrors([error.message || 'Erro ao criar conta. Verifique sua conexão e tente novamente.'])
+        errorMessage = 'Email inválido. Verifique o formato.'
+      } else if (error.message) {
+        errorMessage = error.message
       }
+      
+      // Toast de erro
+      toast.error('Erro no cadastro', {
+        description: errorMessage
+      })
+      
+      // Também mostrar na interface para detalhes
+      setErrors([errorMessage])
     } finally {
       setIsLoading(false)
     }
@@ -331,6 +370,15 @@ export default function Register() {
           )}
         </button>
       </form>
+
+      {/* Modal de Sucesso */}
+      <RegisterSuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleModalClose}
+        userEmail={registeredEmail}
+        needsConfirmation={needsEmailConfirmation}
+        onGoToLogin={handleGoToLogin}
+      />
     </div>
   )
 }

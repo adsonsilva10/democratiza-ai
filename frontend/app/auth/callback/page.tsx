@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react'
+import { getAndClearCallbackUrl } from '@/lib/auth-utils'
 
 export default function AuthCallback() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
@@ -34,9 +35,13 @@ export default function AuthCallback() {
           setStatus('success')
           setMessage('Login realizado com sucesso!')
           
+          // Obter URL de callback usando utilitário
+          const callbackUrl = getAndClearCallbackUrl()
+          
           // Redirecionar após 2 segundos
           setTimeout(() => {
-            window.location.href = '/dashboard'
+            console.log('🔄 Redirecionando para:', callbackUrl)
+            window.location.href = callbackUrl
           }, 2000)
           
         } else {
@@ -59,8 +64,8 @@ export default function AuthCallback() {
     window.location.href = '/login'
   }
 
-  const handleGoToDashboard = () => {
-    window.location.href = '/dashboard'
+  const handleGoToPlataforma = () => {
+    window.location.href = '/plataforma'
   }
 
   return (
@@ -102,13 +107,13 @@ export default function AuthCallback() {
                 Login realizado com sucesso!
               </h2>
               <p className="text-gray-600">
-                Redirecionando para o dashboard...
+                Redirecionando para a plataforma...
               </p>
               <button
-                onClick={handleGoToDashboard}
+                onClick={handleGoToPlataforma}
                 className="w-full mt-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-3 px-6 rounded-xl hover:shadow-lg transition-all duration-300"
               >
-                Ir para Dashboard
+                Ir para Plataforma
               </button>
             </div>
           )}

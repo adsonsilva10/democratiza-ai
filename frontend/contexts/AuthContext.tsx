@@ -48,6 +48,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(null)
       setSession(null)
       
+      // Limpar localStorage e cookies
+      localStorage.removeItem('auth-token')
+      localStorage.removeItem('user-email')
+      document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+      
       // Redirecionar para login
       window.location.href = '/login'
     } catch (error) {
@@ -99,13 +104,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setSession(session)
         setUser(session?.user || null)
         
-        // Sincronizar com localStorage para compatibilidade
+        // Sincronizar com localStorage e cookies para compatibilidade
         if (session?.user) {
           localStorage.setItem('auth-token', session.access_token)
           localStorage.setItem('user-email', session.user.email || '')
+          
+          // Salvar também como cookie para o middleware detectar
+          document.cookie = `auth-token=${session.access_token}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 dias
         } else {
           localStorage.removeItem('auth-token')
           localStorage.removeItem('user-email')
+          
+          // Remover cookie também
+          document.cookie = 'auth-token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
         }
         
         setLoading(false)
