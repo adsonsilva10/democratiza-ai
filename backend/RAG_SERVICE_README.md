@@ -1,23 +1,75 @@
-# RAG Service - Retrieval-Augmented Generation
+# RAG Service - Retrieval-Augmented Generation Multi-Provider
 
 ## Visão Geral
 
-O RAG Service é o sistema de recuperação aumentada por geração que enriquece os agentes de IA com conhecimento jurídico especializado. Permite que os agentes façam análises mais precisas e fundamentadas em legislação brasileira, jurisprudência e melhores práticas.
+O RAG Service é o sistema de recuperação aumentada por geração que enriquece os agentes de IA com conhecimento jurídico especializado. Implementa uma **arquitetura multi-provider** que permite usar diferentes serviços de embeddings (Gemini, OpenAI, Anthropic) com fallback automático.
 
-## Arquitetura
+**✨ Novidade**: Implementação multi-provider com suporte a Google Gemini (gratuito), OpenAI (alta qualidade) e Anthropic/Voyage AI (especializado em domínio legal).
+
+## Arquitetura Multi-Provider
 
 ### Componentes Principais
 
 1. **Vector Database (pg_vector)**: Armazena embeddings de documentos legais
-2. **Legal Documents**: Leis, regulamentos, jurisprudência indexada
-3. **Knowledge Base**: Diretrizes e melhores práticas
-4. **Context Builder**: Constrói contexto relevante para agentes
-5. **Search Service**: Busca por similaridade vetorial
+2. **Multi-Provider Engine**: Sistema de embeddings com fallback automático
+3. **Legal Documents**: Leis, regulamentos, jurisprudência indexada
+4. **Knowledge Base**: Diretrizes e melhores práticas
+5. **Context Builder**: Constrói contexto relevante para agentes
+6. **Search Service**: Busca por similaridade vetorial
+
+### Providers Disponíveis
+
+#### 🥇 Google Gemini (Default)
+- **Modelo**: `models/embedding-001`
+- **Dimensões**: 768
+- **Custo**: Gratuito (com limites)
+- **Vantagens**: 
+  - Ótimo para português brasileiro
+  - Gratuito no free tier
+  - Boa performance em textos jurídicos
+- **Limites Free Tier**:
+  - 1,500 requests/dia
+  - 15 requests/minuto
+- **Status**: ✅ Implementado e testado
+
+#### 🥈 OpenAI (Fallback)
+- **Modelo**: `text-embedding-3-small`
+- **Dimensões**: 1536
+- **Custo**: Pago ($0.02 / 1M tokens)
+- **Vantagens**:
+  - Melhor qualidade geral
+  - Mais dimensões (1536)
+  - API estável e rápida
+- **Status**: ✅ Implementado, aguardando OPENAI_API_KEY
+
+#### 🥉 Anthropic/Voyage AI (Futuro)
+- **Modelo**: Voyage AI (especializado)
+- **Dimensões**: 1024
+- **Custo**: A definir
+- **Vantagens**:
+  - Especializado em domínio legal
+  - Alta precisão para contratos
+- **Status**: 🔄 Placeholder implementado
 
 ### Fluxo de Dados
 
 ```
-Consulta → Embedding → Busca Vetorial → Contexto → Agente → Análise Enriquecida
+Consulta → [Provider Selection] → Embedding → Busca Vetorial → Contexto → Agente → Análise Enriquecida
+                ↓
+         Gemini > OpenAI > Anthropic
+```
+
+### Auto-Seleção de Provider
+
+O sistema seleciona automaticamente o melhor provider disponível:
+
+```python
+Priority Chain:
+1. Gemini (se GOOGLE_API_KEY disponível) → Free + Bom para PT-BR
+2. OpenAI (se OPENAI_API_KEY disponível) → Melhor qualidade
+3. Anthropic (placeholder) → Futuro especializado
+
+Fallback automático se quota excedida ou API indisponível
 ```
 
 ## Configuração do Banco
@@ -25,7 +77,7 @@ Consulta → Embedding → Busca Vetorial → Contexto → Agente → Análise E
 ### 1. Habilitar pg_vector
 
 ```sql
--- No PostgreSQL
+-- No PostgreSQL (Supabase)
 CREATE EXTENSION IF NOT EXISTS vector;
 ```
 
@@ -44,18 +96,182 @@ alembic upgrade head
 
 ## Configuração de Ambiente
 
-### Variáveis Necessárias
+### Variáveis de API Keys
+
+O sistema suporta múltiplos providers. Configure pelo menos um:
 
 ```env
-# OpenAI para embeddings
-OPENAI_API_KEY=sk-your-openai-key
+# Opção 1: Google Gemini (Recomendado para começar - FREE)
+GOOGLE_API_KEY=your_google_api_key_here
 
-# Database com pg_vector
-DATABASE_URL=postgresql+asyncpg://user:pass@host:port/db
+# Opção 2: OpenAI (Melhor qualidade - PAGO)
+OPENAI_API_KEY=your_openai_api_key_here
 
-# Claude para análise
-CLAUDE_API_KEY=your-claude-key
+# Opção 3: Anthropic (Futuro - especializado legal)
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
 ```
+
+### Como Obter API Keys
+
+#### Google Gemini (Gratuito)
+1. Acesse: https://makersuite.google.com/app/apikey
+2. Clique em "Create API Key"
+3. Copie a key e adicione no `.env`
+4. **Limites Free**: 1,500 requests/dia, 15/minuto
+
+#### OpenAI (Pago)
+1. Acesse: https://platform.openai.com/api-keys
+2. Clique em "Create new secret key"
+3. Copie a key e adicione no `.env`
+4. **Custo**: ~$0.02 por 1M tokens
+
+#### Anthropic (Futuro)
+1. Em breve: integração com Voyage AI
+2. Embeddings especializados em documentos legais
+
+## Instalação de Dependências
+
+### Pacotes Python Necessários
+
+```bash
+# Instalar todos os providers
+pip install google-generativeai anthropic openai
+
+# Ou apenas o que você vai usar:
+pip install google-generativeai  # Para Gemini
+pip install openai                # Para OpenAI
+pip install anthropic             # Para Anthropic (futuro)
+```
+
+### Verificar Instalação
+
+```python
+# Test script
+python -c "import google.generativeai; import anthropic; print('✅ Packages OK')"
+```
+
+## Uso Programático
+
+### Exemplo Básico - Auto-Seleção de Provider
+
+```python
+from app.services.rag_service import get_rag_service
+
+# O sistema escolhe automaticamente o melhor provider disponível
+rag = get_rag_service()
+
+# Criar embeddings
+texts = [
+    "Contrato de locação com cláusula abusiva",
+    "Multa por rescisão antecipada de 3 meses"
+]
+
+embeddings = await rag.create_embeddings(texts)
+print(f"Provider usado: {rag.provider}")  # gemini, openai ou anthropic
+print(f"Dimensões: {len(embeddings[0])}")  # 768, 1536 ou 1024
+```
+
+### Exemplo Avançado - Provider Específico
+
+```python
+from app.services.rag_service import RAGService, EmbeddingProvider
+
+# Forçar uso do Gemini
+rag_gemini = RAGService(provider=EmbeddingProvider.GEMINI)
+
+# Forçar uso do OpenAI (se disponível)
+rag_openai = RAGService(provider=EmbeddingProvider.OPENAI)
+
+# Verificar qual provider está ativo
+print(f"Provider: {rag_gemini.provider.value}")
+print(f"Model: {rag_gemini.embedding_model}")
+print(f"Dimensions: {rag_gemini.embedding_dimension}")
+```
+
+### Busca Semântica com RAG
+
+```python
+from app.services.rag_service import get_rag_service
+from app.db.session import get_session
+
+async def search_legal_knowledge():
+    rag = get_rag_service()
+    
+    async with get_session() as db:
+        results = await rag.search_legal_knowledge(
+            query="cláusulas abusivas em contratos de locação",
+            contract_category="locacao",
+            document_types=["lei", "jurisprudencia"],
+            authority_level="high",
+            limit=10,
+            similarity_threshold=0.75,
+            db=db
+        )
+    
+    print(f"Found {len(results['legal_chunks'])} relevant chunks")
+    for chunk in results['legal_chunks']:
+        print(f"- {chunk.content[:100]}... (similarity: {chunk.similarity:.2f})")
+```
+
+### Tratamento de Erros e Fallback
+
+```python
+from app.services.rag_service import get_rag_service
+from google.api_core.exceptions import ResourceExhausted
+
+async def safe_embedding_creation(texts):
+    """Criação de embeddings com tratamento de quota"""
+    rag = get_rag_service()
+    
+    try:
+        embeddings = await rag.create_embeddings(texts)
+        return embeddings
+    
+    except ResourceExhausted:
+        # Quota do Gemini excedida
+        print("⚠️ Gemini quota exceeded, sistema tentará fallback automático")
+        
+        # Se tiver OpenAI configurado, o sistema usa automaticamente
+        # Caso contrário, você pode configurar OpenAI:
+        # 1. Adicione OPENAI_API_KEY no .env
+        # 2. Reinicie o serviço
+        # 3. Sistema fará fallback automaticamente
+        
+        raise Exception("Configure OPENAI_API_KEY para fallback automático")
+```
+
+## Comparação de Providers
+
+### Performance Benchmark
+
+| Provider | Dimensões | Custo/1M tokens | Tempo/embed | Qualidade PT-BR |
+|----------|-----------|-----------------|-------------|-----------------|
+| **Gemini** | 768 | 🆓 Gratuito* | ~0.3s | ⭐⭐⭐⭐ Excelente |
+| **OpenAI** | 1536 | $0.02 | ~0.1s | ⭐⭐⭐⭐⭐ Superior |
+| **Anthropic** | 1024 | TBD | TBD | ⭐⭐⭐⭐⭐ Legal-specific |
+
+*Sujeito a limites: 1,500/dia, 15/minuto no free tier
+
+### Quando Usar Cada Provider
+
+#### Use Gemini quando:
+- ✅ Começando o projeto (gratuito)
+- ✅ Desenvolvimento e testes
+- ✅ Volume moderado (< 1,500 requests/dia)
+- ✅ Textos em português brasileiro
+- ✅ Orçamento limitado
+
+#### Use OpenAI quando:
+- ✅ Produção com alto volume
+- ✅ Máxima qualidade necessária
+- ✅ Orçamento disponível
+- ✅ Busca mais precisa
+- ✅ Quota do Gemini excedida
+
+#### Use Anthropic quando:
+- ✅ Domínio legal específico (futuro)
+- ✅ Análise de contratos complexos
+- ✅ Necessita embeddings especializados
 
 ## Indexação de Conhecimento
 
@@ -191,6 +407,226 @@ precedents = await agent.get_legal_precedents(
 - Código Civil
 - Princípios contratuais
 - Direitos fundamentais
+
+## Troubleshooting
+
+### Erro: "Quota exceeded" (Gemini)
+
+**Problema**: Quota do Gemini Free Tier excedida
+
+```
+google.api_core.exceptions.ResourceExhausted: 429 You exceeded your current quota
+```
+
+**Soluções**:
+
+1. **Opção A - Aguardar reset** (recomendado para dev):
+   - Quota diária: Reset à meia-noite (PST)
+   - Quota por minuto: Reset após 60 segundos
+
+2. **Opção B - Configurar OpenAI** (recomendado para prod):
+   ```bash
+   # Adicione no .env
+   OPENAI_API_KEY=sk-your-key-here
+   
+   # Reinicie o serviço
+   # Sistema fará fallback automático para OpenAI
+   ```
+
+3. **Opção C - Upgrade Gemini** (futuro):
+   - Google oferecerá plano pago com quotas maiores
+
+### Erro: "GOOGLE_API_KEY not found"
+
+**Problema**: API key não configurada
+
+**Solução**:
+```bash
+# 1. Obtenha a key em https://makersuite.google.com/app/apikey
+# 2. Adicione no backend/.env
+echo "GOOGLE_API_KEY=your_key_here" >> backend/.env
+
+# 3. Reinicie o servidor
+cd backend
+python -m uvicorn main:app --reload
+```
+
+### Erro: "Import google.generativeai could not be resolved"
+
+**Problema**: Pacote não instalado
+
+**Solução**:
+```bash
+pip install google-generativeai anthropic
+```
+
+### Embeddings com Dimensões Erradas
+
+**Problema**: Mistura de embeddings de providers diferentes
+
+**Sintomas**:
+- Busca vetorial retorna resultados irrelevantes
+- Erro: "dimension mismatch" no pg_vector
+
+**Solução**: Use o script de migração (ver seção abaixo)
+
+### Performance Lenta
+
+**Problema**: Embeddings demorando muito
+
+**Diagnóstico**:
+```python
+import time
+from app.services.rag_service import get_rag_service
+
+rag = get_rag_service()
+start = time.time()
+await rag.create_embeddings(["test"])
+print(f"Time: {time.time() - start:.2f}s")
+```
+
+**Soluções**:
+- **Gemini**: ~0.3s/embedding (sequencial)
+- **OpenAI**: ~0.1s/embedding (batch de 100)
+- Para alto volume, use OpenAI
+
+## Melhores Práticas
+
+### 1. Lazy Initialization
+
+```python
+# ✅ CORRETO: Usa get_rag_service()
+from app.services.rag_service import get_rag_service
+
+rag = get_rag_service()  # Lazy loading
+```
+
+```python
+# ❌ ERRADO: Importação global
+from app.services.rag_service import rag_service  # Antigo, deprecated
+
+# Causará erro se API key não estiver configurada no startup
+```
+
+### 2. Batch Processing
+
+```python
+# ✅ CORRETO: Processa em batch
+texts = [...]  # 100 textos
+embeddings = await rag.create_embeddings(texts)  # Uma chamada
+
+# ❌ ERRADO: Um por um
+for text in texts:
+    emb = await rag.create_embeddings([text])  # 100 chamadas!
+```
+
+### 3. Cache de Embeddings
+
+```python
+# ✅ CORRETO: Cache em database
+async def get_cached_embedding(text: str, db):
+    # Verifica se já existe
+    cached = await db.query(LegalChunk).filter_by(content=text).first()
+    if cached:
+        return cached.embedding
+    
+    # Se não existe, cria e salva
+    embedding = await rag.create_embeddings([text])
+    chunk = LegalChunk(content=text, embedding=embedding[0])
+    db.add(chunk)
+    await db.commit()
+    return embedding[0]
+```
+
+### 4. Tratamento de Erros
+
+```python
+# ✅ CORRETO: Try/catch com fallback
+try:
+    embeddings = await rag.create_embeddings(texts)
+except ResourceExhausted:
+    # Log erro e tenta provider alternativo
+    logger.warning("Gemini quota exceeded")
+    # Sistema já tenta fallback automático
+    raise
+except Exception as e:
+    logger.error(f"Embedding error: {e}")
+    # Seu código de recuperação aqui
+```
+
+### 5. Monitoramento de Quota
+
+```python
+# Implementar contador de requests
+import redis
+
+async def check_gemini_quota():
+    """Verifica se está próximo do limite"""
+    r = redis.Redis()
+    count = r.incr('gemini_requests_today')
+    r.expire('gemini_requests_today', 86400)  # 24h
+    
+    if count > 1400:  # 93% do limite de 1500
+        logger.warning(f"Gemini quota quase excedida: {count}/1500")
+        # Mudar para OpenAI
+        return False
+    return True
+```
+
+## Migração Entre Providers
+
+Ver script detalhado em: `backend/scripts/migrate_embeddings.py`
+
+### Cenários de Migração
+
+#### 1. Gemini → OpenAI (Upgrade para Produção)
+
+```bash
+# Motivo: Maior qualidade e sem limites de quota
+python backend/scripts/migrate_embeddings.py \
+    --from gemini \
+    --to openai \
+    --batch-size 100
+```
+
+#### 2. OpenAI → Gemini (Redução de Custos)
+
+```bash
+# Motivo: Economizar em ambiente de desenvolvimento
+python backend/scripts/migrate_embeddings.py \
+    --from openai \
+    --to gemini \
+    --batch-size 10  # Menor batch por causa do rate limit
+```
+
+#### 3. Qualquer → Anthropic (Futu ro - Legal Specific)
+
+```bash
+# Quando Voyage AI estiver disponível
+python backend/scripts/migrate_embeddings.py \
+    --from gemini \
+    --to anthropic \
+    --batch-size 50
+```
+
+### Validação Pós-Migração
+
+```python
+# Verificar consistência após migração
+from app.services.rag_service import get_rag_service
+
+rag = get_rag_service()
+
+# Test query
+results = await rag.search_legal_knowledge(
+    query="cláusula abusiva",
+    db=db,
+    limit=10
+)
+
+print(f"Found {len(results['legal_chunks'])} results")
+# Se retornar 0 ou resultados irrelevantes, houve problema na migração
+```
 
 ## Métricas de Qualidade
 
