@@ -95,8 +95,8 @@ class AsyncContractProcessor:
         self.active_jobs: Dict[str, asyncio.Task] = {}
         self.websocket_connections: Dict[str, List[WebSocket]] = {}
         
-        # Services
-        self.agent_factory = AgentFactory()
+        # Services (initialize agent_factory later when needed with proper arguments)
+        self._agent_factory = None
         self.image_processor = DocumentImageProcessor()
         self.email_service = EmailService()
         self.rag_service = RAGService()
@@ -104,6 +104,18 @@ class AsyncContractProcessor:
         # Configuration
         self.max_concurrent_jobs = 5
         self.job_timeout_minutes = 30
+    
+    @property
+    def agent_factory(self):
+        """Lazy initialization of AgentFactory with required dependencies"""
+        if self._agent_factory is None:
+            from app.services.llm_client import UnifiedLLMService
+            from app.agents.factory import AgentFactory
+            
+            llm_service = UnifiedLLMService()
+            claude_client = llm_service.clients.get(list(llm_service.clients.keys())[0]) if llm_service.clients else None
+            self._agent_factory = AgentFactory(claude_client, self.rag_service)
+        return self._agent_factory
         
     async def create_job(
         self,

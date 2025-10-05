@@ -16,7 +16,7 @@ class RAGService:
     
     def __init__(self):
         # Configure OpenAI client
-        openai.api_key = settings.OPENAI_API_KEY
+        openai.api_key = getattr(settings, 'OPENAI_API_KEY', None)
         self.embedding_model = "text-embedding-3-small"  # OpenAI's latest embedding model
         self.embedding_dimension = 1536
     

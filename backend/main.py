@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1 import auth, contracts, chat, payments, signatures, image_processing, async_jobs, storage
+from app.api.v1.cross_product import recommendations, persona, journey
 from app.core.config import settings
 
 app = FastAPI(
@@ -29,6 +30,11 @@ app.include_router(signatures.router, prefix="/api/v1/signatures", tags=["signat
 app.include_router(image_processing.router, prefix="/api/v1", tags=["image-processing"])
 app.include_router(async_jobs.router, prefix="/api/v1/async", tags=["async-processing"])
 app.include_router(storage.router, prefix="/api/v1/storage", tags=["storage"])
+
+# Cross-Product Integration routers (Phase 1)
+app.include_router(recommendations.router, prefix="/api/v1/cross-product/recommendations", tags=["cross-product"])
+app.include_router(persona.router, prefix="/api/v1/cross-product/persona", tags=["cross-product"])
+app.include_router(journey.router, prefix="/api/v1/cross-product/journey", tags=["cross-product"])
 
 @app.get("/")
 async def root():

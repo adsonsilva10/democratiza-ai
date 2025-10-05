@@ -447,7 +447,7 @@ class UnifiedLLMService:
         
         for provider, config in router.llm_configs.items():
             try:
-                client = LLMClientFactory.create_client(config, self.api_keys)
+                client = LLMClientFactory.create_client_from_config(config, self.api_keys)
                 self.clients[provider] = client
                 print(f"✅ Cliente {provider.value} inicializado")
             except ValueError as e:
