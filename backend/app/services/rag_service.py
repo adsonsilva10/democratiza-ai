@@ -1,27 +1,164 @@
-from typing import List, Dict, Any, Optional, Union
+from typing import List, Dict, Any, Optional, Union, Literal
 import asyncio
 import openai
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text, and_, or_
 from sqlalchemy.orm import selectinload
 import numpy as np
+from enum import Enum
 from app.db.models import KnowledgeBase, LegalDocument, LegalChunk
 from app.core.config import settings
 import logging
 
+# Multi-provider imports
+try:
+    import google.generativeai as genai
+    GEMINI_AVAILABLE = True
+except ImportError:
+    GEMINI_AVAILABLE = False
+
+try:
+    from anthropic import Anthropic
+    ANTHROPIC_AVAILABLE = True
+except ImportError:
+    ANTHROPIC_AVAILABLE = False
+
 logger = logging.getLogger(__name__)
 
+class EmbeddingProvider(str, Enum):
+    """Supported embedding providers for RAG"""
+    GEMINI = "gemini"          # Google Gemini (default - we have key!)
+    OPENAI = "openai"          # OpenAI (fallback - when we add key)
+    ANTHROPIC = "anthropic"    # Anthropic Claude (future - needs Voyage AI)
+
 class RAGService:
-    """Retrieval-Augmented Generation service for legal knowledge"""
+    """Multi-provider Retrieval-Augmented Generation service for legal knowledge"""
     
-    def __init__(self):
-        # Configure OpenAI client
-        openai.api_key = getattr(settings, 'OPENAI_API_KEY', None)
+    def __init__(self, provider: Optional[EmbeddingProvider] = None):
+        """
+        Initialize RAG service with specified embedding provider.
+        
+        Args:
+            provider: Embedding provider to use. If None, auto-selects based on available API keys.
+                     Priority: Gemini (free/cheap) > OpenAI (best quality) > Anthropic (future)
+        """
+        self.provider = provider or self._auto_select_provider()
+        self._initialize_provider()
+    
+    def _auto_select_provider(self) -> EmbeddingProvider:
+        """Automatically select best available embedding provider"""
+        # Priority 1: Gemini (we have the key and it's free/cheap!)
+        google_key = getattr(settings, 'GOOGLE_API_KEY', None)
+        if google_key and GEMINI_AVAILABLE:
+            logger.info("Auto-selected Gemini embeddings (GOOGLE_API_KEY found)")
+            return EmbeddingProvider.GEMINI
+        
+        # Priority 2: OpenAI (best quality, but needs key)
+        openai_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if openai_key:
+            logger.info("Auto-selected OpenAI embeddings (OPENAI_API_KEY found)")
+            return EmbeddingProvider.OPENAI
+        
+        # Priority 3: Anthropic (future implementation)
+        anthropic_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
+        if anthropic_key and ANTHROPIC_AVAILABLE:
+            logger.warning("Anthropic embeddings not yet implemented, falling back to Gemini")
+            if google_key and GEMINI_AVAILABLE:
+                return EmbeddingProvider.GEMINI
+        
+        # Fallback: Try Gemini even without explicit check
+        if GEMINI_AVAILABLE:
+            logger.warning("No API keys found, attempting Gemini with environment key")
+            return EmbeddingProvider.GEMINI
+        
+        raise ValueError(
+            "No embedding provider available. Please set GOOGLE_API_KEY or OPENAI_API_KEY in .env"
+        )
+    
+    def _initialize_provider(self):
+        """Initialize the selected embedding provider with appropriate configuration"""
+        
+        if self.provider == EmbeddingProvider.GEMINI:
+            self._initialize_gemini()
+        elif self.provider == EmbeddingProvider.OPENAI:
+            self._initialize_openai()
+        elif self.provider == EmbeddingProvider.ANTHROPIC:
+            self._initialize_anthropic()
+    
+    def _initialize_gemini(self):
+        """Initialize Google Gemini embeddings"""
+        google_key = getattr(settings, 'GOOGLE_API_KEY', None)
+        if not google_key:
+            raise ValueError("GOOGLE_API_KEY not found in settings")
+        
+        if not GEMINI_AVAILABLE:
+            raise ImportError("google-generativeai package not installed. Run: pip install google-generativeai")
+        
+        genai.configure(api_key=google_key)
+        self.embedding_model = "models/embedding-001"  # Gemini embedding model
+        self.embedding_dimension = 768  # Gemini uses 768-dimensional embeddings
+        logger.info(f"✅ RAG initialized with Google Gemini embeddings (dimension: {self.embedding_dimension})")
+    
+    def _initialize_openai(self):
+        """Initialize OpenAI embeddings"""
+        openai_key = getattr(settings, 'OPENAI_API_KEY', None)
+        if not openai_key:
+            raise ValueError("OPENAI_API_KEY not found in settings")
+        
+        openai.api_key = openai_key
         self.embedding_model = "text-embedding-3-small"  # OpenAI's latest embedding model
-        self.embedding_dimension = 1536
+        self.embedding_dimension = 1536  # OpenAI uses 1536-dimensional embeddings
+        logger.info(f"✅ RAG initialized with OpenAI embeddings (dimension: {self.embedding_dimension})")
+    
+    def _initialize_anthropic(self):
+        """Initialize Anthropic embeddings (future implementation with Voyage AI)"""
+        logger.warning("⚠️ Anthropic embeddings not yet implemented. Falling back to Gemini.")
+        self.provider = EmbeddingProvider.GEMINI
+        self._initialize_gemini()
     
     async def create_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Create embeddings using OpenAI's API"""
+        """
+        Create embeddings using the configured provider.
+        
+        Args:
+            texts: List of text strings to embed
+            
+        Returns:
+            List of embedding vectors (dimension varies by provider)
+        """
+        if self.provider == EmbeddingProvider.GEMINI:
+            return await self._create_gemini_embeddings(texts)
+        elif self.provider == EmbeddingProvider.OPENAI:
+            return await self._create_openai_embeddings(texts)
+        elif self.provider == EmbeddingProvider.ANTHROPIC:
+            return await self._create_anthropic_embeddings(texts)
+        else:
+            raise ValueError(f"Unknown embedding provider: {self.provider}")
+    
+    async def _create_gemini_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Create embeddings using Google Gemini"""
+        try:
+            all_embeddings = []
+            
+            # Gemini processes one at a time (no batching in API)
+            for text in texts:
+                result = genai.embed_content(
+                    model=self.embedding_model,
+                    content=text,
+                    task_type="retrieval_document",  # Optimized for RAG
+                    title="Legal Contract Document"   # Optional: helps with context
+                )
+                all_embeddings.append(result['embedding'])
+            
+            logger.debug(f"Created {len(all_embeddings)} Gemini embeddings")
+            return all_embeddings
+            
+        except Exception as e:
+            logger.error(f"Error creating Gemini embeddings: {e}")
+            raise
+    
+    async def _create_openai_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """Create embeddings using OpenAI"""
         try:
             # Process in batches to handle rate limits
             batch_size = 100
@@ -42,11 +179,20 @@ class RAGService:
                 batch_embeddings = [item.embedding for item in response.data]
                 all_embeddings.extend(batch_embeddings)
             
+            logger.debug(f"Created {len(all_embeddings)} OpenAI embeddings")
             return all_embeddings
             
         except Exception as e:
-            logger.error(f"Error creating embeddings: {e}")
+            logger.error(f"Error creating OpenAI embeddings: {e}")
             raise
+    
+    async def _create_anthropic_embeddings(self, texts: List[str]) -> List[List[float]]:
+        """
+        Create embeddings using Anthropic/Voyage AI (future implementation).
+        Currently falls back to Gemini.
+        """
+        logger.warning("Anthropic embeddings not implemented yet, using Gemini fallback")
+        return await self._create_gemini_embeddings(texts)
     
     async def search_legal_knowledge(
         self, 
@@ -692,5 +838,12 @@ class RAGService:
             for chunk in results["legal_chunks"]
         ]
 
-# Global RAG service instance
-rag_service = RAGService()
+# Global RAG service instance (lazy initialization)
+rag_service = None
+
+def get_rag_service() -> RAGService:
+    """Get or create the global RAG service instance"""
+    global rag_service
+    if rag_service is None:
+        rag_service = RAGService()
+    return rag_service

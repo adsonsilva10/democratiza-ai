@@ -11,7 +11,7 @@ from dataclasses import dataclass
 
 from .llm_router import LLMRouter, ComplexityLevel
 from .llm_client import UnifiedLLMService, LLMRequest, LLMResponse
-from .rag_service import RAGService
+from .rag_service import get_rag_service
 
 @dataclass
 class ContractAnalysisResult:
@@ -30,7 +30,7 @@ class ContractAnalysisService:
     def __init__(self):
         self.llm_router = LLMRouter()
         self.llm_service = UnifiedLLMService()
-        self.rag_service = RAGService()  # Assumindo que existe
+        self.rag_service = get_rag_service()  # Lazy initialization
         
         # Templates de prompts especializados
         self.analysis_prompts = {

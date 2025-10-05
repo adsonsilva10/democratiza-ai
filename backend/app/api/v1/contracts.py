@@ -407,9 +407,9 @@ async def search_legal_knowledge(
     """Search legal knowledge base using RAG"""
     
     try:
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
-        results = await rag_service.search_legal_knowledge(
+        results = await get_rag_service().search_legal_knowledge(
             query=request.query,
             contract_category=request.contract_category,
             document_types=request.document_types,
@@ -455,7 +455,7 @@ async def get_enhanced_contract_analysis(
         )
     
     try:
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         from app.agents.factory import AgentFactory
         
         # Create agent factory with database session
@@ -506,9 +506,9 @@ async def get_legal_precedents(
     """Get legal precedents for specific contract clauses"""
     
     try:
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
-        precedents = await rag_service.get_legal_precedents(
+        precedents = await get_rag_service().get_legal_precedents(
             contract_clause=request.contract_clause,
             contract_type=request.contract_type,
             limit=5,
@@ -536,9 +536,9 @@ async def get_rag_statistics(
     """Get RAG knowledge base statistics"""
     
     try:
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
-        stats = await rag_service.get_knowledge_stats(db)
+        stats = await get_rag_service().get_knowledge_stats(db)
         
         return stats
         
@@ -562,7 +562,7 @@ async def record_user_consent(
     
     try:
         from app.agents.factory import AgentFactory
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
         # Converte strings para enums
         purposes = [ProcessingPurpose(purpose) for purpose in request.purposes]
@@ -617,7 +617,7 @@ async def analyze_contract_ethically(
     
     try:
         from app.agents.factory import AgentFactory
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
         # Inicializa factory com dependências
         factory = AgentFactory(
@@ -692,7 +692,7 @@ async def export_user_data(
     
     try:
         from app.agents.factory import AgentFactory
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
         factory = AgentFactory(None, rag_service)
         data = factory.get_user_data_summary(str(current_user.id))
@@ -719,7 +719,7 @@ async def delete_user_data(
     
     try:
         from app.agents.factory import AgentFactory
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
         factory = AgentFactory(None, rag_service)
         result = factory.delete_user_data(str(current_user.id))
@@ -753,7 +753,7 @@ async def get_compliance_report(
     
     try:
         from app.agents.factory import AgentFactory
-        from app.services.rag_service import rag_service
+        from app.services.rag_service import get_rag_service
         
         factory = AgentFactory(None, rag_service)
         report = factory.get_compliance_report()

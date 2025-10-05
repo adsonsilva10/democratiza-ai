@@ -22,7 +22,7 @@ except ImportError:
 from app.db.database import AsyncSessionLocal
 from app.db.models import Contract, User, RiskFactor
 from app.agents.factory import AgentFactory
-from app.services.rag_service import rag_service
+from app.services.rag_service import get_rag_service
 from app.services.email_service import email_service
 from app.services.ocr_service import ocr_service
 from app.services.llm_router import LLMRouter
@@ -324,7 +324,7 @@ class DocumentProcessor:
         # Initialize agent factory with proper clients
         # TODO: Initialize with actual Claude client and RAG service
         if not self.agent_factory:
-            self.agent_factory = AgentFactory(None, rag_service)
+            self.agent_factory = AgentFactory(None, get_rag_service())
         
         try:
             # Use agent factory for analysis

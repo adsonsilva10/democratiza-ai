@@ -7,7 +7,7 @@ import json
 from typing import List, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.database import AsyncSessionLocal
-from app.services.rag_service import rag_service
+from app.services.rag_service import get_rag_service
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -17,7 +17,7 @@ class LegalKnowledgeIndexer:
     """Indexes Brazilian legal documents for the RAG service"""
     
     def __init__(self):
-        self.rag_service = rag_service
+        self.rag_service = get_rag_service()
     
     async def index_basic_legal_framework(self):
         """Index basic Brazilian legal framework for contract law"""

@@ -15,7 +15,7 @@ import logging
 from app.services.email_service import EmailService
 from app.agents.factory import AgentFactory
 from app.services.image_processor import DocumentImageProcessor
-from app.services.rag_service import RAGService
+from app.services.rag_service import get_rag_service
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +99,7 @@ class AsyncContractProcessor:
         self._agent_factory = None
         self.image_processor = DocumentImageProcessor()
         self.email_service = EmailService()
-        self.rag_service = RAGService()
+        self.rag_service = get_rag_service()
         
         # Configuration
         self.max_concurrent_jobs = 5
