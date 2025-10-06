@@ -241,8 +241,9 @@ class DocumentProcessor:
         try:
             logger.info(f"Downloading file: {file_id_or_url}")
             
-            # If it's a file_id (from new R2 system), need to create a mock user for download
-            # In production, this should be called with proper user context
+            # If it's a file_id (from new R2 system), download using direct R2 access
+            # NOTE: Background workers use user_id=1 as system context
+            # In production, get actual user_id from contract.owner_id
             if not file_id_or_url.startswith('http'):
                 # This is a file_id, we need user context to download
                 # For now, create a temporary download using direct R2 access
@@ -286,11 +287,26 @@ class DocumentProcessor:
             raise ValueError(f"Unsupported file type: {mime_type}")
     
     async def _extract_text_from_pdf(self, pdf_content: bytes) -> tuple[str, float]:
-        """Extract text from PDF using OCR"""
-        # This would implement PDF to image conversion + OCR
-        # For now, return placeholder
-        logger.info("Extracting text from PDF")
-        return "Texto extraído do PDF...", 0.95
+        """Extract text from PDF using OCR service"""
+        try:
+            from app.services.ocr_service import OCRService
+            ocr_service = OCRService()
+            
+            if not ocr_service.available:
+                logger.warning("OCR service not available, using fallback")
+                return "OCR não disponível. Configure Google Cloud Vision.", 0.0
+            
+            logger.info("Extracting text from PDF via OCR")
+            ocr_result = await ocr_service.extract_text_from_pdf(pdf_content)
+            
+            text = ocr_result.get('text', '')
+            confidence = ocr_result.get('confidence', 0.0)
+            
+            return text, confidence
+            
+        except Exception as e:
+            logger.error(f"PDF extraction error: {e}")
+            return f"Erro na extração: {str(e)}", 0.0
     
     async def _extract_text_from_image(self, image_content: bytes) -> tuple[str, float]:
         """Extract text from image using Google Cloud Vision"""
@@ -321,10 +337,23 @@ class DocumentProcessor:
     async def _analyze_contract_with_agents(self, contract_text: str, contract_id: str) -> Dict[str, Any]:
         """Analyze contract using AI agent factory"""
         
-        # Initialize agent factory with proper clients
-        # TODO: Initialize with actual Claude client and RAG service
+        # Initialize agent factory with proper LLM and RAG services
         if not self.agent_factory:
-            self.agent_factory = AgentFactory(None, get_rag_service())
+            from app.services.llm_client import UnifiedLLMService
+            
+            llm_service = UnifiedLLMService()
+            claude_client = None
+            
+            # Try to get Claude client
+            for client_name, client in llm_service.clients.items():
+                if 'anthropic' in client_name.lower() or 'claude' in client_name.lower():
+                    claude_client = client
+                    break
+            
+            if not claude_client and llm_service.clients:
+                claude_client = list(llm_service.clients.values())[0]
+            
+            self.agent_factory = AgentFactory(claude_client, get_rag_service())
         
         try:
             # Use agent factory for analysis

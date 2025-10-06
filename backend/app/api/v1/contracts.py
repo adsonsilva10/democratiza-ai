@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form, Request, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -15,8 +15,42 @@ from app.core.config import settings
 from app.legal.privacy_service import ProcessingPurpose
 from app.services.contract_analysis_service import contract_analysis_service
 from app.services.llm_router import LLMProvider
+from app.services.storage_service import get_r2_service
+from app.services.async_processor import AsyncContractProcessor
 
 router = APIRouter()
+
+# Initialize processor
+async_processor = AsyncContractProcessor()
+
+# Helper function to get initialized AgentFactory
+def get_agent_factory(db: AsyncSession = None):
+    """Get initialized AgentFactory with LLM client and RAG service"""
+    from app.services.rag_service import get_rag_service
+    from app.services.llm_client import UnifiedLLMService
+    
+    # Get RAG service
+    rag_service = get_rag_service()
+    
+    # Initialize LLM service and get Claude client
+    llm_service = UnifiedLLMService()
+    claude_client = None
+    
+    # Try to get an available Claude client
+    for client_name, client in llm_service.clients.items():
+        if 'anthropic' in client_name.lower() or 'claude' in client_name.lower():
+            claude_client = client
+            break
+    
+    # If no Claude client, use first available
+    if not claude_client and llm_service.clients:
+        claude_client = list(llm_service.clients.values())[0]
+    
+    return AgentFactory(
+        claude_client=claude_client,
+        rag_service=rag_service,
+        db_session=db
+    )
 
 # Pydantic models
 class ContractCreate(BaseModel):
@@ -130,6 +164,7 @@ def validate_file(file: UploadFile) -> bool:
 async def upload_contract(
     file: UploadFile = File(...),
     title: str = Form(...),
+    background_tasks: BackgroundTasks = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -157,8 +192,49 @@ async def upload_contract(
         await db.commit()
         await db.refresh(contract)
         
-        # TODO: Implement file upload to Cloudflare R2
-        # TODO: Queue document processing task
+        # Upload file to Cloudflare R2
+        r2_service = get_r2_service()
+        if r2_service:
+            try:
+                file_content = await file.read()
+                file_key = f"contracts/{current_user.id}/{contract.id}/{file.filename}"
+                
+                file_url = await r2_service.upload_file(
+                    file_content=file_content,
+                    file_key=file_key,
+                    content_type=file.content_type
+                )
+                
+                # Update contract with storage info
+                contract.storage_path = file_key
+                contract.storage_url = file_url
+                await db.commit()
+                
+            except Exception as upload_error:
+                # Log but don't fail - file can be reprocessed
+                print(f"R2 upload error: {upload_error}")
+        
+        # Queue document processing task asynchronously
+        try:
+            job_id = await async_processor.create_job(
+                contract_id=str(contract.id),
+                user_id=str(current_user.id),
+                file_path=contract.storage_path or file.filename,
+                metadata={
+                    'title': title,
+                    'filename': file.filename,
+                    'mime_type': file.content_type
+                }
+            )
+            
+            # Start processing in background
+            await async_processor.start_processing(job_id)
+            
+        except Exception as processing_error:
+            print(f"Processing queue error: {processing_error}")
+            # Update status to failed
+            contract.processing_status = "failed"
+            await db.commit()
         
         return ContractResponse(
             id=str(contract.id),
@@ -352,9 +428,33 @@ async def reanalyze_contract(
     contract.processing_status = "processing"
     await db.commit()
     
-    # TODO: Queue reanalysis task
-    
-    return {"message": "Contract queued for reanalysis"}
+    # Queue reanalysis task
+    try:
+        job_id = await async_processor.create_job(
+            contract_id=contract_id,
+            user_id=str(current_user.id),
+            file_path=contract.storage_path or contract.original_filename,
+            metadata={
+                'title': contract.title,
+                'reanalysis': True
+            }
+        )
+        
+        # Start reprocessing
+        await async_processor.start_processing(job_id)
+        
+        return {
+            "message": "Contract queued for reanalysis",
+            "job_id": job_id
+        }
+        
+    except Exception as e:
+        contract.processing_status = "failed"
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to queue reanalysis: {str(e)}"
+        )
 
 @router.delete("/{contract_id}")
 async def delete_contract(
@@ -376,10 +476,18 @@ async def delete_contract(
             detail="Contract not found"
         )
     
+    # Delete file from Cloudflare R2 if stored
+    if contract.storage_path:
+        r2_service = get_r2_service()
+        if r2_service:
+            try:
+                await r2_service.delete_file(contract.storage_path)
+            except Exception as delete_error:
+                # Log but don't fail the deletion
+                print(f"R2 deletion error: {delete_error}")
+    
     await db.delete(contract)
     await db.commit()
-    
-    # TODO: Delete file from Cloudflare R2
     
     return {"message": "Contract deleted successfully"}
 
@@ -455,15 +563,8 @@ async def get_enhanced_contract_analysis(
         )
     
     try:
-        from app.services.rag_service import get_rag_service
-        from app.agents.factory import AgentFactory
-        
         # Create agent factory with database session
-        agent_factory = AgentFactory(
-            claude_client=None,  # TODO: Initialize Claude client
-            rag_service=rag_service,
-            db_session=db
-        )
+        agent_factory = get_agent_factory(db)
         
         # Get enhanced analysis using RAG
         enhanced_analysis = await agent_factory.analyze_contract(
@@ -556,7 +657,8 @@ async def get_rag_statistics(
 async def record_user_consent(
     request: ConsentRequest,
     http_request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """Registra consentimento do usuário para tratamento de dados (LGPD)"""
     
@@ -572,7 +674,7 @@ async def record_user_consent(
         user_agent = http_request.headers.get("user-agent", "")
         
         # Cria factory e registra consentimento
-        factory = AgentFactory(None, rag_service)  # Claude client não necessário aqui
+        factory = get_agent_factory(db)
         result = factory.record_user_consent(
             user_id=str(current_user.id),
             purposes=purposes,
@@ -616,15 +718,8 @@ async def analyze_contract_ethically(
     """
     
     try:
-        from app.agents.factory import AgentFactory
-        from app.services.rag_service import get_rag_service
-        
-        # Inicializa factory com dependências
-        factory = AgentFactory(
-            claude_client=None,  # Será inicializado internamente
-            rag_service=rag_service,
-            db_session=db
-        )
+        # Inicializa factory com dependências completas
+        factory = get_agent_factory(db)
         
         # Executa análise ética completa
         result = await factory.analyze_contract_ethically(
@@ -686,15 +781,13 @@ async def analyze_contract_ethically(
 
 @router.get("/ethical/user-data", response_model=UserDataExportResponse)
 async def export_user_data(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """Exporta dados do usuário (direito de portabilidade - LGPD Art. 18, V)"""
     
     try:
-        from app.agents.factory import AgentFactory
-        from app.services.rag_service import get_rag_service
-        
-        factory = AgentFactory(None, rag_service)
+        factory = get_agent_factory(db)
         data = factory.get_user_data_summary(str(current_user.id))
         
         if data.get("status") == "error":
@@ -713,15 +806,13 @@ async def export_user_data(
 
 @router.delete("/ethical/user-data", response_model=DataDeletionResponse)
 async def delete_user_data(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """Deleta dados do usuário (direito de eliminação - LGPD Art. 18, VI)"""
     
     try:
-        from app.agents.factory import AgentFactory
-        from app.services.rag_service import get_rag_service
-        
-        factory = AgentFactory(None, rag_service)
+        factory = get_agent_factory(db)
         result = factory.delete_user_data(str(current_user.id))
         
         if result.get("status") == "error":
@@ -740,7 +831,8 @@ async def delete_user_data(
 
 @router.get("/ethical/compliance-report", response_model=ComplianceReportResponse)
 async def get_compliance_report(
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
 ):
     """Gera relatório de conformidade ética e legal (apenas para administradores)"""
     
@@ -752,10 +844,7 @@ async def get_compliance_report(
     #     )
     
     try:
-        from app.agents.factory import AgentFactory
-        from app.services.rag_service import get_rag_service
-        
-        factory = AgentFactory(None, rag_service)
+        factory = get_agent_factory(db)
         report = factory.get_compliance_report()
         
         return ComplianceReportResponse(**report)
@@ -948,18 +1037,41 @@ async def upload_and_analyze_contract_smart(
         if file.content_type == 'text/plain':
             contract_text = file_content.decode('utf-8')
         elif file.content_type == 'application/pdf':
-            # TODO: Implementar extração de PDF com OCR
-            contract_text = "Extração de PDF ainda não implementada. Use texto plano."
-            raise HTTPException(
-                status_code=501,
-                detail="Extração de PDF será implementada em breve. Use análise por texto."
-            )
+            # Usar OCR service para extração de PDF
+            from app.services.ocr_service import OCRService
+            ocr_service = OCRService()
+            
+            if not ocr_service.available:
+                raise HTTPException(
+                    status_code=501,
+                    detail="Serviço de OCR não configurado. Configure Google Cloud Vision para processar PDFs."
+                )
+            
+            ocr_result = await ocr_service.extract_text_from_pdf(file_content)
+            if ocr_result.get('error'):
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Erro ao extrair texto do PDF: {ocr_result['error']}"
+                )
+            contract_text = ocr_result.get('text', '')
         else:
-            # TODO: Implementar extração de DOC/DOCX
-            raise HTTPException(
-                status_code=501,
-                detail="Extração de DOC/DOCX será implementada em breve. Use análise por texto."
-            )
+            # Suporte para outros formatos via OCR
+            from app.services.ocr_service import OCRService
+            ocr_service = OCRService()
+            
+            if not ocr_service.available:
+                raise HTTPException(
+                    status_code=501,
+                    detail="Tipo de arquivo não suportado sem OCR configurado. Use texto plano ou configure Google Cloud Vision."
+                )
+            
+            ocr_result = await ocr_service.extract_text_from_file(file_content, file.filename)
+            if ocr_result.get('error'):
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Erro ao extrair texto: {ocr_result['error']}"
+                )
+            contract_text = ocr_result.get('text', '')
         
         # Parse dos metadados
         metadata = {}
