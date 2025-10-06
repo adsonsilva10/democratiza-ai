@@ -593,5 +593,6 @@ class CloudflareR2Service:
                 print(f"[STORAGE AUDIT] {operation} | {file_id} | {user_id} | {success}")
 
 
-# Instância global do serviço
-r2_service = CloudflareR2Service()
+# Instância global do serviço - será inicializada apenas quando necessária
+# para evitar problemas de SSL/conexão no startup
+r2_service = None  # Inicializado via lazy loading em dependencies ou no primeiro uso
