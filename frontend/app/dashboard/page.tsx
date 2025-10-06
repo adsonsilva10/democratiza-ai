@@ -58,85 +58,28 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadDashboardData = async () => {
-      // Simular carregamento de dados da API
+      // TODO: Buscar dados reais da API
+      // Por enquanto, inicializar com estado vazio
       setTimeout(() => {
         setUserProfile({
-          name: 'Adson Silva',
-          planType: 'professional',
-          contractsAnalyzed: 23,
-          signaturesCompleted: 12,
-          hasAnalyzedContracts: true // Mude para false para testar estado inicial
+          name: 'Usuário',
+          planType: 'free',
+          contractsAnalyzed: 0,
+          signaturesCompleted: 0,
+          hasAnalyzedContracts: false // Estado inicial sem contratos
         })
 
         setInsights({
-          economiaTotal: 8547.30,
-          riscosEvitados: 12,
-          contratosMaisArriscados: ['Telecomunicações', 'Financeiro', 'Locação'],
-          alertasAtivos: [
-            {
-              id: '1',
-              tipo: 'prazo',
-              titulo: 'Contrato de Internet Vencendo',
-              descricao: 'Seu contrato com a Vivo vence em 15 dias. Hora de renegociar!',
-              severidade: 'alta',
-              dataLimite: '2025-10-15',
-              acao: 'Analisar opções de renovação'
-            },
-            {
-              id: '2',
-              tipo: 'oportunidade',
-              titulo: 'Economia Potencial Identificada',
-              descricao: 'Detectamos cláusulas em 3 contratos que podem gerar R$ 1.200 de economia',
-              severidade: 'média'
-            },
-            {
-              id: '3',
-              tipo: 'risco',
-              titulo: 'Cláusula Abusiva Detectada',
-              descricao: 'Contrato de cartão de crédito possui taxa de juros acima do permitido',
-              severidade: 'crítica'
-            }
-          ],
-          tendenciasMensais: [
-            { mes: 'Jul', contratos: 8, economia: 2100, riscos: 3 },
-            { mes: 'Ago', contratos: 12, economia: 3200, riscos: 5 },
-            { mes: 'Set', contratos: 15, economia: 4500, riscos: 7 }
-          ],
-          recomendacoes: [
-            {
-              id: '1',
-              categoria: 'economia',
-              titulo: 'Renegociar taxa do cartão de crédito',
-              valor: 450.00,
-              confianca: 85
-            },
-            {
-              id: '2',
-              categoria: 'juridico',
-              titulo: 'Revisar cláusula de reajuste do aluguel',
-              valor: 280.00,
-              confianca: 92
-            },
-            {
-              id: '3',
-              categoria: 'negociacao',
-              titulo: 'Solicitar desconto no plano de internet',
-              valor: 120.00,
-              confianca: 78
-            }
-          ],
-          proximasAcoes: [
-            {
-              id: '1',
-              titulo: 'Revisar contrato do cartão',
-              descricao: 'Análise urgente necessária devido a cláusulas abusivas',
-              urgencia: 'alta',
-              prazo: '3 dias'
-            }
-          ]
+          economiaTotal: 0,
+          riscosEvitados: 0,
+          contratosMaisArriscados: [],
+          alertasAtivos: [],
+          tendenciasMensais: [],
+          recomendacoes: [],
+          proximasAcoes: []
         })
         setIsLoading(false)
-      }, 1500)
+      }, 800)
     }
 
     loadDashboardData()

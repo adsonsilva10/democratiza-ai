@@ -7,53 +7,9 @@ export default function HistoricoPage() {
   const [filter, setFilter] = useState('todos')
   const router = useRouter()
 
-  // Dados simulados com status de assinatura
-  const contratos = [
-    {
-      id: 1,
-      nome: 'Contrato de Locação - Apto 101',
-      data: '2025-09-20',
-      tipo: 'Locação',
-      risco: 'Alto',
-      riscoColor: 'bg-red-100 text-red-800',
-      arquivo: 'contrato_locacao_101.pdf',
-      assinado: false,
-      podeAssinar: true
-    },
-    {
-      id: 2,
-      nome: 'Contrato de Internet - Fibra 200MB',
-      data: '2025-09-18',
-      tipo: 'Telecomunicações',
-      risco: 'Médio',
-      riscoColor: 'bg-yellow-100 text-yellow-800',
-      arquivo: 'contrato_internet_fibra.pdf',
-      assinado: true,
-      podeAssinar: false
-    },
-    {
-      id: 3,
-      nome: 'Contrato de Financiamento Veicular',
-      data: '2025-09-15',
-      tipo: 'Financeiro',
-      risco: 'Baixo',
-      riscoColor: 'bg-green-100 text-green-800',
-      arquivo: 'financiamento_veiculo.pdf',
-      assinado: false,
-      podeAssinar: true
-    },
-    {
-      id: 4,
-      nome: 'Contrato de Cartão de Crédito Premium',
-      data: '2025-09-12',
-      tipo: 'Financeiro',
-      risco: 'Alto',
-      riscoColor: 'bg-red-100 text-red-800',
-      arquivo: 'cartao_credito_premium.pdf',
-      assinado: true,
-      podeAssinar: false
-    }
-  ]
+  // TODO: Buscar contratos reais da API
+  // Por enquanto, inicializar vazio
+  const contratos: any[] = []
 
   const filteredContratos = filter === 'todos' 
     ? contratos 
@@ -165,7 +121,29 @@ export default function HistoricoPage() {
           </h2>
         </div>
         <div className="divide-y divide-gray-200">
-          {filteredContratos.map((contrato) => (
+          {filteredContratos.length === 0 ? (
+            // Estado vazio
+            <div className="p-8 sm:p-12 text-center">
+              <div className="mx-auto w-16 h-16 mb-4 text-gray-400">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Nenhum contrato analisado ainda
+              </h3>
+              <p className="text-gray-500 mb-6">
+                Faça o upload do seu primeiro contrato para começar a análise
+              </p>
+              <button
+                onClick={() => router.push('/dashboard/analise')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                📄 Analisar Primeiro Contrato
+              </button>
+            </div>
+          ) : (
+            filteredContratos.map((contrato) => (
             <div key={contrato.id} className="p-4 sm:p-6 hover:bg-gray-50 transition-colors">
               
               {/* Mobile Layout */}
@@ -316,7 +294,8 @@ export default function HistoricoPage() {
                 </div>
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
     </div>
