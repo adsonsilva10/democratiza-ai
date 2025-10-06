@@ -20,8 +20,7 @@ class ComplexityLevel(Enum):
 class LLMProvider(Enum):
     """Provedores de LLM disponíveis"""
     GEMINI_FLASH = "gemini_flash"       # Ultra-barato - triagem rápida
-    GROQ_LLAMA = "groq_llama"           # Mais barato - contratos simples
-    GEMINI_PRO = "gemini_pro"           # Econômico - contratos médios
+    GEMINI_PRO = "gemini_pro"           # Econômico - contratos simples/médios
     ANTHROPIC_HAIKU = "anthropic_haiku" # Custo médio - contratos médios
     ANTHROPIC_SONNET = "anthropic_sonnet" # Alto custo - contratos complexos
     ANTHROPIC_OPUS = "anthropic_opus"   # Máximo custo - casos especializados
@@ -256,16 +255,6 @@ class LLMRouter:
                 quality="very_good"
             ),
             
-            LLMProvider.GROQ_LLAMA: LLMConfig(
-                provider=LLMProvider.GROQ_LLAMA,
-                model_name="llama-3.1-70b-versatile",
-                cost_per_1k_tokens=0.0005,  # $0.0005 por 1k tokens
-                max_context=32000,
-                best_for=["contratos simples", "análise básica", "classificação"],
-                speed="fast",
-                quality="good"
-            ),
-            
             LLMProvider.ANTHROPIC_HAIKU: LLMConfig(
                 provider=LLMProvider.ANTHROPIC_HAIKU,
                 model_name="claude-3-haiku-20240307",
@@ -428,7 +417,7 @@ class LLMRouter:
         if analysis_type == "quick":
             # Para análise rápida, usar modelo mais barato se possível
             if complexity == ComplexityLevel.MEDIO:
-                return LLMProvider.GROQ_LLAMA
+                return LLMProvider.GEMINI_PRO
             elif complexity == ComplexityLevel.COMPLEXO:
                 return LLMProvider.ANTHROPIC_HAIKU
         
@@ -441,7 +430,7 @@ class LLMRouter:
         
         # Ajuste baseado no tamanho do texto
         if text_length > 50000:  # Textos muito grandes
-            if base_model == LLMProvider.GROQ_LLAMA:
+            if base_model == LLMProvider.GEMINI_PRO:
                 return LLMProvider.ANTHROPIC_HAIKU  # Melhor para contextos longos
         
         return base_model
@@ -481,8 +470,8 @@ class LLMRouter:
         if selected_model == LLMProvider.ANTHROPIC_OPUS:
             recommendations.append("💰 Alto custo - revisar se complexidade justifica")
         
-        if selected_model == LLMProvider.GROQ_LLAMA:
-            recommendations.append("⚡ Análise econômica e rápida selecionada")
+        if selected_model == LLMProvider.GEMINI_PRO:
+            recommendations.append("⚡ Análise econômica e balanceada selecionada")
         
         return recommendations
     

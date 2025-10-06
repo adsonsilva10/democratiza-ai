@@ -923,7 +923,7 @@ async def analyze_contract_smart(
     - **contract_text**: Texto completo do contrato
     - **contract_metadata**: Metadados em JSON (valor, tipo, duração, etc.)
     - **analysis_depth**: quick, standard, detailed, comprehensive  
-    - **force_model**: groq_llama, anthropic_haiku, anthropic_sonnet, anthropic_opus
+    - **force_model**: gemini_flash, gemini_pro, anthropic_haiku, anthropic_sonnet, anthropic_opus
     - **include_rag**: Incluir consulta à base de conhecimento jurídico
     """
     
@@ -947,7 +947,7 @@ async def analyze_contract_smart(
             except ValueError:
                 raise HTTPException(
                     status_code=400,
-                    detail=f"Modelo '{force_model}' não suportado. Use: groq_llama, anthropic_haiku, anthropic_sonnet, anthropic_opus"
+                    detail=f"Modelo '{force_model}' não suportado. Use: gemini_flash, gemini_pro, anthropic_haiku, anthropic_sonnet, anthropic_opus"
                 )
         
         # Validação da profundidade de análise
@@ -1015,7 +1015,7 @@ async def upload_and_analyze_contract_smart(
     - **file**: Arquivo do contrato (PDF, DOC, DOCX, TXT)
     - **contract_metadata**: Metadados em JSON (valor, tipo, duração, etc.)
     - **analysis_depth**: quick, standard, detailed, comprehensive
-    - **force_model**: groq_llama, anthropic_haiku, anthropic_sonnet, anthropic_opus  
+    - **force_model**: gemini_flash, gemini_pro, anthropic_haiku, anthropic_sonnet, anthropic_opus  
     - **include_rag**: Incluir consulta à base de conhecimento jurídico
     """
     

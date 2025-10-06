@@ -77,90 +77,6 @@ class BaseLLMClient(ABC):
             (current_avg * (total_requests - 1) + response_time) / total_requests
         )
 
-class GroqLlamaClient(BaseLLMClient):
-    """Cliente para Groq Llama (modelo econômico)"""
-    
-    def __init__(self, config: LLMConfig, api_key: str):
-        super().__init__(config, api_key)
-        self.base_url = "https://api.groq.com/openai/v1"
-        self.headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
-    
-    async def generate_response(self, request: LLMRequest) -> LLMResponse:
-        """Gera resposta usando Groq Llama"""
-        start_time = datetime.now()
-        
-        # Preparar mensagens
-        messages = []
-        if request.system_prompt:
-            messages.append({"role": "system", "content": request.system_prompt})
-        messages.extend(request.messages)
-        
-        payload = {
-            "model": self.config.model_name,
-            "messages": messages,
-            "max_tokens": request.max_tokens,
-            "temperature": request.temperature,
-            "stream": False
-        }
-        
-        async with aiohttp.ClientSession() as session:
-            try:
-                async with session.post(
-                    f"{self.base_url}/chat/completions",
-                    headers=self.headers,
-                    json=payload,
-                    timeout=aiohttp.ClientTimeout(total=60)
-                ) as response:
-                    
-                    if response.status != 200:
-                        error_text = await response.text()
-                        raise Exception(f"Groq API Error {response.status}: {error_text}")
-                    
-                    result = await response.json()
-                    
-                    response_time = int((datetime.now() - start_time).total_seconds() * 1000)
-                    
-                    # Extrair dados da resposta
-                    content = result['choices'][0]['message']['content']
-                    usage = result.get('usage', {})
-                    
-                    input_tokens = usage.get('prompt_tokens', 0)
-                    output_tokens = usage.get('completion_tokens', 0)
-                    total_tokens = usage.get('total_tokens', input_tokens + output_tokens)
-                    
-                    cost = self._calculate_cost(input_tokens, output_tokens)
-                    
-                    # Atualizar estatísticas
-                    self._update_stats(total_tokens, cost, response_time)
-                    
-                    return LLMResponse(
-                        content=content,
-                        model=self.config.model_name,
-                        provider=LLMProvider.GROQ_LLAMA,
-                        tokens_used={
-                            'input': input_tokens,
-                            'output': output_tokens,
-                            'total': total_tokens
-                        },
-                        cost_usd=cost,
-                        response_time_ms=response_time,
-                        metadata={
-                            'finish_reason': result['choices'][0].get('finish_reason'),
-                            'usage': usage
-                        }
-                    )
-            
-            except Exception as e:
-                raise Exception(f"Erro ao comunicar com Groq: {str(e)}")
-    
-    async def stream_response(self, request: LLMRequest) -> AsyncGenerator[str, None]:
-        """Streaming não implementado para Groq nesta versão"""
-        response = await self.generate_response(request)
-        yield response.content
-
 class AnthropicClient(BaseLLMClient):
     """Cliente para modelos Anthropic Claude"""
     
@@ -368,8 +284,7 @@ class LLMClientFactory:
         from ..core.config import settings
         self.api_keys = {
             'GOOGLE_API_KEY': getattr(settings, 'GOOGLE_API_KEY', None),
-            'ANTHROPIC_API_KEY': getattr(settings, 'ANTHROPIC_API_KEY', None),
-            'GROQ_API_KEY': getattr(settings, 'GROQ_API_KEY', None)
+            'ANTHROPIC_API_KEY': getattr(settings, 'ANTHROPIC_API_KEY', None)
         }
     
     def create_client(self, provider_name: str) -> BaseLLMClient:
@@ -383,7 +298,6 @@ class LLMClientFactory:
             'GEMINI_PRO': LLMProvider.GEMINI_PRO,
             'CLAUDE_SONNET': LLMProvider.ANTHROPIC_SONNET,
             'CLAUDE_OPUS': LLMProvider.ANTHROPIC_OPUS,
-            'GROQ_LLAMA': LLMProvider.GROQ_LLAMA,
             'ANTHROPIC_HAIKU': LLMProvider.ANTHROPIC_HAIKU
         }
         
@@ -398,13 +312,7 @@ class LLMClientFactory:
     def create_client_from_config(config: LLMConfig, api_keys: Dict[str, str]) -> BaseLLMClient:
         """Cria cliente apropriado baseado na configuração"""
         
-        if config.provider == LLMProvider.GROQ_LLAMA:
-            api_key = api_keys.get('GROQ_API_KEY')
-            if not api_key:
-                raise ValueError("GROQ_API_KEY não encontrada")
-            return GroqLlamaClient(config, api_key)
-        
-        elif config.provider in [LLMProvider.GEMINI_FLASH, LLMProvider.GEMINI_PRO]:
+        if config.provider in [LLMProvider.GEMINI_FLASH, LLMProvider.GEMINI_PRO]:
             api_key = api_keys.get('GOOGLE_API_KEY')
             if not api_key:
                 raise ValueError("GOOGLE_API_KEY não encontrada")
@@ -435,7 +343,6 @@ class UnifiedLLMService:
         """Carrega chaves de API das variáveis de ambiente"""
         return {
             'ANTHROPIC_API_KEY': os.getenv('ANTHROPIC_API_KEY', ''),
-            'GROQ_API_KEY': os.getenv('GROQ_API_KEY', ''),
             'GOOGLE_API_KEY': os.getenv('GOOGLE_API_KEY', '')
         }
     
