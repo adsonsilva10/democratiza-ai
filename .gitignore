@@ -17,6 +17,9 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.private
+*/.env.private
+**/.env.private
 
 # IDE
 .vscode/
@@ -123,3 +126,6 @@ public
 # API Keys and secrets
 secrets/
 .secrets/
+google-cloud-credentials.json
+**/credentials/*.json
+backend/credentials/
