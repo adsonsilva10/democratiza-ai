@@ -1,4 +1,4 @@
-// Mock API client for development
+// Real API client for backend connection
 export interface Contract {
   id: string
   title: string
@@ -12,51 +12,69 @@ export interface Contract {
 class ApiClient {
   private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'
 
-  async uploadContract(file: File, title?: string): Promise<{ data: Contract }> {
-    // Simulate upload with delay
-    await new Promise(resolve => setTimeout(resolve, 1000))
+  private async request(endpoint: string, options: RequestInit = {}) {
+    const url = `${this.baseURL}${endpoint}`
     
-    const contractId = Math.random().toString(36).substr(2, 9)
+    // Get token from localStorage
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth-token') : null
     
-    return {
-      data: {
-        id: contractId,
-        title: title || file.name,
-        status: 'processing'
-      }
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...(options.headers as Record<string, string>),
     }
+    
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    })
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: 'Request failed' }))
+      throw new Error(error.detail || `HTTP ${response.status}`)
+    }
+    
+    return response.json()
+  }
+
+  async uploadContract(file: File, title?: string): Promise<{ data: Contract }> {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (title) formData.append('title', title)
+    
+    const response = await this.request('/contracts', {
+      method: 'POST',
+      headers: {}, // FormData sets its own Content-Type
+      body: formData,
+    })
+    
+    return { data: response }
   }
 
   async getContract(contractId: string): Promise<{ data: Contract }> {
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    // Simulate processing completion after some time
-    const isCompleted = Math.random() > 0.3
-    
-    return {
-      data: {
-        id: contractId,
-        title: 'Contract Title',
-        status: isCompleted ? 'completed' : 'processing',
-        analysis: isCompleted ? {
-          riskLevel: 'medium',
-          summary: 'Análise concluída com sucesso'
-        } : undefined
-      }
-    }
+    const response = await this.request(`/contracts/${contractId}`)
+    return { data: response }
+  }
+
+  async listContracts(): Promise<{ data: Contract[] }> {
+    const response = await this.request('/contracts')
+    return { data: response }
   }
 
   async analyzeContract(contractId: string): Promise<{ data: any }> {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    return {
-      data: {
-        riskLevel: 'medium',
-        clauses: [],
-        summary: 'Análise mock'
-      }
-    }
+    const response = await this.request(`/contracts/${contractId}/analyze`, {
+      method: 'POST',
+    })
+    return { data: response }
+  }
+
+  async deleteContract(contractId: string): Promise<void> {
+    await this.request(`/contracts/${contractId}`, {
+      method: 'DELETE',
+    })
   }
 }
 

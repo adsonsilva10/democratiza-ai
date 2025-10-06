@@ -1,74 +1,11 @@
 'use client'
 
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
-// Mock data para demonstração
-const mockContracts = [
-  {
-    id: 1,
-    title: 'Contrato de Locação - Apartamento Centro',
-    type: 'rental',
-    riskLevel: 'medium',
-    uploadDate: '2025-09-15',
-    status: 'analyzed',
-    summary: 'Cláusulas de reajuste anual com IGP-M. Taxa de administração de 8%.'
-  },
-  {
-    id: 2,
-    title: 'Plano de Internet - Operadora XYZ',
-    type: 'telecom',
-    riskLevel: 'low',
-    uploadDate: '2025-09-10',
-    status: 'analyzed',
-    summary: 'Fidelidade de 12 meses. Velocidade garantida em 80% do contratado.'
-  },
-  {
-    id: 3,
-    title: 'Empréstimo Pessoal - Banco ABC',
-    type: 'financial',
-    riskLevel: 'high',
-    uploadDate: '2025-09-08',
-    status: 'analyzed',
-    summary: 'Taxa de juros alta (3,2% a.m.). Cláusula de vencimento antecipado.'
-  },
-  {
-    id: 4,
-    title: 'Seguro Auto - Seguradora DEF',
-    type: 'insurance',
-    riskLevel: 'medium',
-    uploadDate: '2025-09-05',
-    status: 'analyzed',
-    summary: 'Cobertura limitada para terceiros. Franquia elevada para sinistros.'
-  }
-]
-
-// Principais riscos identificados
-const topRisks = [
-  {
-    risk: 'Juros Abusivos',
-    count: 12,
-    percentage: 35,
-    severity: 'high'
-  },
-  {
-    risk: 'Cláusulas de Fidelidade',
-    count: 8,
-    percentage: 23,
-    severity: 'medium'
-  },
-  {
-    risk: 'Multas Excessivas',
-    count: 6,
-    percentage: 17,
-    severity: 'high'
-  },
-  {
-    risk: 'Renovação Automática',
-    count: 4,
-    percentage: 12,
-    severity: 'medium'
-  }
-]
+// TODO: Buscar dados reais da API
+const mockContracts: any[] = []
+const topRisks: any[] = []
 
 const riskColors = {
   low: 'bg-green-100 text-green-800',
@@ -94,6 +31,64 @@ export default function DashboardPage() {
   const analyzedContracts = mockContracts.filter(c => c.status === 'analyzed').length
   const highRiskContracts = mockContracts.filter(c => c.riskLevel === 'high').length
   const recentContracts = mockContracts.slice(0, 3)
+
+  // Estado vazio - nenhum contrato
+  if (totalContracts === 0) {
+    return (
+      <div className="w-full max-w-7xl mx-auto">
+        {/* Header Principal */}
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+            🏠 Home
+          </h1>
+          <p className="text-gray-600 text-base sm:text-lg">
+            Visão geral da sua análise de contratos e principais alertas
+          </p>
+        </div>
+
+        {/* Call-to-Action Principal */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white text-center mb-8">
+          <h2 className="text-2xl font-bold mb-3">Bem-vindo ao Contrato Seguro!</h2>
+          <p className="text-blue-100 mb-6 text-lg">Comece analisando seu primeiro contrato e descubra os riscos ocultos</p>
+          <Link href="/dashboard/analise">
+            <button className="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors text-lg">
+              📄 Analisar Meu Primeiro Contrato
+            </button>
+          </Link>
+        </div>
+
+        {/* Estatísticas vazias */}
+        <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-6">📊 Estatísticas Gerais</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="text-3xl font-bold text-blue-600">0</div>
+              <div className="text-sm text-blue-700 font-medium">Total de Contratos</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg border border-green-100">
+              <div className="text-3xl font-bold text-green-600">0</div>
+              <div className="text-sm text-green-700 font-medium">Analisados</div>
+            </div>
+            <div className="text-center p-4 bg-red-50 rounded-lg border border-red-100">
+              <div className="text-3xl font-bold text-red-600">0</div>
+              <div className="text-sm text-red-700 font-medium">Alto Risco</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-100">
+              <div className="text-3xl font-bold text-purple-600">0%</div>
+              <div className="text-sm text-purple-700 font-medium">Taxa Análise</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Seção vazia */}
+        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
+          <div className="text-6xl mb-4">📂</div>
+          <h3 className="text-xl font-medium text-gray-900 mb-2">Nenhum contrato analisado ainda</h3>
+          <p className="text-gray-500 mb-6">Seus contratos analisados aparecerão aqui com insights e alertas</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full max-w-7xl mx-auto">
