@@ -596,3 +596,19 @@ class CloudflareR2Service:
 # Instância global do serviço - será inicializada apenas quando necessária
 # para evitar problemas de SSL/conexão no startup
 r2_service = None  # Inicializado via lazy loading em dependencies ou no primeiro uso
+
+
+def get_r2_service() -> "CloudflareR2Service":
+    """
+    Retorna a instância do serviço R2, inicializando-a se necessário.
+    
+    Esta função implementa o padrão de lazy loading para evitar problemas
+    de inicialização durante o startup da aplicação.
+    
+    Returns:
+        CloudflareR2Service: Instância configurada do serviço
+    """
+    global r2_service
+    if r2_service is None:
+        r2_service = CloudflareR2Service()
+    return r2_service
