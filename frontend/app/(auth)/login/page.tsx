@@ -22,9 +22,18 @@ export default function LoginPage() {
   // Mostrar mensagem de sucesso se vier da página de registro
   useEffect(() => {
     const message = searchParams.get('message')
+    const timeout = searchParams.get('timeout')
+    
     if (message) {
       toast.success('Cadastro realizado!', {
         description: message
+      })
+    }
+    
+    if (timeout === 'true') {
+      toast.warning('Sessão Expirada', {
+        description: 'Sua sessão expirou por inatividade. Por favor, faça login novamente.',
+        duration: 5000
       })
     }
   }, [searchParams])
