@@ -20,6 +20,12 @@ yarn-error.log*
 .env.private
 */.env.private
 **/.env.private
+.env.dev
+.env.prod
+backend/.env
+backend/.env.*
+frontend/.env
+frontend/.env.*
 
 # IDE
 .vscode/
