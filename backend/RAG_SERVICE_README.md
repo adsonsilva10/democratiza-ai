@@ -19,7 +19,18 @@ O RAG Service é o sistema de recuperação aumentada por geração que enriquec
 
 ### Providers Disponíveis
 
-#### 🥇 Google Gemini (Default)
+#### 🥇 OpenAI (Default)
+- **Modelo**: `text-embedding-3-small` ou `text-embedding-ada-002`
+- **Dimensões**: 1536
+- **Custo**: Pago ($0.02 / 1M tokens)
+- **Vantagens**:
+  - Melhor qualidade geral
+  - 1536 dimensões (alta precisão)
+  - API estável e rápida
+  - Excelente para português brasileiro
+- **Status**: ✅ Implementado e configurado (OPENAI_API_KEY presente)
+
+#### 🥈 Google Gemini (Fallback)
 - **Modelo**: `models/embedding-001`
 - **Dimensões**: 768
 - **Custo**: Gratuito (com limites)
@@ -30,17 +41,7 @@ O RAG Service é o sistema de recuperação aumentada por geração que enriquec
 - **Limites Free Tier**:
   - 1,500 requests/dia
   - 15 requests/minuto
-- **Status**: ✅ Implementado e testado
-
-#### 🥈 OpenAI (Fallback)
-- **Modelo**: `text-embedding-3-small`
-- **Dimensões**: 1536
-- **Custo**: Pago ($0.02 / 1M tokens)
-- **Vantagens**:
-  - Melhor qualidade geral
-  - Mais dimensões (1536)
-  - API estável e rápida
-- **Status**: ✅ Implementado, aguardando OPENAI_API_KEY
+- **Status**: ✅ Implementado (GOOGLE_API_KEY presente)
 
 #### 🥉 Anthropic/Voyage AI (Futuro)
 - **Modelo**: Voyage AI (especializado)

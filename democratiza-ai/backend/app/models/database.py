@@ -1,29 +1,47 @@
-from sqlalchemy import Column, Integer, String, create_engine
+"""
+Database configuration
+Per spec: PostgreSQL via Supabase with pg_vector extension
+"""
+
+from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from typing import Generator
+import os
 
-Base = declarative_base()
+# Get database URL from environment
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    os.getenv("SUPABASE_DB_URL", "postgresql://user:password@localhost/dbname")
+)
 
-class User(Base):
-    __tablename__ = 'users'
+# SQLAlchemy engine
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=10,
+    max_overflow=20
+)
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    email = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-
-class Contract(Base):
-    __tablename__ = 'contracts'
-
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, index=True)
-    contract_type = Column(String)
-    content = Column(String)
-
-DATABASE_URL = "postgresql+psycopg2://user:password@localhost/dbname"
-
-engine = create_engine(DATABASE_URL)
+# Session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Base class for models
+Base = declarative_base()
+
+
+def get_db() -> Generator:
+    """
+    Dependency for FastAPI routes
+    Usage: db: Session = Depends(get_db)
+    """
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 def init_db():
+    """Initialize database tables"""
     Base.metadata.create_all(bind=engine)

@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 class EmbeddingProvider(str, Enum):
     """Supported embedding providers for RAG"""
-    GEMINI = "gemini"          # Google Gemini (default - free/cheap)
-    OPENAI = "openai"          # OpenAI (fallback - best quality)
+    OPENAI = "openai"          # OpenAI (default - best quality, 1536d)
+    GEMINI = "gemini"          # Google Gemini (fallback - free/cheap, 768d)
 
 class RAGService:
     """Multi-provider Retrieval-Augmented Generation service for legal knowledge"""
@@ -33,24 +33,24 @@ class RAGService:
         
         Args:
             provider: Embedding provider to use. If None, auto-selects based on available API keys.
-                     Priority: Gemini (free/cheap) > OpenAI (best quality)
+                     Priority: OpenAI (best quality, 1536d) > Gemini (fallback, 768d)
         """
         self.provider = provider or self._auto_select_provider()
         self._initialize_provider()
     
     def _auto_select_provider(self) -> EmbeddingProvider:
         """Automatically select best available embedding provider"""
-        # Priority 1: Gemini (we have the key and it's free/cheap!)
-        google_key = getattr(settings, 'GOOGLE_API_KEY', None)
-        if google_key and GEMINI_AVAILABLE:
-            logger.info("Auto-selected Gemini embeddings (GOOGLE_API_KEY found)")
-            return EmbeddingProvider.GEMINI
-        
-        # Priority 2: OpenAI (best quality, but needs key)
+        # Priority 1: OpenAI (best quality, 1536 dimensions)
         openai_key = getattr(settings, 'OPENAI_API_KEY', None)
         if openai_key:
             logger.info("Auto-selected OpenAI embeddings (OPENAI_API_KEY found)")
             return EmbeddingProvider.OPENAI
+        
+        # Priority 2: Gemini (free/cheap, 768 dimensions)
+        google_key = getattr(settings, 'GOOGLE_API_KEY', None)
+        if google_key and GEMINI_AVAILABLE:
+            logger.info("Auto-selected Gemini embeddings (GOOGLE_API_KEY found, fallback)")
+            return EmbeddingProvider.GEMINI
         
         # Fallback: Try Gemini even without explicit check
         if GEMINI_AVAILABLE:

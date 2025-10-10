@@ -34,6 +34,12 @@ class Settings(BaseSettings):
     # ========================================
     # AI SERVICES
     # ========================================
+    # OpenAI API
+    OPENAI_API_KEY: Optional[str] = None
+    OPENAI_MODEL: str = "gpt-4"
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    
+    # Anthropic Claude API
     ANTHROPIC_API_KEY: Optional[str] = None
     CLAUDE_MODEL: str = "claude-3-sonnet-20240229"
     
