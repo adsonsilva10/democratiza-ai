@@ -129,3 +129,18 @@ secrets/
 google-cloud-credentials.json
 **/credentials/*.json
 backend/credentials/
+# Temporary git cleanup scripts (generated during secret removal)
+clean-history.ps1
+fix_history.sh
+remove_secrets.py
+remove_secrets_from_history.py
+
+# Environment backups with secrets
+**/.env.backup
+**/.env.backup.*
+**/._env_backups_*/
+
+# Old/obsolete documentation
+GITHUB_PUSH_INSTRUCTIONS.md
+GITHUB_PUSH_SUCCESS.md
+UNCOMMITTED_FILES_ANALYSIS.md
